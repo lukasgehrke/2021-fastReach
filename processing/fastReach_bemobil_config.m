@@ -1,8 +1,11 @@
 clear bemobil_config
 
 %% General Setup
-bemobil_config.study_folder = '/Users/lukasgehrke/Documents/publications/2021-CHI-fastReach/data/'; %(NEEDS to have a filesep at the end, sorry!) 
-bemobil_config.filename_prefix = 'sub-';
+% bemobil_config.study_folder = '/Users/lukasgehrke/Documents/publications/2021-CHI-fastReach/data/'; %(NEEDS to have a filesep at the end, sorry!) 
+% bemobil_config.filename_prefix = 'sub-';
+
+bemobil_config.study_folder = '/Users/lukasgehrke/Documents/publications/2021-CHI-fastReach/classifier-poc/pre-study/data'; %(NEEDS to have a filesep at the end, sorry!) 
+bemobil_config.filename_prefix = 'p';
 
 % foldernames (NEED to have a filesep at the end, sorry!) 
 bemobil_config.source_data_folder = '0_source-data/';

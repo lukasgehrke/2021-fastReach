@@ -2,10 +2,6 @@ function [sp] = extract_EEG_features(EEG, onsets, event_str, epoch_classes)
 %EXTRACT_EEG_FEATURES Summary of this function goes here
 %   Detailed explanation goes her
 
-%% signal processing
-
-EEG = pop_eegfiltnew(EEG, .1, 20);
-
 %% select sample in pre-movement class
 
 EEG_mov = pop_epoch( EEG, {event_str}, epoch_classes{1});
