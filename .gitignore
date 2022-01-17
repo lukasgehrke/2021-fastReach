@@ -1,2 +1,4 @@
 *.icloud
 processing/**
+data/
+old_processing/
