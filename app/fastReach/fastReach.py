@@ -5,24 +5,28 @@ from pylsl import StreamInlet, resolve_stream
 import numpy as np
 import serial, time, random, string, pickle, json
 from LSL import LSL
+from threading import *
 
 class fastReach:
 
-    def __init__(self) -> None:
+    def __init__(self, pID) -> None:
         self.lsl = LSL('fastReach')
-
+        
+        self.pID = pID
         path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/app/fastReach/'
         self.config = json.load(open(path+'config.json', 'r'))
         self.markers = json.load(open(path+'markers.json', 'r'))
-        # self.lsl.send(self.markers['create'],1)     
         self.instruction = json.load(open(path+'instructions.json', 'r'))
+        
+        self.init_screen(fullscreen=True)
+        self.init_txt()
 
-        self.ems = EmsClassifier()
-
-    def init_screen(self):
+    def init_screen(self, fullscreen):
         info = pg.display.Info()
-        # self.screen = pg.display.set_mode((info.current_w, info.current_h), pg.FULLSCREEN) 
-        self.screen = pg.display.set_mode((600, 600), pg.RESIZABLE)
+        if fullscreen == True:
+            self.screen = pg.display.set_mode((info.current_w, info.current_h), pg.FULLSCREEN) 
+        else:
+            self.screen = pg.display.set_mode((1200, 600), pg.RESIZABLE)
         self.screen.fill((240, 240, 240))
         self.screen_rect = self.screen.get_rect()
 
@@ -37,138 +41,139 @@ class fastReach:
         # self.wait()
         pg.display.flip()
 
-    def training(self):
-        
-        self.init_screen()
-        self.init_txt()
+    def app(self, ems_on):
+
+        if ems_on == True:
+            self.ems = serial.Serial(port='/dev/cu.usbmodem11201', baudrate=9600, timeout=.1)
+            model_path_eeg = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
+            self.eeg = Classifier(model_path_eeg, 'eeg')
+            model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_eeg.sav'
+            self.motion = Classifier(model_path_motion, 'motion')
 
         trial_counter = 0
-        key_press_time = time.time()
+        start = time.time()
         running = False
         trial = False
+        marker_sent = False
+        name = []
 
         while trial_counter<self.config['num_trainings_trials']:
 
-            elapsed = time.time() - key_press_time
+            elapsed = time.time() - start
 
-            if elapsed < 4 and trial == True:
-                self.instruct(self.instruction["training start"])
+            if elapsed > 2 and elapsed < 6 and trial == True:
+                self.instruct(self.instruction["start"])
 
-            elif elapsed > 4 and trial == True:
-                letter = random.choice(string.ascii_uppercase)
-                self.instruct(self.instruction["training task"]+letter)
+            if elapsed > 4 and marker_sent == False:
+                self.lsl.send(self.markers['idle'],1)
+                marker_sent = True
+
+            if elapsed > 6 and trial == True:
+                # letter = random.choice(string.ascii_uppercase)
+                # self.instruct(self.instruction["training task"]+letter)
+                self.instruct(''.join(name))
                 trial = False
+
+            if ems_on == True and elapsed > 6:
+                if self.eeg.state() == True and self.motion.state() == False and ems_sent == False:
+                    self.ems.write("p".encode('utf-8'))
+                    self.lsl.send(self.markers["ems"],1)
+                    ems_sent = True
 
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
 
                     if event.key == pg.K_SPACE and running == False:
 
-                        self.lsl.send(self.markers['training start'],1)
+                        self.lsl.send(self.markers['start'],1)
                         running = True
                         trial = True
-                        key_press_time = time.time()
+                        start = time.time()
 
                     if event.key == pg.K_ESCAPE:
                         pg.display.quit()
 
-                    elif elapsed > 4:
+                    if elapsed > 6:
                         
-                        key_press_time = time.time()
+                        start = time.time()
+                        name.append(event.unicode)
                         trial_counter += 1
-                        marker = self.markers["reach end"]+self.markers["trial number"]+str(trial_counter)+';'
-                        self.lsl.send(marker,0)
-                        print(marker)
+                        self.lsl.send(self.markers["reach end"],1)
+                        marker_sent = False
                         trial = True
+                        self.instruct(''.join(name))
 
             if trial_counter == self.config['num_trainings_trials']:
-                self.lsl.send(self.markers['training end'],1)
+                self.lsl.send(self.markers['end'],1)
+                self.instruct(self.instruction["wait"])
                 # TODO send close the recording command to labrecorder
 
-    def experiment(self):
-        
-        self.ems.run()
-
-        # check EMS classifier output
-        if self.ems.run:
-            pass
-
-class EmsClassifier:
+class Classifier(Thread):
     
-    def __init__(self, ems_port='/dev/cu.usbmodem11201') -> None:
-        # self.ems = serial.Serial(port=ems_port, baudrate=9600, timeout=.1)
-        pass
-    
-    def run(self):
+    def __init__(self, model_path, type) -> None:
+        self.model_path = model_path
 
         # pickle load the model and good chans ix
+        self.clf = pickle.load(open(self.model_path, 'rb'))
 
-        # first resolve an EMG stream on the lab network
-        print("looking for an EEG stream...")
-        # streams = resolve_stream('type', 'EEG')
+        # if type == 'motion':
+        #     streams = resolve_stream('type', 'rigidBody')
+        # elif type == 'eeg':
+        #     streams = resolve_stream('type', 'eeg')
 
         # # create a new inlet to read from the stream
-        # inlet = StreamInlet(streams[0])
+        # self.inlet = StreamInlet(streams[0])
 
-        # # create empty numpy array (2D: m1 and m2)
-        # all_data = np.array([[],[]])
+        # create empty numpy array (2D: m1 and m2)
+        self.all_data = np.array([[],[]])
 
-        # # set window_size and threshold
-        # window_size = 250
-        # threshold = 0.8
-        # dropped_samples = 25 # number of samples dropped each round
+        # set window_size and threshold
+        # TODO make this as passed parameters
+        self.window_size = 250
+        self.threshold = 0.8
+        self.dropped_samples = 25 # number of samples dropped each round
+    
+    def state(self):
 
         while True:
-            pass
 
-            # # get a new sample (you can also omit the timestamp part if you're not
-            # # interested in it)
-            # sample = inlet.pull_sample()
+            # get a new sample (you can also omit the timestamp part if you're not interested in it)
+            sample = self.inlet.pull_sample()
             # sample = sample[good_chans]
             
-            # # add sample to all_data array
-            # # TODO: dont use np.append, instead overwrite using indices of all_data array so not copies are created
-            # all_data = np.append(all_data, [[sample[0]],[sample[1]]], axis = 1)
+            # add sample to all_data array
+            # TODO: dont use np.append, instead overwrite using indices of all_data array so not copies are created
+            self.all_data = np.append(self.all_data, [[sample[0]],[sample[1]]], axis = 1)
             
-            # if all_data.shape[1] == window_size:
+            if self.all_data.shape[1] == self.window_size:
                 
-            #     # filter the data? fast enough?
+                # filter the data? fast enough?
 
-            #     # feature calculations
-            #     RMS_m1 = np.sqrt(np.sum(np.square(all_data[0]))/window_size)
-            #     RMS_m2 = np.sqrt(np.sum(np.square(all_data[1]))/window_size)
+                # feature calculations
+                RMS_m1 = np.sqrt(np.sum(np.square(self.all_data[0]))/self.window_size)
                             
-            #     # MAV
-            #     MAV_m1 = np.sum(np.absolute(all_data[0]))/window_size
-            #     MAV_m2 = np.sum(np.absolute(all_data[1]))/window_size 
+                features = np.array([RMS_m1, RMS_m2, MAV_m1, MAV_m2, VAR_m1, VAR_m2])
                 
-            #     # VAR
-            #     VAR_m1 = np.sum(np.square(all_data[0]))/(window_size-1)
-            #     VAR_m2 = np.sum(np.square(all_data[1]))/(window_size-1) 
-                            
-            #     features = np.array([RMS_m1, RMS_m2, MAV_m1, MAV_m2, VAR_m1, VAR_m2])
+                # reshape: 1 datapoint + many features
+                reshaped = features.reshape(1,-1)
                 
-            #     # reshape: 1 datapoint + many features
-            #     reshaped = features.reshape(1,-1)
+                # prediction for emg-window
+                prediction = self.clf.predict(reshaped)[0] #predicted class
+                probs = self.clf.predict_proba(reshaped) #probability for class prediction
                 
-            #     # prediction for emg-window
-            #     prediction = clf.predict(reshaped)[0] #predicted class
-            #     probs = clf.predict_proba(reshaped) #probability for class prediction
-                
-            #     if probs[0][prediction-1] > threshold: #-1 da class 1,2 und index 0,1
-            #         if prediction == 1:
-            #             # ems_wait = input("press enter to send a EMS pulse: ") 
-            #             self.ems.write("p".encode('utf-8'))
-            #             return True
-            #         if prediction == 2:
-            #             # self.ems.write("p".encode('utf-8'))
-            #             return False
+                if probs[0][prediction-1] > self.threshold: #-1 da class 1,2 und index 0,1
+                    if prediction == 1:
+                        return True
+                    if prediction == 2:
+                        return False
                         
-            #     # drop first entry
-            #     # TODO: instead of np.delete overwrite the matrix entries
-            #     all_data = np.delete(all_data, np.s_[:dropped_samples] , axis = 1)
+                # drop first entry
+                # TODO: instead of np.delete overwrite the matrix entries
+                self.all_data = np.delete(self.all_data, np.s_[:self.dropped_samples] , axis = 1)
 
 # def __main__():
 pg.init()
-exp = fastReach()
-exp.training()
+exp = fastReach(1)
+exp.app(ems_on=False)
+input("continue with app")
+exp.app(ems_on=True)
