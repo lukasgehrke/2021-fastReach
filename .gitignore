@@ -5,3 +5,4 @@ old_processing/
 figures/
 *.asv
 *.pyc
+*.mat
