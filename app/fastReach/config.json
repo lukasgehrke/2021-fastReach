@@ -1,3 +1,5 @@
 {
-    "num_trainings_trials": 2
+    "num_trainings_trials": 1,
+    "num_experiment_trials": 2
+
 }

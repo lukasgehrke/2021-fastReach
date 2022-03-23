@@ -1,5 +1,7 @@
 {
-    "training start": "start the training",
-    "training back": "Please move your hand to the resting position",
-    "training task": "Please press the button "
+    "start": "please write this sentence, one letter at a time.",
+    "back": "Please move your hand to the resting position",
+    "task": "Please press the button ",
+    "app start": "what to do",
+    "wait": "please call for the experimenter."
 }

@@ -1,7 +1,8 @@
 {
     "create": "marker stream created",
-    "reach end": "reach:end;",
-    "trial number": "trial:",
-    "training start": "training:start;",
-    "training end": "training:end;"
+    "reach end": "reach:end",
+    "start": "app:start",
+    "end": "app:end",
+    "idle": "idle:start",
+    "ems": "ems:sent"
 }
