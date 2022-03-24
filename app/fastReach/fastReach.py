@@ -42,32 +42,59 @@ class fastReach:
         # self.wait()
         pg.display.flip()
 
-    def app(self, num_trials, ems_on):
+    def start(self, num_trials, ems_on):
+        
+        while True:
+            for event in pg.event.get():
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_SPACE:
+                        self.lsl.send(self.markers['start'],1)
+                        start = time.time()
+                        self.app(num_trials, ems_on, start)
+
+
+    def app(self, num_trials, ems_on, start):
 
         if ems_on == True:
             
-            # self.ems = serial.Serial(port='/dev/cu.usbmodem11201', baudrate=9600, timeout=.1)
+            self.ems = serial.Serial(port='/dev/cu.usbmodem11201', baudrate=9600, timeout=.1)
             model_path_eeg = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_eeg.sav'
-
             chans = np.arange(20)
             self.eeg = Classifier(model_path_eeg, "eeg", chans, .8, 25, 250)
             self.eeg.state()
 
-            # model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
-            # self.motion = Classifier(model_path_eeg, "motion", 5, .9, 1, 50)
-            # self.motion.state()
+            chans = np.array([4,5,6])
+            model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
+            self.motion = Classifier(model_path_motion, "motion", chans, .6, 1, 10)
+            self.motion.state()
 
+        # trial logic
         trial_counter = 0
-        start = time.time()
-        running = False
-        trial = False
+        trial = True
         marker_sent = False
         name = []
-        ems_sent = False
 
-        while trial_counter<self.config['num_trainings_trials']:
+        # arduino
+        ems_sent = False
+        ems_counter = trial_counter
+        ems_time = start
+
+        # classifiers
+        print_states = True
+
+        while trial_counter<num_trials:
+
+            if print_states:
+                print(self.motion.state())
+                # print(self.eeg.state())
 
             elapsed = time.time() - start
+            ems_duration = time.time() - ems_time
+
+            if ems_duration > .5 and ems_sent == True:
+                ems_sent = False
+                self.ems.write("p".encode('utf-8'))
+                self.lsl.send(self.markers["ems off"],1)
 
             if elapsed > 2 and elapsed < 6 and trial == True:
                 self.instruct(self.instruction["start"])
@@ -79,24 +106,22 @@ class fastReach:
             if elapsed > 6 and trial == True:
                 # letter = random.choice(string.ascii_uppercase)
                 # self.instruct(self.instruction["training task"]+letter)
+
                 self.instruct(''.join(name))
                 trial = False
 
-            if ems_on == True and elapsed > 6:
-                if self.eeg.state() == True and ems_sent == False: # and self.motion.state() == False 
+            if ems_on == True and elapsed > 6 and ems_counter == trial_counter:
+                
+                if self.eeg.state() == True and ems_sent == False and self.motion.state() == False:
+
                     self.ems.write("p".encode('utf-8'))
-                    self.lsl.send(self.markers["ems"],1)
+                    self.lsl.send(self.markers["ems on"],1)
                     ems_sent = True
+                    ems_counter += 1
+                    ems_time = time.time()
 
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
-
-                    if event.key == pg.K_SPACE and running == False:
-
-                        self.lsl.send(self.markers['start'],1)
-                        running = True
-                        trial = True
-                        start = time.time()
 
                     if event.key == pg.K_ESCAPE:
                         pg.display.quit()
@@ -111,7 +136,7 @@ class fastReach:
                         trial = True
                         self.instruct(''.join(name))
 
-            if trial_counter == self.config['num_trainings_trials']:
+            if trial_counter == num_trials:
                 self.lsl.send(self.markers['end'],1)
                 self.instruct(self.instruction["wait"])
 
@@ -159,7 +184,18 @@ class Classifier(Thread):
                 # filter the data? fast enough?
 
                 if self.type == "motion":
-                    feats = self.all_data.reshape(-1,1) # when only 1 feature
+                    
+                    # length of vector
+                    # feats = np.sqrt(np.square(self.all_data[0,:]) + np.square(self.all_data[1,:]) + np.square(self.all_data[2,:]))
+                    # feats = np.mean(feats - feats[0])
+                    
+                    # mag of vel
+                    feats = np.sqrt(
+                        np.square(np.diff(self.all_data[0,:])) + 
+                        np.square(np.diff(self.all_data[1,:])) + 
+                        np.square(np.diff(self.all_data[2,:])))
+
+                    feats = feats.reshape(-1,1) # when only 1 feature
 
                 if self.type == "eeg":
                     feats = np.mean(np.reshape(self.all_data, (int(self.window_size/self.frame_rate), len(self.chans), self.frame_rate)), axis = 2)
@@ -168,23 +204,28 @@ class Classifier(Thread):
                 prediction = self.clf.predict(feats)[0] #predicted class
                 probs = self.clf.predict_proba(feats) #probability for class prediction
 
-                # print(probs[0][int(prediction-1)])
-                # print(prediction)
-
-                # TODO confirm that the correct prediction output is selected here!
-                if probs[0][int(prediction-1)] > self.threshold: #-1 da class 1,2 und index 0,1
-                    if int(prediction) == 1:
+                if self.type == "motion":
+                    if prediction == 1 and probs[0][0] > self.threshold:
+                        # print(str(prediction) + ' ' + str(probs[0][0]))
+                        # print("hand is moving")
                         return True
-                    if int(prediction) == 2:
+                    else:
                         return False
-                else:
-                    return False
 
-            frame +=1
+                if self.type == "eeg":
+                    if prediction == 1 and probs[0][0] > self.threshold:
+                        # print(str(prediction) + ' ' + str(probs[0][0]))
+                        # print("rp detected")
+                        return True
+                    else:
+                        return False
+
+            else:
+                frame +=1
 
 # def __main__():
 pg.init()
-exp = fastReach(1)
-exp.app(num_trials=20, ems_on=True)
+exp = fastReach(2)
+exp.start(num_trials=20, ems_on=True)
 # input("continue with app")
 # exp.app(num_trials = 50, ems_on=True)
