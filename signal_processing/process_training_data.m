@@ -6,7 +6,7 @@ addpath('/Users/lukasgehrke/Documents/code.nosync/fieldtrip-sj');
 
 %% cfg fastReach
 
-cfg.subject                = 2;                                  % required
+cfg.subject                = 3;                                  % required
 cfg.fname                  = 'test_prepilot.xdf';
 
 
@@ -79,8 +79,14 @@ EMG = pop_loadset('filename', ['sub-' num2str(cfg.subject) '_fastReach_PHYSIO.se
     'filepath', ['/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/2_raw-EEGLAB/sub-' num2str(cfg.subject)]);
 
 % movement onset events
+vel = squeeze(sqrt(diff(Motion.data(4,:)).^2+diff(Motion.data(5,:)).^2+diff(Motion.data(6,:)).^2));
+vel = [vel, mean(vel)];
+Motion.data(1,:) = vel;
 motion_tmp = pop_epoch(Motion, {cfg.event.move}, cfg.event.win);
-mag = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
+
+% mag = squeeze(sqrt(Motion.data(4,:,:).^2 + Motion.data(5,:,:).^2 + Motion.data(6,:,:).^2));
+% mag = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
+mag = squeeze(motion_tmp.data(1,:,:));
 
 for i = 1:size(mag,2)
     onset(i) = fR_movement_onset_detector(mag(:,i), .7, 125, .05);
@@ -121,12 +127,14 @@ rp = pop_epoch(EMG, {cfg.event.rp}, cfg.feat.rp_win);
 emg.rp = squeeze(rp.data(cfg.EMG_chan,:,:) - rp.data(cfg.EMG_chan,1,:));
 
 motion_tmp = pop_epoch(Motion, {cfg.event.idle}, cfg.feat.idle_win);
-motion.idle = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
-motion.idle = motion.idle - motion.idle(1,:);
+motion.idle = squeeze(motion_tmp.data(1,:,:));
+% motion.idle = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
+% motion.idle = motion.idle - motion.idle(1,:);
 Motion.event = onsets;
 motion_tmp = pop_epoch(Motion, {cfg.event.rp}, cfg.feat.move_win);
-motion.move = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
-motion.move = motion.move - motion.move(1,:);
+motion.move = squeeze(motion_tmp.data(1,:,:));
+% motion.move = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
+% motion.move = motion.move - motion.move(1,:);
 
 % save
 rp = ones(size(eeg.rp,3),1);
