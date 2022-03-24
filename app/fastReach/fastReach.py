@@ -42,7 +42,7 @@ class fastReach:
         # self.wait()
         pg.display.flip()
 
-    def app(self, ems_on):
+    def app(self, num_trials, ems_on):
 
         if ems_on == True:
             
@@ -185,6 +185,6 @@ class Classifier(Thread):
 # def __main__():
 pg.init()
 exp = fastReach(1)
-exp.app(ems_on=True)
+exp.app(num_trials=20, ems_on=True)
 # input("continue with app")
-# exp.app(ems_on=True)
+# exp.app(num_trials = 50, ems_on=True)
