@@ -4,5 +4,6 @@
     "start": "app:start",
     "end": "app:end",
     "idle": "idle:start",
-    "ems": "ems:sent"
+    "ems on": "ems:on",
+    "ems off": "ems:off"
 }
