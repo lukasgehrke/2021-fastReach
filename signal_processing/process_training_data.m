@@ -1,17 +1,17 @@
-%% init
+
+
+cfg.subject                = 4;
+cfg.fname                  = 'te4st.xdf';
+
+%% run fastReach signal processing training data
+% init
 eeglab;
 addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent'));
 addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/bemobil-pipeline-sj'));
+addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/eeglab_changes/newColormap'));
 addpath('/Users/lukasgehrke/Documents/code.nosync/fieldtrip-sj');
 
-%% cfg fastReach
-
-cfg.subject                = 3;                                  % required
-cfg.fname                  = 'test_prepilot.xdf';
-
-
-%% cfg fastReach
-
+% cfg fastReach
 cfg.filename               = ['/Users/lukasgehrke/Desktop/' cfg.fname];
 cfg.bids_target_folder     = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/1_bids';                               % required
 cfg.task                   = 'fastReach';                         % optional 
@@ -36,34 +36,35 @@ cfg.motion.streams{1}.tracksys                 = 'HTCVive';   % required, match 
 cfg.motion.streams{1}.tracked_points           = 'Tracker'; %  keyword in channel names, indicating which object (tracked point) is included in the stream
                                                                      % searched for in field "xdfdata{streamIndex}.info.desc.channels.channel{channelIndex}.label"
                                                                      % required to be unique in a single tracking system                                          
-cfg.phys.streams{1}.stream_name          = 'OpenSignals';           % optional
-
-cfg.other_data_types = {'motion', 'physio'};
+% cfg.phys.streams{1}.stream_name          = 'OpenSignals';           % optional
+cfg.other_data_types = {'motion'};%, 'physio'};
 
 % convert .xdf to bids to set
 bemobil_xdf2bids(cfg);
 bemobil_bids2set(cfg);
 
-% cfg processing
+% processing
 cfg.event.move             = 'reach:end';
 cfg.event.idle             = 'idle:start';
 cfg.event.rp               = 'movement_onset';
-cfg.event.win              = [-2, -.1];
+cfg.event.win              = [-3, -0];
 cfg.feat.rp_win            = [-1, 0];
 cfg.feat.move_win          = [0, 1];
-cfg.feat.idle_win          = [-.5, .5];
+cfg.feat.idle_win          = [-1, 0];
 
 cfg.EMG_chan               = 2;
 
-cfg.n_best_chans           = 20;
+cfg.n_best_chans           = 40;
 cfg.n_wins                 = 10;
+
+%%
 
 EEG = pop_loadset('filename', ['sub-' num2str(cfg.subject) '_fastReach_EEG.set'], ...
     'filepath', ['/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/2_raw-EEGLAB/sub-' num2str(cfg.subject)]);
 ori_events = EEG.event;
 EEG = pop_eegfiltnew(EEG, .1, 10);
 EEG = pop_reref(EEG, []);
-% EEG = clean_asr(EEG,[],[],[],[],'off'); -> todo play with settings
+% EEG = clean_asr(EEG,[],[],[],[],'off'); % -> todo play with settings
 
 for n = 1:length(EEG.chanlocs)
     EEG.chanlocs(n).labels = cfg.eeg.chanloc_newname{n};
@@ -75,17 +76,14 @@ Motion = pop_loadset('filename', ['sub-' num2str(cfg.subject) '_fastReach_MOTION
     'filepath', ['/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/2_raw-EEGLAB/sub-' num2str(cfg.subject)]);
 Motion = pop_eegfiltnew(Motion, [], 6);
 
-EMG = pop_loadset('filename', ['sub-' num2str(cfg.subject) '_fastReach_PHYSIO.set'], ...
-    'filepath', ['/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/2_raw-EEGLAB/sub-' num2str(cfg.subject)]);
+% EMG = pop_loadset('filename', ['sub-' num2str(cfg.subject) '_fastReach_PHYSIO.set'], ...
+%     'filepath', ['/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/2_raw-EEGLAB/sub-' num2str(cfg.subject)]);
 
 % movement onset events
 vel = squeeze(sqrt(diff(Motion.data(4,:)).^2+diff(Motion.data(5,:)).^2+diff(Motion.data(6,:)).^2));
 vel = [vel, mean(vel)];
 Motion.data(1,:) = vel;
 motion_tmp = pop_epoch(Motion, {cfg.event.move}, cfg.event.win);
-
-% mag = squeeze(sqrt(Motion.data(4,:,:).^2 + Motion.data(5,:,:).^2 + Motion.data(6,:,:).^2));
-% mag = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
 mag = squeeze(motion_tmp.data(1,:,:));
 
 for i = 1:size(mag,2)
@@ -93,12 +91,19 @@ for i = 1:size(mag,2)
 end
 dists = size(mag,1) - onset;
 
-% for i = 1:5 -> ok
-%     figure;plot(mag(:,i)); xline(onset(i));
+% detection ok!!!
+% figure;
+% for i = 1:20 %size(mag,2)
+%     subplot(1,20,i);
+%     plot(mag(:,i)); xline(onset(i));
 % end
 
 move_ev_ixs = strfind({Motion.event.type}', cfg.event.move);
 move_ev_ixs = find(~cellfun(@isempty, move_ev_ixs));
+
+idle_ev_ixs = strfind({Motion.event.type}', cfg.event.idle);
+idle_ev_ixs = find(~cellfun(@isempty, idle_ev_ixs));
+
 move_ev_lats = [EEG.event(move_ev_ixs).latency] - dists;
  
 for i = 1:numel(move_ev_lats)
@@ -107,34 +112,45 @@ for i = 1:numel(move_ev_lats)
 end
 
 % checks -> ok
-% mag = squeeze(sqrt(motion.data(4,:,:).^2 + motion.data(5,:,:).^2 + motion.data(6,:,:).^2));
-% motion.event = onsets;
+% mag = squeeze(Motion.data(1,:));
 % figure;plot(mag); xline([onsets.latency]);
 
 % select data
 idle = pop_epoch(EEG, {cfg.event.idle}, cfg.feat.idle_win);
+ori_events = EEG.event;
 EEG.event = onsets;
 rp = pop_epoch(EEG, {cfg.event.rp}, cfg.feat.rp_win);
-best_chans_ixs = rp_ERP_select_channels(rp.data, idle.data, EEG.srate/cfg.n_wins, 0); % extract informative channels
+[~, noisy_epochs] = pop_autorej(rp, 'nogui','on','eegplot','off');
+
+[best_chans_ixs, crit1, crit2] = rp_ERP_select_channels(rp.data, idle.data, EEG.srate/cfg.n_wins, 1); % extract informative channels
 sel_chans = best_chans_ixs(1:cfg.n_best_chans);
 eeg.idle = idle.data(sel_chans,:,:) - idle.data(sel_chans,1,:);
 eeg.rp = rp.data(sel_chans,:,:) - rp.data(sel_chans,1,:);
 
-idle = pop_epoch(EMG, {cfg.event.idle}, cfg.feat.idle_win);
-emg.idle = squeeze(idle.data(cfg.EMG_chan,:,:) - idle.data(cfg.EMG_chan,1,:));
-EMG.event = onsets;
-rp = pop_epoch(EMG, {cfg.event.rp}, cfg.feat.rp_win);
-emg.rp = squeeze(rp.data(cfg.EMG_chan,:,:) - rp.data(cfg.EMG_chan,1,:));
+% idle = pop_epoch(EMG, {cfg.event.idle}, cfg.feat.idle_win);
+% emg.idle = squeeze(idle.data(cfg.EMG_chan,:,:) - idle.data(cfg.EMG_chan,1,:));
+% EMG.event = onsets;
+% rp = pop_epoch(EMG, {cfg.event.rp}, cfg.feat.rp_win);
+% emg.rp = squeeze(rp.data(cfg.EMG_chan,:,:) - rp.data(cfg.EMG_chan,1,:));
 
 motion_tmp = pop_epoch(Motion, {cfg.event.idle}, cfg.feat.idle_win);
 motion.idle = squeeze(motion_tmp.data(1,:,:));
-% motion.idle = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
-% motion.idle = motion.idle - motion.idle(1,:);
 Motion.event = onsets;
 motion_tmp = pop_epoch(Motion, {cfg.event.rp}, cfg.feat.move_win);
 motion.move = squeeze(motion_tmp.data(1,:,:));
-% motion.move = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
-% motion.move = motion.move - motion.move(1,:);
+
+% remove noisy epochs & premature movements
+Motion.event = ori_events;
+rp_wait_time = [Motion.event(move_ev_ixs).latency] - [Motion.event(idle_ev_ixs).latency];
+premature_movement = find(rp_wait_time<EEG.srate*2);
+reject_eps = unique([noisy_epochs, premature_movement]);
+
+eeg.rp(:,:,reject_eps) = [];
+eeg.idle(:,:,reject_eps) = [];
+% emg.rp(:,:,reject_eps) = [];
+% emg.idle(:,:,reject_eps) = [];
+motion.move(:,reject_eps) = [];
+motion.idle(:,reject_eps) = [];
 
 % save
 rp = ones(size(eeg.rp,3),1);
@@ -147,19 +163,66 @@ sample = repmat(sample, size(rp_class,1),1);
 rp_class = repelem(rp_class, size(eeg.rp,2));
 epoch_ix = repelem(epoch_ix, size(eeg.rp,2));
 
-EEG = [eeg.rp(:,:)'; eeg.idle(:,:)'];
-Motion = [motion.move(:); motion.idle(:)];
-EMG = [emg.rp(:); emg.idle(:)];
+EEG_out = [eeg.rp(:,:)'; eeg.idle(:,:)'];
+Motion_out = [motion.move(:); motion.idle(:)];
+% EMG_out = [emg.rp(:); emg.idle(:)];
 
-t = array2table([sample, epoch_ix, rp_class, Motion, EMG, EEG], "VariableNames", ['sample', 'epoch_ix' 'rp_class' 'Motion' 'EMG' cfg.eeg.chanloc_newname(sel_chans)]);
+% t = array2table([sample, epoch_ix, rp_class, Motion_out, EMG_out, EEG_out], "VariableNames", ['sample', 'epoch_ix' 'rp_class' 'Motion' 'EMG' cfg.eeg.chanloc_newname(sel_chans)]);
+t = array2table([sample, epoch_ix, rp_class, Motion_out, EEG_out], "VariableNames", ['sample', 'epoch_ix' 'rp_class' 'Motion' cfg.eeg.chanloc_newname(sel_chans)]);
 
 if ~exist([cfg.study_folder '/eeglab2python/' num2str(cfg.subject)])
     mkdir([cfg.study_folder '/eeglab2python/' num2str(cfg.subject)]);
 end
-
 writetable(t, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/data.csv']);
+writematrix(sel_chans, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/chans.csv']);
 
+%% for plotting timeseris with seaborn
 
-% save([cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/eeg.mat'], 'eeg');
-% save([cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/emg.mat'], 'emg')
-% save([cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/motion.mat'], 'motion')
+Motion.event = ori_events;
+Motion = pop_resample(Motion,50);
+
+rp_wait_time = [Motion.event(move_ev_ixs).latency] - [Motion.event(idle_ev_ixs).latency];
+rp_wait_time = mean(rp_wait_time) / Motion.srate;
+win = rp_wait_time;
+
+EEG = pop_resample(EEG,50);
+rp = pop_epoch(EEG, {cfg.event.rp}, [-win,win]);
+
+Motion.event = EEG.event;
+motion = pop_epoch(Motion, {cfg.event.rp}, [-win,win]);
+move = squeeze(motion.data(1,:,:));
+
+rp = pop_select(rp, 'channel', sel_chans(1));
+cz = squeeze(rp.data);
+
+epoch_ix = (1:size(cz,2))';
+samples_per_ep = (1:size(cz,1))' / EEG.srate - win;
+
+sample = repmat(samples_per_ep, size(epoch_ix,1)*2,1);
+epoch_ix = repelem(epoch_ix, size(samples_per_ep,1)*2);
+
+cz = zscore(cz(:));
+move = zscore(move(:));
+vals = [cz;move];
+
+type = ones(size(cz,1),1);
+type = [type; type*2];
+
+t = array2table([sample, epoch_ix, type, vals], "VariableNames", {'sample', 'epoch_ix', 'type', ['Motion' cfg.eeg.chanloc_newname{sel_chans(1)}]});
+writetable(t, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/data_for_plot.csv']);
+
+%% EEG topopot
+
+% figure; plot(squeeze(mean(eeg.rp,3))')
+% figure; plot(squeeze(mean(eeg.idle,3))')
+% [H,P,CI,STATS] = ttest(eeg.rp(:),eeg.idle(:))
+
+set(0, 'DefaultFigureRenderer', 'painters');
+figure;
+
+% values for colorcoding - showing most dominat RP deflection
+mean_crit1 = mean(crit1,2);
+sel_chans = sort(sel_chans);
+
+topoplot(mean_crit1(sel_chans),EEG.chanlocs(sel_chans),'headrad',.6,'electrodes','pts','chaninfo',EEG.chaninfo);
+cbar;
