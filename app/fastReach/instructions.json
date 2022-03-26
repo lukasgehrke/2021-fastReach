@@ -1,5 +1,6 @@
 {
-    "start": "please write this sentence, one letter at a time.",
+    "start": "please repeat this sentence below, one letter at a time.\n\n",
+    "isi": "wait...",
     "back": "Please move your hand to the resting position",
     "task": "Please press the button ",
     "app start": "what to do",

@@ -4,6 +4,9 @@
     "start": "app:start",
     "end": "app:end",
     "idle": "idle:start",
+    "isi": "isi:start",
     "ems on": "ems:on",
-    "ems off": "ems:off"
+    "ems off": "ems:off",
+    "instruction off": "instruction:off"
+
 }
