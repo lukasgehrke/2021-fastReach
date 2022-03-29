@@ -1,5 +1,5 @@
 {
-    "start": "please repeat this sentence below, one letter at a time.\n\n",
+    "start": "dear participant. please rewrite this sentence below, one letter at a time.\n\n",
     "isi": "wait...",
     "back": "Please move your hand to the resting position",
     "task": "Please press the button ",
