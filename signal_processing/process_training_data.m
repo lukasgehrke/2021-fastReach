@@ -54,7 +54,7 @@ cfg.feat.idle_win          = [-1, 0];
 
 cfg.EMG_chan               = 2;
 
-cfg.n_best_chans           = 40;
+cfg.n_best_chans           = 10;
 cfg.n_wins                 = 10;
 
 %%
@@ -174,7 +174,9 @@ if ~exist([cfg.study_folder '/eeglab2python/' num2str(cfg.subject)])
     mkdir([cfg.study_folder '/eeglab2python/' num2str(cfg.subject)]);
 end
 writetable(t, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/data.csv']);
-writematrix(sel_chans, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/chans.csv']);
+
+chans = array2table([sel_chans], "VariableNames", {'chans'});
+writetable(chans, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/chans.csv']);
 
 %% for plotting timeseris with seaborn
 
