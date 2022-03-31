@@ -1,4 +1,5 @@
 
+import re
 import pygame as pg
 from pygame.locals import *
 from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
@@ -31,11 +32,11 @@ class fastReach:
             model_path_eeg = data_path+'/model_'+str(self.pID)+'_eeg.sav'
             target_class = 1
             chans = pickle.load(open(data_path+'/chans_'+str(self.pID)+'_eeg.sav', 'rb'))
-            threshold = .7
+            threshold = .55
             buffer_feat_comp_size_samples = 250
             windowed_mean_size_samples = 25
-            self.eeg = Classifier('eeg_classifier', model_path_eeg, "eeg", target_class, 
-                chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples)
+            self.eeg = Classifier('eeg_classifier', buffer_feat_comp_size_samples/windowed_mean_size_samples,
+                model_path_eeg, "eeg", target_class, chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples)
 
             model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
             target_class = 1
@@ -43,7 +44,7 @@ class fastReach:
             threshold = 1.0
             buffer_feat_comp_size_samples = 2
             windowed_mean_size_samples = 2
-            self.motion = Classifier('motion_classifier', model_path_motion, "motion", target_class,
+            self.motion = Classifier('motion_classifier', 45, model_path_motion, "motion", target_class,
                 chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples)
 
             self.motion.start()
@@ -67,7 +68,7 @@ class fastReach:
         ptext.draw(text, topleft=(200, 200), color=col, fontsize=40)  # Recognizes newline characters.
         pg.display.flip()
 
-    def start(self, num_trials, ems_on):
+    def start(self, trial_type, num_trials, ems_on):
         
         while True:
             for event in pg.event.get():
@@ -76,27 +77,29 @@ class fastReach:
                         self.lsl.send(self.markers['start'],1)
                         start = time.time()
 
-                        self.app(num_trials, ems_on, start)
+                        self.app(trial_type, num_trials, ems_on, start)
 
-    def app(self, num_trials, ems_on, start):
+    def app(self, trial_type, num_trials, ems_on, start):
 
-        # trial logic
         trial_counter = 0
-        baseline = True
-        base_marker_sent = False
-        trial = False
-        trial_marker_sent = False
         name = []
-        trial_dur = 4
+        trial_marker_sent = False
+        
+        if trial_type == 'training':
+            trial_dur = 4
+            base_marker_sent = False
 
-        # arduino
-        ems_sent = False
-        ems_counter = trial_counter
-        ems_time = start
+        elif trial_type == 'experiment':
+            trial_dur = 2
+        
+        if ems_on == True:
+            ems_sent = False
+            ems_counter = trial_counter
+            ems_time = start
+            ems_reset_time = start
+            ems_reset = True
 
-        # classifiers
         print_states = False
-
         while True: # trial_counter<num_trials:
 
             if print_states:
@@ -105,15 +108,30 @@ class fastReach:
 
             elapsed = time.time() - start
             
+            if trial_type == 'training' and base_marker_sent == False:
+                self.instruct(self.instruction["isi"])
+                if elapsed > 2:
+                    self.lsl.send(self.markers['idle'],1)
+                    base_marker_sent = True
+
+            if elapsed > trial_dur:
+                    self.instruct(self.instruction["start"]+'\n\n'+''.join(name))                    
+
+                    if trial_marker_sent == True:
+                        if time.time() - trial_end_time > 2: # next trial
+                            start = time.time()
+                            trial_marker_sent = False
+                            base_marker_sent = False
+
             if ems_on == True:
-                
+
                 ems_duration = time.time() - ems_time
                 if ems_duration > .5 and ems_sent == True:
                     ems_sent = False
                     self.ems.write("p".encode('utf-8'))
                     self.lsl.send(self.markers["ems off"],1)
 
-                if elapsed > 6 and ems_counter == trial_counter:    
+                if elapsed > trial_dur and ems_counter == trial_counter:
                     if self.eeg.state == True and ems_sent == False and self.motion.state == False:
                         self.ems.write("p".encode('utf-8'))
                         self.lsl.send(self.markers["ems on"],1)
@@ -121,35 +139,20 @@ class fastReach:
                         ems_counter += 1
                         ems_time = time.time()
 
-            if baseline == True:
-                self.instruct(self.instruction["isi"])
-
-                if elapsed > 2 and base_marker_sent == False:
-                    self.lsl.send(self.markers['idle'],1)
-                    base_marker_sent = True
-
-                if elapsed > trial_dur:
-                    baseline = False
-                    trial = True
-
-            if trial == True:
-                self.instruct(self.instruction["start"]+'\n\n'+''.join(name))                    
-
-                if trial_marker_sent == True:
-                    if time.time() - trial_end_time > 2: # next trial
-                        start = time.time()
-                        trial = False
-                        trial_marker_sent = False
-                        base_marker_sent = False
-                        baseline = True
+                # TODO test this
+                if ems_reset == True:
+                    ems_reset = False
+                    self.ems.write("p".encode('utf-8'))
+                    self.lsl.send(self.markers["ems reset"],1)
+                    ems_reset_time = time.time()
+                elif ems_reset == False and (time.time() - ems_reset_time > .15):
+                    self.ems.write("p".encode('utf-8'))
+                    ems_reset = True
 
             if trial_counter == num_trials:
                 if time.time() - trial_end_time > 2:
                     self.lsl.send(self.markers['end'],1)
                     self.instruct(self.instruction["wait"])
-
-                    baseline = False
-                    trial = False
                     ems_on = False
                     trial_counter += 1
 
@@ -167,49 +170,67 @@ class fastReach:
                         trial_end_time = time.time()
                         print(elapsed)
 
-    def demo(self):
+                        # TODO test this
+                        if ems_on:
+                            ems_reset = True
+
+    def demo(self, mode):
 
         ems_time = time.time()
-        start = time.time()
+        ems_reset_time = time.time()
         ems_sent = False
+        ems_reset = True
+
+        # TODO test both modes
 
         while True:
 
-            elapsed = time.time() - start
-                
             ems_duration = time.time() - ems_time
             if ems_duration > .5 and ems_sent == True:
                 ems_sent = False
                 self.ems.write("p".encode('utf-8'))
                 self.lsl.send(self.markers["ems off"],1)
-                start = time.time()
+        
+            if mode == 'eeg':
+                if self.eeg.state == True and ems_sent == False and self.motion.state == False:
+                    self.ems.write("p".encode('utf-8'))
+                    self.lsl.send(self.markers["ems on"],1)
+                    ems_sent = True
+                    ems_time = time.time()
+            
 
-            if elapsed > 5 and self.eeg.state == True and ems_sent == False and self.motion.state == False:
-                self.ems.write("p".encode('utf-8'))
-                self.lsl.send(self.markers["ems on"],1)
-                ems_sent = True
-                ems_time = time.time()
+            elif mode == 'button':
+        
+                print(time.time() - ems_reset_time) 
+                if (time.time() - ems_reset_time) > 9.8 and ems_reset == True:
+                    ems_reset = False
+                    self.ems.write("p".encode('utf-8'))
+                    self.lsl.send(self.markers["ems reset"],1)
+                if (time.time() - ems_reset_time) > 9.95 and ems_reset == False:
+                    self.ems.write("p".encode('utf-8'))
+                    ems_reset_time = time.time()
+                    ems_reset = True
 
-            for event in pg.event.get():
-                if event.type == pg.KEYDOWN:
+                for event in pg.event.get():
+                    if event.type == pg.KEYDOWN:
 
-                    if event.key == pg.K_ESCAPE:
-                        pg.display.quit()
-                        sys.exit()
-                    else:
-                        self.ems.write("p".encode('utf-8'))
-                        self.lsl.send(self.markers["ems on"],1)
-                        ems_sent = True
-                        ems_time = time.time()
+                        if event.key == pg.K_ESCAPE:
+                            pg.display.quit()
+                            sys.exit()
+                        else:
+                            self.ems.write("p".encode('utf-8'))
+                            self.lsl.send(self.markers["ems on"],1)
+                            ems_sent = True
+                            ems_time = time.time()
 
 class Classifier(threading.Thread):
     
-    def __init__(self, stream_name, model_path, type, target_class, chans, threshold, frame_rate, window_size) -> None:
+    def __init__(self, stream_name, srate, model_path, type, target_class, chans, threshold, frame_rate, window_size) -> None:
         self.model_path = model_path
 
         threading.Thread.__init__(self)
 
-        stream_info = StreamInfo(stream_name, 'Classifier', 2, 0, 'double64', 'myuid34234')
+        stream_info = StreamInfo(stream_name, 'EMG', 3, srate, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
 
         # pickle load the model and good chans ix
@@ -248,21 +269,9 @@ class Classifier(threading.Thread):
             self.all_data[:,-1] = sample[self.chans-1].flatten() # this should be same for motion, TODO check this
             
             if frame == self.frame_rate-1:
-                # print(self.state)
                 frame = 0
 
                 if self.type == "motion":
-                    
-                    # length of vector
-                    # feats = np.sqrt(np.square(self.all_data[0,:]) + np.square(self.all_data[1,:]) + np.square(self.all_data[2,:]))
-                    # feats = np.mean(feats - feats[0])
-                    
-                    # feats = np.reshape(self.all_data, (len(self.chans), int(self.window_size/self.frame_rate), self.frame_rate))
-                    # feats = np.mean(np.diff(feats), axis=2)
-                    # feats = np.square(feats)
-                    # feats = np.sum(feats, axis=0)
-                    # feats = feats.reshape(1,-1)
-                    # print(feats)
     
                     feats = np.sqrt(
                         np.square(np.diff(self.all_data[0,:])) + 
@@ -274,7 +283,7 @@ class Classifier(threading.Thread):
         
                 prediction = self.clf.predict(feats)[0] #predicted class
                 probs = self.clf.predict_proba(feats) #probability for class prediction
-                self.outlet.push_sample([prediction,probs[0][0]])
+                self.outlet.push_sample([prediction,probs[0][0],probs[0][1]])
 
                 if prediction == self.target_class and probs[0][0] >= self.threshold:
                     # print(str(prediction) + ' ' + str(probs[0][0]))
@@ -282,19 +291,25 @@ class Classifier(threading.Thread):
                 else:
                     self.state = False
 
+                # if self.type == 'eeg':
+                    # print(str(prediction) + ' ' + str(probs))
+ 
             else:
                 frame +=1
 
             self.all_data = np.roll(self.all_data,-1) # Speed could be increased here, something like all_data[:,0:-2] = all_data[:,1:-1]
 
-### SET PID ###
-pID = 4
+### SET pID ###
+pID = 9
+trial_type = 'experiment'
 num_trials = 75
 with_ems = True
 arduino_port = '/dev/tty.usbmodem1101' # ls /dev/tty.*
 ###
 
 pg.init()
+np.set_printoptions(precision=2)
 exp = fastReach(pID, with_ems, arduino_port)
-exp.start(num_trials, with_ems)
-# exp.demo()
+
+exp.start(trial_type, num_trials, with_ems)
+# exp.demo(mode='button')
