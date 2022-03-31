@@ -1,19 +1,17 @@
-
-
-cfg.subject                = 4;
-cfg.fname                  = 'te4st.xdf';
-
-%% run fastReach signal processing training data
-% init
+%% init
 eeglab;
 addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent'));
 addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/bemobil-pipeline-sj'));
 addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/eeglab_changes/newColormap'));
 addpath('/Users/lukasgehrke/Documents/code.nosync/fieldtrip-sj');
 
-% cfg fastReach
-cfg.filename               = ['/Users/lukasgehrke/Desktop/' cfg.fname];
-cfg.bids_target_folder     = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/1_bids';                               % required
+cfg.subject                = 9;
+cfg.fname                  = '_training.xdf';
+
+%% run fastReach signal processing training data
+
+cfg.filename               = fullfile('/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/source/', num2str(cfg.subject), cfg.fname);
+cfg.bids_target_folder     = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/1_bids';                               % required
 cfg.task                   = 'fastReach';                         % optional 
 cfg.study_folder           = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study';
 cfg.session_names          = {'fastReach'};                      % required, enter task name as a string, or enter a cell array when there are multiple sessions in the data set  
@@ -37,13 +35,14 @@ cfg.motion.streams{1}.tracked_points           = 'Tracker'; %  keyword in channe
                                                                      % searched for in field "xdfdata{streamIndex}.info.desc.channels.channel{channelIndex}.label"
                                                                      % required to be unique in a single tracking system                                          
 % cfg.phys.streams{1}.stream_name          = 'OpenSignals';           % optional
-cfg.other_data_types = {'motion'};%, 'physio'};
 
-% convert .xdf to bids to set
+cfg.other_data_types = {'motion'};
+
+%% convert .xdf to bids to set
 bemobil_xdf2bids(cfg);
 bemobil_bids2set(cfg);
 
-% processing
+%% processing
 cfg.event.move             = 'reach:end';
 cfg.event.idle             = 'idle:start';
 cfg.event.rp               = 'movement_onset';
@@ -54,10 +53,8 @@ cfg.feat.idle_win          = [-1, 0];
 
 cfg.EMG_chan               = 2;
 
-cfg.n_best_chans           = 10;
+cfg.n_best_chans           = 30;
 cfg.n_wins                 = 10;
-
-%%
 
 EEG = pop_loadset('filename', ['sub-' num2str(cfg.subject) '_fastReach_EEG.set'], ...
     'filepath', ['/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/2_raw-EEGLAB/sub-' num2str(cfg.subject)]);
@@ -124,14 +121,14 @@ rp = pop_epoch(EEG, {cfg.event.rp}, cfg.feat.rp_win);
 
 [best_chans_ixs, crit1, crit2] = rp_ERP_select_channels(rp.data, idle.data, EEG.srate/cfg.n_wins, 1); % extract informative channels
 sel_chans = best_chans_ixs(1:cfg.n_best_chans);
-eeg.idle = idle.data(sel_chans,:,:) - idle.data(sel_chans,1,:);
-eeg.rp = rp.data(sel_chans,:,:) - rp.data(sel_chans,1,:);
+eeg.idle = idle.data(sel_chans,:,:);% - idle.data(sel_chans,1,:);
+eeg.rp = rp.data(sel_chans,:,:);% - rp.data(sel_chans,1,:);
 
 % idle = pop_epoch(EMG, {cfg.event.idle}, cfg.feat.idle_win);
-% emg.idle = squeeze(idle.data(cfg.EMG_chan,:,:) - idle.data(cfg.EMG_chan,1,:));
+% emg.idle = squeeze(idle.data(cfg.EMG_chan,:,:);% - idle.data(cfg.EMG_chan,1,:));
 % EMG.event = onsets;
 % rp = pop_epoch(EMG, {cfg.event.rp}, cfg.feat.rp_win);
-% emg.rp = squeeze(rp.data(cfg.EMG_chan,:,:) - rp.data(cfg.EMG_chan,1,:));
+% emg.rp = squeeze(rp.data(cfg.EMG_chan,:,:);% - rp.data(cfg.EMG_chan,1,:));
 
 motion_tmp = pop_epoch(Motion, {cfg.event.idle}, cfg.feat.idle_win);
 motion.idle = squeeze(motion_tmp.data(1,:,:));
@@ -151,6 +148,8 @@ eeg.idle(:,:,reject_eps) = [];
 % emg.idle(:,:,reject_eps) = [];
 motion.move(:,reject_eps) = [];
 motion.idle(:,reject_eps) = [];
+% add some noise to idle motion
+motion.idle = motion.idle * 3;
 
 % save
 rp = ones(size(eeg.rp,3),1);
@@ -178,7 +177,7 @@ writetable(t, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/data.cs
 chans = array2table([sel_chans], "VariableNames", {'chans'});
 writetable(chans, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/chans.csv']);
 
-%% for plotting timeseris with seaborn
+%% for plotting timeseries with seaborn
 
 Motion.event = ori_events;
 Motion = pop_resample(Motion,50);
@@ -222,9 +221,9 @@ writetable(t, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/data_fo
 set(0, 'DefaultFigureRenderer', 'painters');
 figure;
 
-% values for colorcoding - showing most dominat RP deflection
-mean_crit1 = mean(crit1,2);
-sel_chans = sort(sel_chans);
+% values for colorcoding - showing most dominant RP deflection
+val = mean(crit2,2);
+val = mean(eeg.rp(:,end,:),3);
 
-topoplot(mean_crit1(sel_chans),EEG.chanlocs(sel_chans),'headrad',.6,'electrodes','pts','chaninfo',EEG.chaninfo);
+topoplot(val,EEG.chanlocs(sel_chans),'headrad',.6,'electrodes','pts','chaninfo',EEG.chaninfo);
 cbar;
