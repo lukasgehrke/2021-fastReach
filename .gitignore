@@ -6,3 +6,6 @@ figures/
 *.asv
 *.pyc
 *.mat
+app/fastReach/ptext.py
+*.docx
+*.pdf

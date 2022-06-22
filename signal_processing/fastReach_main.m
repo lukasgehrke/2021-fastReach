@@ -1,9 +1,9 @@
 
 %% init
 eeglab;
-addpath(genpath('/Users/lukasgehrke/Documents/code/signal-processing-motor-intent'));
-addpath(genpath('/Users/lukasgehrke/Documents/documents.nosync/tools/bemobil-pipeline-sj'));
-addpath('/Users/lukasgehrke/Documents/documents.nosync/tools/fieldtrip-sj');
+addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent'));
+addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/bemobil-pipeline-sj'));
+addpath('/Users/lukasgehrke/Documents/code.nosync/fieldtrip-sj');
 
 %% cfg
 
@@ -12,7 +12,10 @@ plotting = 1;
 cfg.overwrite              = 'on';
 cfg.subject                = 1;                                  % required
 
-cfg.filename               = '/Users/lukasgehrke/Documents/code/fastReach/data/pilot/fastReach-mediation-test.xdf'; % required
+cfg.filename               = '/Users/lukasgehrke/Documents/code.nosync/fastReach/data/pilot/fastReach-mediation-test.xdf'; % required
+% cfg.filename               = 'smb://stor1.bpn.tu-berlin.de/projects/Lukas_Gehrke/Willy_Nguyen/willy_test_EEG_EMG_mocapHand_reachEnd.xdf'
+
+
 cfg.bids_target_folder     = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/1_bids';                               % required
 cfg.task                   = 'fastReach';                         % optional 
 
@@ -78,7 +81,7 @@ EEG = pop_reref(EEG, []);
 %% movement onset events
 
 motion_tmp = pop_epoch(motion, {cfg.event.move}, cfg.event.win);
-mag = squeeze(sqrt(motion_tmp.data(4,:,:).^2 + motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2));
+mag = squeeze(sqrt(motion_tmp.data(5,:,:).^2 + motion_tmp.data(6,:,:).^2 + motion_tmp.data(7,:,:).^2)); 
 
 for i = 1:size(mag,2)
     onset(i) = fR_movement_onset_detector(mag(:,i), .7, 125, .05);
@@ -167,10 +170,36 @@ cvtrainAccuracy = 1-cvtrainError
 
 %% export
 
+%% export data for exploration Willy
 
+EEG.event = ori_events;
+idle = pop_epoch(EEG, {cfg.event.idle}, cfg.feat.idle_win);
+idle.data = idle.data - idle.data(:,1,:);
+eeg_idle = idle.data;
 
+EEG.event = onsets;
+rp = pop_epoch(EEG, {cfg.event.rp}, cfg.feat.rp_win);
+rp.data = rp.data - rp.data(:,1,:);
+eeg_rp = rp.data;
 
+% select most discriminitave channels based on ERP
+eeg_chans_ixs = rp_ERP_select_channels(data.eeg.rp, data.eeg.idle, 25, plotting);
 
+motion.event = ori_events;
+idle = pop_epoch(motion, {cfg.event.idle}, cfg.feat.idle_win);
+idle.data = idle.data - idle.data(:,1,:);
+motion_idle = idle.data;
+
+motion.event = onsets;
+rp = pop_epoch(motion, {cfg.event.rp}, cfg.feat.rp_win);
+rp.data = rp.data - rp.data(:,1,:);
+motion_rp = rp.data;
+
+save('eeg_idle.mat', 'eeg_idle')
+save('eeg_rp.mat', 'eeg_rp')
+save('eeg_chans_ixs.mat', 'eeg_chans_ixs')
+save('motion_idle.mat', 'motion_idle')
+save('motion_rp.mat', 'motion_rp')
 
 
 

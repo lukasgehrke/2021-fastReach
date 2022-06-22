@@ -1,0 +1,83 @@
+"""Example program to demonstrate how to send a multi-channel time series to
+LSL."""
+import sys
+import getopt
+
+import time
+from random import random as rand
+import pandas as pd
+import numpy as np
+
+from pylsl import StreamInfo, StreamOutlet, local_clock
+
+
+def main(argv):
+    
+    pID = '13'
+    path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'
+    data_fname = '/eeg.csv'
+    data = np.array(pd.read_csv(path+pID+data_fname, header=None))
+    chans_fname = '/chans.csv'
+    chans = np.array(pd.read_csv(path+pID+chans_fname))
+    data = np.squeeze(data[(chans-1),:])
+    
+    srate = 250
+    name = 'BrainVision RDA'
+    type = 'EEG'
+    n_channels = chans.shape[0] # 64
+    help_string = 'SendData.py -s <sampling_rate> -n <stream_name> -t <stream_type>'
+    try:
+        opts, args = getopt.getopt(argv, "hs:c:n:t:", longopts=["srate=", "channels=", "name=", "type"])
+    except getopt.GetoptError:
+        print(help_string)
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print(help_string)
+            sys.exit()
+        elif opt in ("-s", "--srate"):
+            srate = float(arg)
+        elif opt in ("-c", "--channels"):
+            n_channels = int(arg)
+        elif opt in ("-n", "--name"):
+            name = arg
+        elif opt in ("-t", "--type"):
+            type = arg
+
+    # first create a new stream info (here we set the name to BioSemi,
+    # the content-type to EEG, 8 channels, 100 Hz, and float-valued data) The
+    # last value would be the serial number of the device or some other more or
+    # less locally unique identifier for the stream as far as available (you
+    # could also omit it but interrupted connections wouldn't auto-recover)
+    info = StreamInfo(name, type, n_channels, srate, 'float32', 'myuid34234')
+
+    # next make an outlet
+    outlet = StreamOutlet(info)
+
+    print("now sending data...")
+    start_time = local_clock()
+    sent_samples = 0
+    while True:
+        elapsed_time = local_clock() - start_time
+        required_samples = int(srate * elapsed_time) - sent_samples
+
+        for sample_ix in range(required_samples):
+            # make a new random n_channels sample; this is converted into a
+            # pylsl.vectorf (the data type that is expected by push_sample)
+
+            mysample = data[:,sent_samples+sample_ix].tolist()
+
+            # mysample = [rand() for _ in range(n_channels)]
+            # mysample = [_ for _ in range(n_channels)]
+            # now send it
+            outlet.push_sample(mysample)
+        sent_samples += required_samples
+        # now send it and wait for a bit before trying again.
+        time.sleep(0.01)
+
+        if required_samples == data.shape[1]:
+            sent_samples = 0
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
