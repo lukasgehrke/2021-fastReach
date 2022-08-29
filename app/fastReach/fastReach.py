@@ -9,6 +9,8 @@ from LSL import LSL
 import threading
 import ptext
 
+import matplotlib.pyplot as plt
+
 EMS_RESET_TIME = time.time()
 
 class fastReach:
@@ -28,8 +30,8 @@ class fastReach:
         if ems_on == True:
             
             self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
-            self.ems_resetter = EMSResetter(self.ems, self.lsl, self.markers)
-            self.ems_resetter.start()
+            # self.ems_resetter = EMSResetter(self.ems, self.lsl, self.markers)
+            # self.ems_resetter.start()
 
             data_path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)
 
@@ -37,11 +39,12 @@ class fastReach:
             target_class = 1
             chans = pickle.load(open(data_path+'/chans_'+str(self.pID)+'_eeg.sav', 'rb'))
             threshold = .7
-            buffer_feat_comp_size_samples = 250
+            buffer_feat_comp_size_samples = 275
             windowed_mean_size_samples = 25
             do_reg = False
-            self.eeg = Classifier('eeg_classifier', buffer_feat_comp_size_samples/windowed_mean_size_samples,
+            self.eeg = Classifier('eeg_classifier', (buffer_feat_comp_size_samples/windowed_mean_size_samples)-1,
                 model_path_eeg, "eeg", target_class, chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
+            self.eeg.start()
 
             model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
             target_class = 1
@@ -50,11 +53,9 @@ class fastReach:
             buffer_feat_comp_size_samples = 2
             windowed_mean_size_samples = 2
             do_reg = False
-            self.motion = Classifier('motion_classifier', 45, model_path_motion, "motion", target_class,
-                chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
-
-            self.motion.start()
-            self.eeg.start()
+            # self.motion = Classifier('motion_classifier', 45, model_path_motion, "motion", target_class,
+                # chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
+            # self.motion.start()
 
     def init_screen(self, fullscreen):
         info = pg.display.Info()
@@ -110,7 +111,7 @@ class fastReach:
             if print_states:
                 # print('moving: '+str(self.motion.state))
                 # print('rp: '+str(self.eeg.state))
-                print([self.eeg.state, ems_sent, self.motion.state, self.ems_resetter.state])
+                print([self.eeg.state, ems_sent, self.motion.state]) # , self.ems_resetter.state])
             
             # trial logic
             elapsed = time.time() - start
@@ -153,9 +154,9 @@ class fastReach:
 
                 if elapsed > trial_dur and ems_counter == trial_counter and trial_marker_sent == False:
 
-                    print("ems live")
+                    # print("ems live")
 
-                    if self.eeg.state == True and ems_sent == False and self.motion.state == False and self.ems_resetter.state == False:
+                    if self.eeg.state == True and ems_sent == False and self.motion.state == False: # and self.ems_resetter.state == False:
                         self.ems.write("p".encode('utf-8'))
                         self.lsl.send(self.markers["ems on"],1)
                         ems_sent = True
@@ -194,7 +195,7 @@ class fastReach:
                 self.lsl.send(self.markers["ems off"],1)
         
             if mode == 'eeg':
-                if self.eeg.state == True and ems_sent == False and self.motion.state == False and self.ems_resetter.state == False:
+                if self.eeg.state == True and ems_sent == False and self.motion.state == False: # and self.ems_resetter.state == False:
                     self.ems.write("p".encode('utf-8'))
                     self.lsl.send(self.markers["ems on"],1)
                     ems_sent = True
@@ -218,12 +219,13 @@ class fastReach:
 
 class Classifier(threading.Thread):
     
-    def __init__(self, stream_name, srate, model_path, type, target_class, chans, threshold, frame_rate, window_size, regression) -> None:
+    def __init__(self, stream_name, classifier_srate, model_path, type, target_class, chans, threshold, frame_rate, window_size, regression) -> None:
         self.model_path = model_path
 
         threading.Thread.__init__(self)
 
-        stream_info = StreamInfo(stream_name, 'EMG', 3, srate, 'double64', 'myuid34234')
+        self.classifier_srate = classifier_srate
+        stream_info = StreamInfo(stream_name, 'Classifier', 3, self.classifier_srate, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
 
         # pickle load the model and good chans ix
@@ -237,7 +239,7 @@ class Classifier(threading.Thread):
             streams = resolve_stream('type', 'rigidBody')
             
         elif self.type == 'eeg':
-            streams = resolve_stream('type', 'EEG')
+            streams = resolve_stream('name', 'BrainVision RDA')
 
         # create a new inlet to read from the stream
         self.inlet = StreamInlet(streams[0])
@@ -246,6 +248,7 @@ class Classifier(threading.Thread):
         self.frame_rate = frame_rate
         self.window_size = window_size
         self.do_reg = regression
+        self.baseline_size = 25
 
         # create empty numpy array (2D: m1 and m2)
         self.all_data = np.zeros((len(self.chans), self.window_size))
@@ -255,36 +258,25 @@ class Classifier(threading.Thread):
     
     def run(self):
 
-        # tmp = []
+        frame = 1
 
-        # frame = 0
         while True:
 
             # get a new sample (you can also omit the timestamp part if you're not interested in it)
             sample = np.array(self.inlet.pull_sample()[0])
-
-            # TODO check if this is empty? Use of while True is bad here
-
             self.all_data[:,-1] = sample[self.chans-1].flatten()
-            
-            # if frame == self.frame_rate-1:
-            #     frame = 0
 
-            if self.type == "motion":
 
-                feats = np.sqrt(
-                    np.square(np.diff(self.all_data[0,:])) + 
-                    np.square(np.diff(self.all_data[1,:])) + 
-                    np.square(np.diff(self.all_data[2,:]))).reshape(1,-1)
+            if frame == self.classifier_srate: # every X ms
 
-            if self.type == "eeg":
+                if self.type == "motion":
+                    feats = np.sqrt(
+                        np.square(np.diff(self.all_data[0,:])) + 
+                        np.square(np.diff(self.all_data[1,:])) + 
+                        np.square(np.diff(self.all_data[2,:]))).reshape(1,-1)
 
-                # feat_data = self.all_data - np.expand_dims(self.all_data[:,0],1)
-                # feat_data = np.reshape(feat_data, (len(self.chans), int(self.window_size/self.frame_rate), self.frame_rate))
-                # feat_data = np.reshape(self.all_data, (len(self.chans), int(self.window_size/self.frame_rate), self.frame_rate))
-                feat_data = np.reshape(self.all_data, (len(self.chans), 25, 10))
-
-                # TODO recheck if this is correct
+                if self.type == "eeg":
+                    feat_data = np.reshape(self.all_data, (len(self.chans), 11, 25))
 
                 if self.do_reg == True:
                     try:
@@ -298,28 +290,24 @@ class Classifier(threading.Thread):
                     except:
                         print("waiting for buffer")
                 else:
-                    feats = np.mean(feat_data, axis = 1).flatten().reshape(1,-1)
-    
-            prediction = self.clf.predict(feats)[0] #predicted class
-            probs = self.clf.predict_proba(feats) #probability for class prediction
-            self.outlet.push_sample([prediction,probs[0][0],probs[0][1]])
+                    feats = np.mean(feat_data, axis = 2) # windowed mean features
+                    feats -= feats[:,0][:,None] # base correct
+                    feats = feats[:,1:]
+                    feats = feats.flatten().reshape(1,-1)
+        
+                prediction = self.clf.predict(feats)[0] #predicted class
+                probs = self.clf.predict_proba(feats) #probability for class prediction
+                self.outlet.push_sample([prediction,probs[0][0],probs[0][1]])
 
-            if prediction == self.target_class and probs[0][0] >= self.threshold:
+                if prediction == self.target_class and probs[0][0] >= self.threshold:
+                    self.state = True
+                else:
+                    self.state = False
 
-                # if self.type == 'eeg':
-                #     print(str(prediction) + ' ' + str(probs))
-                # print(str(prediction) + ' ' + str(probs[0][0]))
-                self.state = True
-            else:
-                self.state = False
-
-            # if self.type == 'eeg':
+                frame = 0
                 # print(str(prediction) + ' ' + str(probs))
-                # print(str(probs[0][0]))
- 
-            # else:
-            #     frame +=1
 
+            frame += 1
             self.all_data = np.roll(self.all_data,-1) # Speed could be increased here, something like all_data[:,0:-2] = all_data[:,1:-1]
 
 class EMSResetter(threading.Thread):
@@ -352,7 +340,7 @@ pID = 13
 trial_type = 'experiment' # training
 num_trials = 75
 with_ems = True
-arduino_port = '/dev/tty.usbmodem11301' # ls /dev/tty.*
+arduino_port = '/dev/tty.usbmodem1401' # ls /dev/tty.*
 ###
 
 pg.init()
