@@ -1,25 +1,20 @@
 %% init
-% eeglab;
-% addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent'));
-% addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/bemobil-pipeline-sj'));
-% addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/eeglab_changes/newColormap'));
-% addpath('/Users/lukasgehrke/Documents/code.nosync/fieldtrip-sj');
-
-eeglab_ver("mac")
 
 cfg.subject                = 13;
-cfg.fname                  = '13.xdf';
+
+eeglab_ver("mac")
+cfg.fname                  = [num2str(cfg.subject), '.xdf'];
 
 %% run fastReach signal processing training data
 
-cfg.filename               = fullfile(['/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/source/', ...
-    num2str(cfg.subject)], cfg.fname);
-cfg.bids_target_folder     = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/1_bids';                               % required
-cfg.task                   = 'fastReach';                         % optional 
 cfg.study_folder           = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study';
-cfg.session_names          = {'fastReach'};                      % required, enter task name as a string, or enter a cell array when there are multiple sessions in the data set  
+cfg.filename               = fullfile(cfg.study_folder, '0_raw-data', num2str(cfg.subject), cfg.fname);
+cfg.bids_target_folder     = fullfile(cfg.study_folder, '1_BIDS-data');
+cfg.set_folder             = cfg.study_folder;
+cfg.task                   = 'fastReach';
+cfg.session_names          = {cfg.task};
 
-cfg.eeg.stream_name        = 'BrainVision RDA';%                      % required BrainVision RDA
+cfg.eeg.stream_name        = 'BrainVision RDA';
 cfg.eeg.chanloc_newname    = {'Fp1', 'Fz', 'F3', 'F7', 'FT9', 'FC5', 'FC1', ...
     'C3', 'T7', 'TP9', 'CP5', 'CP1', 'Pz', 'P3', 'P7', 'O1', 'Oz', 'O2', ...
     'P4', 'P8', 'TP10', 'CP6', 'CP2', 'Cz', 'C4', 'T8', 'FT10', 'FC6', ...
@@ -29,21 +24,16 @@ cfg.eeg.chanloc_newname    = {'Fp1', 'Fz', 'F3', 'F7', 'FT9', 'FC5', 'FC1', ...
     'FT8', 'F6', 'AF8', 'AF4', 'F2', 'VEOG'
     }; % doesn't work
 
-cfg.motion.tracksys{1}.name                    = 'HTCVive';   % required, string, name of the tracking system
-                                                                    % in case motion metadata are provided, match with fieldname in "motionInfo.motion.TrackingSystems.(fieldname)"
-                                                                    % e.g., motionInfo.motion.TrackingSystems.HTCVive.Manufacturer = 'HTC'; 
-cfg.motion.streams{1}.name                     = 'Tracker';      % required, keyword in stream name, searched for in field "xdfdata{streamIndex}.info.name"
-cfg.motion.streams{1}.tracksys                 = 'HTCVive';   % required, match with one of the values in "motion.tracksys{}.name"
-cfg.motion.streams{1}.tracked_points           = 'Tracker'; %  keyword in channel names, indicating which object (tracked point) is included in the stream
-                                                                     % searched for in field "xdfdata{streamIndex}.info.desc.channels.channel{channelIndex}.label"
-                                                                     % required to be unique in a single tracking system                                          
-% cfg.phys.streams{1}.stream_name          = 'OpenSignals';           % optional
+cfg.motion.streams{1}.xdfname                  = 'Tracker';
+cfg.motion.streams{1}.bidsname                 = 'HTCVive';      
+cfg.motion.streams{1}.tracksys                 = 'HTCVive';
+cfg.motion.streams{1}.tracked_points           = 'Tracker';
 
 cfg.other_data_types = {'motion'};
 
 %% convert .xdf to bids to set
-% bemobil_xdf2bids(cfg);
-% bemobil_bids2set(cfg);
+bemobil_xdf2bids(cfg);
+bemobil_bids2set(cfg);
 
 %% processing
 cfg.event.move             = 'reach:end';
@@ -94,16 +84,16 @@ motion_tmp = pop_epoch(Motion, {cfg.event.move}, cfg.event.win);
 mag = squeeze(motion_tmp.data(1,:,:));
 
 for i = 1:size(mag,2)
-    onset(i) = fR_movement_onset_detector(mag(:,i), .7, 125, .05);
+    onset(i) = fR_movement_onset_detector(mag(:,i), .7, 125, .1);
 end
 dists = size(mag,1) - onset;
 
 % detection ok!!!
-% figure;
-% for i = 1:20 %size(mag,2)
-%     subplot(1,20,i);
-%     plot(mag(:,i)); xline(onset(i));
-% end
+figure;
+for i = 1:20 %size(mag,2)
+    subplot(1,20,i);
+    plot(mag(:,i)); xline(onset(i));
+end
 
 move_ev_ixs = strfind({Motion.event.type}', cfg.event.move);
 move_ev_ixs = find(~cellfun(@isempty, move_ev_ixs));
@@ -335,40 +325,40 @@ disp(['exports done, subject ', num2str(cfg.subject)])
 % t = array2table([sample, epoch_ix, type, vals], "VariableNames", {'sample', 'epoch_ix', 'type', ['Motion' cfg.eeg.chanloc_newname{24}]});
 % writetable(t, [cfg.study_folder '/eeglab2python/' num2str(cfg.subject) '/data_for_plot.csv']);
 
-
-%% EEG = pop_eegfiltnew(EMG, 10);
-allEventsLats = [EEG.event.latency];
-
-%% instantiate the library
-disp('Loading library...');
-lib = lsl_loadlib();
-
-% make a new stream outlet
-disp('Creating a new streaminfo...');
-info = lsl_streaminfo(lib,'BrainVision RDA','EEG',64,250,'cf_float32','sdfwerr32432');
-
-disp('Opening an outlet...');
-outlet = lsl_outlet(info);
-
-%% send data into the outlet, sample by sample
-disp('Now transmitting data...');
-
-i = 1;
-while true
-    data = double(EEG.data(:,i));
-    outlet.push_sample(data);
-    pause(0.004);
-
-    i = i + 1;
-    if i > size(EEG.data,2)
-        i = 1;
-    end
-
-    current_ev_ix = max(find(i>allEventsLats));
-    if ~isempty(current_ev_ix)
-        event = EEG.event(current_ev_ix).type;
-        disp(event);
-    end
-
-end
+% 
+% %% EEG = pop_eegfiltnew(EMG, 10);
+% allEventsLats = [EEG.event.latency];
+% 
+% %% instantiate the library
+% disp('Loading library...');
+% lib = lsl_loadlib();
+% 
+% % make a new stream outlet
+% disp('Creating a new streaminfo...');
+% info = lsl_streaminfo(lib,'BrainVision RDA','EEG',64,250,'cf_float32','sdfwerr32432');
+% 
+% disp('Opening an outlet...');
+% outlet = lsl_outlet(info);
+% 
+% %% send data into the outlet, sample by sample
+% disp('Now transmitting data...');
+% 
+% i = 1;
+% while true
+%     data = double(EEG.data(:,i));
+%     outlet.push_sample(data);
+%     pause(0.004);
+% 
+%     i = i + 1;
+%     if i > size(EEG.data,2)
+%         i = 1;
+%     end
+% 
+%     current_ev_ix = max(find(i>allEventsLats));
+%     if ~isempty(current_ev_ix)
+%         event = EEG.event(current_ev_ix).type;
+%         disp(event);
+%     end
+% 
+% end
 
