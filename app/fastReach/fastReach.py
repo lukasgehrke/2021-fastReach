@@ -156,6 +156,10 @@ class fastReach:
 
                     # print("ems live")
 
+                    if self.motion.state == True:
+                        ems_counter += 1
+                        self.lsl.send(self.markers["deactivate EMS due to movement"],1)
+
                     if self.eeg.state == True and ems_sent == False and self.motion.state == False: # and self.ems_resetter.state == False:
                         self.ems.write("p".encode('utf-8'))
                         self.lsl.send(self.markers["ems on"],1)
@@ -184,21 +188,27 @@ class fastReach:
 
         ems_time = time.time()
         ems_sent = False
+        ems_timeout = True
         global EMS_RESET_TIME
 
         while True:
 
             ems_duration = time.time() - ems_time
+
             if ems_duration > .5 and ems_sent == True:
                 ems_sent = False
                 self.ems.write("p".encode('utf-8'))
                 self.lsl.send(self.markers["ems off"],1)
+            
+            if ems_duration > 4:
+                ems_timeout = False
         
             if mode == 'eeg':
-                if self.eeg.state == True and ems_sent == False and self.motion.state == False: # and self.ems_resetter.state == False:
+                if self.eeg.state == True and ems_sent == False and self.motion.state == False and ems_timeout == False: # and self.ems_resetter.state == False:
                     self.ems.write("p".encode('utf-8'))
                     self.lsl.send(self.markers["ems on"],1)
                     ems_sent = True
+                    ems_timeout = True
                     ems_time = time.time()
                     EMS_RESET_TIME = ems_time
 
@@ -335,18 +345,20 @@ class EMSResetter(threading.Thread):
                 EMS_RESET_TIME = time.time()
                 self.state = False
 
-### SET pID ###
-pID = 13
-trial_type = 'experiment' # training
-num_trials = 75
-with_ems = True
 arduino_port = '/dev/tty.usbmodem1401' # ls /dev/tty.*
-###
-
 pg.init()
 np.set_printoptions(precision=2)
-exp = fastReach(pID, with_ems, arduino_port)
+num_trials = 75
 
+
+
+### SET pID ###
+pID = 13
+trial_type = 'training' # training experiment
+with_ems = False
+###
+
+exp = fastReach(pID, with_ems, arduino_port)
 exp.start(trial_type, num_trials, with_ems)
 # exp.demo(mode='button')
 # exp.demo(mode='eeg')
