@@ -8,6 +8,8 @@ import serial, time, pickle, json, sys
 from LSL import LSL
 import threading
 import ptext
+import random
+
 
 import matplotlib.pyplot as plt
 
@@ -24,6 +26,18 @@ class fastReach:
         self.markers = json.load(open(path+'markers.json', 'r'))
         self.instruction = json.load(open(path+'instructions.json', 'r'))
         
+        sampleRate = 44100
+        # 44.1kHz, 16-bit signed, mono
+        pg.mixer.pre_init(sampleRate, -16, 1) 
+        pg.init()
+        # 4096 : the peak ; volume ; loudness
+        # 440 : the frequency in hz
+        arr = np.array([4096 * np.sin(2.0 * np.pi * 440 * x / sampleRate) for x in range(0, sampleRate)]).astype(np.int16)
+        self.sound = pg.sndarray.make_sound(arr)
+
+        self.IB_DURATION = 500
+        self.IB_stepsize = 50
+
         self.init_screen(fullscreen=False)
         self.init_txt()
 
@@ -69,6 +83,11 @@ class fastReach:
     def init_txt(self):
         self.font = pg.font.Font(None, 45)
 
+    def play_sound(self, duration):
+        self.sound.play(-1)
+        pg.time.delay(duration)
+        self.sound.stop()
+
     def instruct(self, text, col = (0,0,0)):
 
         self.screen.fill((240, 240, 240))
@@ -91,6 +110,12 @@ class fastReach:
         trial_counter = 0
         name = []
         trial_marker_sent = False
+        run_ib_task = False
+        next_trial = False
+        ib_answered = False
+        sound_played = False
+        letter_written = False
+
         global EMS_RESET_TIME
         
         if trial_type == 'training':
@@ -117,24 +142,83 @@ class fastReach:
             elapsed = time.time() - start
             if trial_counter < num_trials:
             
+                # runs in training and shows ISI message for 2 seconds then sends a marker at the end
                 if trial_type == 'training' and base_marker_sent == False:
                     self.instruct(self.instruction["isi"])
+
+                    # send idle marker only in training condition
                     if elapsed > 2:
                         self.lsl.send(self.markers['idle'],1)
                         base_marker_sent = True
 
+                # interactive part of each trial starts after some initial resting period. Shows the sentence written so far, then waits for a button press to occur which sets trial_marker_sent to true
                 if elapsed > trial_dur:
-                    self.instruct(self.instruction["start"]+'\n\n'+''.join(name))                    
-
+                    
                     if trial_marker_sent == True:
-                        if trial_type == 'training' and time.time() - trial_end_time > 2: # next trial
-                            start = time.time()
+                        if trial_type == 'training': # and time.time() - reach_end_time > 2: # next trial
+                            # start = time.time()
                             trial_marker_sent = False
-                            base_marker_sent = False
+                            # base_marker_sent = False
+                            run_ib_task = True
+
                         elif trial_type == 'experiment':
-                            start = time.time()
+                            # start = time.time()
                             trial_marker_sent = False
-                            ems_counter = trial_counter
+                            ems_counter = trial_counter    
+                            run_ib_task = True
+
+                    if run_ib_task == False and letter_written == False:
+                        if (trial_counter % 2) == 0:
+                            target = random.choice(['a','s','d'])
+                        else:
+                            target = random.choice(['j','k','l'])
+
+                        # self.instruct(self.instruction["start"]+'\n\n'+''.join(name))
+                        self.instruct(target+'\n\n'+''.join(name))
+                        letter_written = True
+
+                    elif run_ib_task == True:
+
+                        # TODO now do the IB test here
+                        # after 2s after button press, play a sound and let participants judge whether they think this was longer than their reach to press lasted
+                        # # print the adjusted IB so I can then add it to the live phase
+                        
+                        if time.time() - reach_end_time < 2:
+                            # self.instruct(self.instruction["start"]+'\n\n'+''.join(name))
+                            self.instruct(target+'\n\n'+''.join(name))
+
+                        # some interval
+                        if time.time() - reach_end_time > 2 and time.time() - reach_end_time < 7:
+                            self.instruct(self.instruction["ib task wait"])
+
+                        if time.time() - reach_end_time > 4 and sound_played == False:
+                            print(self.IB_DURATION)
+                            self.play_sound(self.IB_DURATION)
+                            sound_played = True
+
+                        # Listen to the sound:
+                        if time.time() - reach_end_time > 7:
+                            self.instruct(self.instruction["ib task"])
+
+                        if ib_answered == True:
+                            next_trial = True
+
+                    if next_trial == True:
+                        if trial_type == 'training':
+                            base_marker_sent = False
+                        
+                        trial_end_time = time.time()
+                        trial_counter += 1
+                        
+                        sound_played = False
+                        ib_answered = False
+                        run_ib_task = False
+                        
+                        start = time.time()
+                        next_trial = False
+                        
+                        letter_written = False
+                        name = []
 
             if trial_counter == num_trials:
                 if time.time() - trial_end_time > 2:
@@ -175,12 +259,20 @@ class fastReach:
                     if event.key == pg.K_ESCAPE:
                         pg.display.quit()
 
-                    if elapsed > trial_dur and trial_marker_sent == False and trial_counter < num_trials:
-                        name.append(event.unicode)
-                        trial_counter += 1
+                    if event.key == pg.K_UP:
+                        self.IB_DURATION += self.IB_stepsize
+                        ib_answered = True
+                    if event.key == pg.K_DOWN:
+                        self.IB_DURATION -= self.IB_stepsize              
+                        ib_answered = True
+
+                    if elapsed > trial_dur and trial_marker_sent == False and trial_counter < num_trials and run_ib_task == False:
+                        # name.append(event.unicode)
+                        name = event.unicode
+                        # trial_counter += 1
                         self.lsl.send(self.markers["reach end"],1)
                         trial_marker_sent = True
-                        trial_end_time = time.time()
+                        reach_end_time = time.time()
                         print(elapsed)
                         
 
@@ -276,7 +368,6 @@ class Classifier(threading.Thread):
             sample = np.array(self.inlet.pull_sample()[0])
             self.all_data[:,-1] = sample[self.chans-1].flatten()
 
-
             if frame == self.classifier_srate: # every X ms
 
                 if self.type == "motion":
@@ -346,11 +437,9 @@ class EMSResetter(threading.Thread):
                 self.state = False
 
 arduino_port = '/dev/tty.usbmodem1401' # ls /dev/tty.*
-pg.init()
+# pg.init()
 np.set_printoptions(precision=2)
 num_trials = 75
-
-
 
 ### SET pID ###
 pID = 13
