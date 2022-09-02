@@ -58,7 +58,8 @@ class fastReach:
             do_reg = False
             self.eeg = Classifier('eeg_classifier', (buffer_feat_comp_size_samples/windowed_mean_size_samples)-1,
                 model_path_eeg, "eeg", target_class, chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
-            self.eeg.start()
+            
+            # self.eeg.start()
 
             model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
             target_class = 1
@@ -179,9 +180,8 @@ class fastReach:
 
                     elif run_ib_task == True:
 
-                        # TODO now do the IB test here
-                        # after 2s after button press, play a sound and let participants judge whether they think this was longer than their reach to press lasted
-                        # # print the adjusted IB so I can then add it to the live phase
+                        # after Xs after button press, play a sound and let participants judge whether they think this was longer than their reach to press lasted
+                        # print the adjusted IB so I can then add it to the live phase
                         
                         if time.time() - reach_end_time < 2:
                             # self.instruct(self.instruction["start"]+'\n\n'+''.join(name))
@@ -190,9 +190,11 @@ class fastReach:
                         # some interval
                         if time.time() - reach_end_time > 2 and time.time() - reach_end_time < 7:
                             self.instruct(self.instruction["ib task wait"])
+                            self.lsl.send(self.markers["ib_task"]+"start",1)
 
                         if time.time() - reach_end_time > 4 and sound_played == False:
                             print(self.IB_DURATION)
+                            self.lsl.send(self.markers["ib_task"]+"tone",1)
                             self.play_sound(self.IB_DURATION)
                             sound_played = True
 
@@ -261,9 +263,11 @@ class fastReach:
 
                     if event.key == pg.K_UP:
                         self.IB_DURATION += self.IB_stepsize
+                        self.lsl.send(self.markers["ib_task"]+self.IB_stepsize,1)
                         ib_answered = True
                     if event.key == pg.K_DOWN:
                         self.IB_DURATION -= self.IB_stepsize              
+                        self.lsl.send(self.markers["ib_task"]+self.IB_stepsize,1)
                         ib_answered = True
 
                     if elapsed > trial_dur and trial_marker_sent == False and trial_counter < num_trials and run_ib_task == False:
@@ -444,10 +448,10 @@ num_trials = 75
 ### SET pID ###
 pID = 13
 trial_type = 'training' # training experiment
-with_ems = False
+with_ems = True
 ###
 
 exp = fastReach(pID, with_ems, arduino_port)
-exp.start(trial_type, num_trials, with_ems)
-# exp.demo(mode='button')
+# exp.start(trial_type, num_trials, with_ems)
+exp.demo(mode='button')
 # exp.demo(mode='eeg')

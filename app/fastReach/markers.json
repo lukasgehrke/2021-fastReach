@@ -8,6 +8,7 @@
     "ems on": "ems:on",
     "ems off": "ems:off",
     "ems reset": "ems:reset",
-    "instruction off": "instruction:off"
+    "instruction off": "instruction:off",
+    "ib task": "ib_task:"
 
 }
