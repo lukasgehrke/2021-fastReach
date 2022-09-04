@@ -44,6 +44,7 @@ class fastReach:
         if ems_on == True:
             
             self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
+            self.ems.write("r".encode('utf-8')) # discharge into resistor
             # self.ems_resetter = EMSResetter(self.ems, self.lsl, self.markers)
             # self.ems_resetter.start()
 
@@ -68,6 +69,7 @@ class fastReach:
             buffer_feat_comp_size_samples = 2
             windowed_mean_size_samples = 2
             do_reg = False
+
             # self.motion = Classifier('motion_classifier', 45, model_path_motion, "motion", target_class,
                 # chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
             # self.motion.start()
@@ -235,7 +237,10 @@ class fastReach:
                 ems_duration = time.time() - ems_time
                 if ems_duration > .5 and ems_sent == True:
                     ems_sent = False
-                    self.ems.write("p".encode('utf-8'))
+                    
+                    self.ems.write("r".encode('utf-8'))
+                    self.ems.write("e".encode('utf-8'))
+
                     self.lsl.send(self.markers["ems off"],1)
 
                 if elapsed > trial_dur and ems_counter == trial_counter and trial_marker_sent == False:
@@ -247,7 +252,10 @@ class fastReach:
                         self.lsl.send(self.markers["deactivate EMS due to movement"],1)
 
                     if self.eeg.state == True and ems_sent == False and self.motion.state == False: # and self.ems_resetter.state == False:
-                        self.ems.write("p".encode('utf-8'))
+    
+                        self.ems.write("r".encode('utf-8'))
+                        self.ems.write("e".encode('utf-8'))
+
                         self.lsl.send(self.markers["ems on"],1)
                         ems_sent = True
                         ems_counter += 1
@@ -293,7 +301,10 @@ class fastReach:
 
             if ems_duration > .5 and ems_sent == True:
                 ems_sent = False
-                self.ems.write("p".encode('utf-8'))
+
+                self.ems.write("r".encode('utf-8'))
+                self.ems.write("e".encode('utf-8'))
+
                 self.lsl.send(self.markers["ems off"],1)
             
             if ems_duration > 4:
@@ -301,7 +312,10 @@ class fastReach:
         
             if mode == 'eeg':
                 if self.eeg.state == True and ems_sent == False and self.motion.state == False and ems_timeout == False: # and self.ems_resetter.state == False:
-                    self.ems.write("p".encode('utf-8'))
+                    
+                    self.ems.write("r".encode('utf-8'))
+                    self.ems.write("e".encode('utf-8'))
+
                     self.lsl.send(self.markers["ems on"],1)
                     ems_sent = True
                     ems_timeout = True
@@ -317,7 +331,10 @@ class fastReach:
                             pg.display.quit()
                             sys.exit()
                         else:
-                            self.ems.write("p".encode('utf-8'))
+        
+                            self.ems.write("r".encode('utf-8'))
+                            self.ems.write("e".encode('utf-8'))
+
                             self.lsl.send(self.markers["ems on"],1)
                             ems_sent = True
                             ems_time = time.time()
@@ -433,10 +450,16 @@ class EMSResetter(threading.Thread):
             # print(time.time() - EMS_RESET_TIME) 
             if (time.time() - EMS_RESET_TIME) > 9.8 and self.state == False:
                 self.state = True
-                self.ems.write("p".encode('utf-8'))
+    
+                self.ems.write("r".encode('utf-8'))
+                self.ems.write("e".encode('utf-8'))
+
                 self.lsl.send(self.markers["ems reset"],1)
             if (time.time() - EMS_RESET_TIME) > 9.95 and self.state == True:
-                self.ems.write("p".encode('utf-8'))
+                
+                self.ems.write("r".encode('utf-8'))
+                self.ems.write("e".encode('utf-8'))
+
                 EMS_RESET_TIME = time.time()
                 self.state = False
 
