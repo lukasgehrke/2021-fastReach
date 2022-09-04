@@ -8,6 +8,53 @@
 % - [ ]  Do you use any occupational (or other) stereotypes?
 % - [ ]  Do you provide the same kinds of information and descriptions when writing about people of different genders?
 
-\section{User Study}
+\section{User Study \& Methods}
 
-\section{Methods}
+With this study we wanted to check user's readiness for collaboration with a computer during preconscious interaction intent.
+
+We interviewed user's after they used a system that controlled their right forearm muscles to cue reaching movements. Our system uses electrical muscle stimulation (EMS) that is controlled by the output of a classifier based on the Electroencephalogram (EEG).
+
+\subsection{Participants}
+
+\todo{add actual number} Eight participants (\todo{add mean age and sd}) from our local institution were interviewed after they completed a writing task using only their right index finger. All participants were right handed, had normal or corrected to normal vision and had not experienced EMS before. Participants received 12 Euro per hour. Prior to their participation, participants were informed of the nature of the experiment, recording and anonymization procedures and signed a consent form approved by a fast track process of the local ethics committee.
+
+\subsection{Task}
+
+\todo{adapt this to the current task} Participants performed a 3D object selection task in VR. The interaction flow of our task, depicted in Figure~\ref{task_flow}, was as follows: (1) participants moved their hands from the \textit{resting position} to the \textit{ready position}, to indicate they were ready to start the next trial; (2) participants waited for a new target to appear (the time of a new target spawning was randomized between 1-2 s); (3) then, the target (a cube) would appear in one of three possible positions (center, left, right), all equidistant from the participant's \textit{ready position}; (4) then, participants acquired the target by moving and touching the target with their index finger. (5) After a target was acquired, participants moved back to the \textit{resting position}. Here, they could take a break before the next trial. 
+
+\missingfigure{add a infographic of the task progression with a time axis here, this should be covering two columns and be at the top of the page!}
+
+\subsection{Interview \& Questionnaire}
+\todo{how where the results analyzed: sentiment analyses and statistics}
+
+We decided against asking questions at the end of each trial, to not break the user's immersion in the task. We aimed to learn about the feelings of cooperation between users and our system. The focus was not on correlating the accuracy of our system with the user's impression of it. This would have required to obtain labels for every trial, significantly disturbing the user in the flow of the interaction.
+
+\subsection{Recordings: Motion Capture and EEG}
+EEG was recorded using 64 active Ag/AgCl electrodes placed according to the extended international 10–20 system \cite{Chatrian1985-ys}. The electrode at position \todo{which one actually?}FP2 was detached from the cap and placed under the left eye to provide additional information about eye movements (EOG). Impedance was kept under 5k$\Omega$ where possible and the EEG was sampled at 250 Hz and amplified using BrainAmp DC amplifiers (Brainproducts GmbH, Gilching, Germany). Hand movements were sampled at 90 Hz. We repurposed the HTC Vive VR System for motion capture purposes. Through a Unity3D routine we streamed motion capture data of a HTC Vive Tracker Puck that was attached to the right hand, see \todo{add figure ref}. EEG, motion capture and an experiment marker stream were recorded and synchronized using labstreaminglayer \footnote{https://github.com/sccn/labstreaminglayer}.
+
+\missingfigure{show participant with measurement system and description next to each element}
+
+\subsubsection{Reproducing Results and Data Availability}
+\todo{Anonymize for submission} Data, experimental protocol, analyses code including scripts for a reproduction of the presented results are hosted at open science foundation \todo{add the correct links when uploaded} (OSF)\footnote{https://osf.io/x7hnm/}. BIDS formatted data is hosted on openneuro \cite{ds003846:1.0.0}.
+
+\subsection{Classifying EEG Signals to Control Muscle Stimulation}
+
+% event labels
+
+\subsection{Labelling Pre-movement Segments}
+For classification of single-trial ERPs, a regularized linear discriminant analysis (LDA) classifier was trained per participant with all idle data segments constituting the first class and pre-move data segments making up the second class. 
+
+We developed a movement onset detector to label pre-movement segments of the hand movement time series. For this, the raw hand motion data was filtered with a 6Hz low-pass filter and re-sampled to match the EEG sample rate using \todo{reference bemobil pipeline}. Subsequently the first derivative was computed and velocity was extracted.
+
+Using the LDA implementation in the python toolbox scikit-learn, the classifier was trained on windowed means as features. First, EEG data were re-sampled to 100 Hz and band-pass filtered from 0.1 to 15 Hz. \todo{Refer to schultze-kraft paper here and adapt the following sentences accordingly, this is just copied from jne paper}Average amplitudes of 20 channels in 20 sequential 50 ms time windows between 0 and 400 ms after the cube was tapped were extracted as the windowed means feature vectors. A mean baseline taken in the -50 to 0 ms window was subtracted in order to compensate for event classes, match and mismatch, occurring at different stages of the ongoing movement. 
+
+We then proceeded to a 20 best channels selection to reduce the computation time and increase the relevancy of the data. We first calculated the mean potential for each channel averaged on all the intention phases, then the selection was done by calculating the potential difference between the mean of the 25 first samples and the 25 last samples in each channel. The best ones were considered as the 20 channels presenting the largest difference between their first and last means.
+Once we extracted all the epochs and selected our best channels, we finally proceeded to a baseline correction of the signal. Indeed, the EEG potential may shift away from its initial position along the recording without any biophysical change occurring.
+
+After this processing, we extracted the mean each 25 samples during the ~\textit{idle} and ~\textit{intention} phases (1s duration at 250Hz) on the selected channel. Thus we obtained 10 features per channel on each trial for a total of 200 features.
+
+For robust performance estimation, a 5 x 5 nested cross-validation was used to calculate the shrinkage regularization parameter and assess the classifiers performance.
+
+\subsection{Experiment Design}
+
+% training and live phase with follow up interview
