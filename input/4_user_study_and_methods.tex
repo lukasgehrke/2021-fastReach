@@ -4,46 +4,47 @@
 % check for the following:
 % - [ ]  Have you used “man” or “men” or words containing them to refer to people who may not be men?
 % - [ ]  Have you used “he,” “him,” “his,” or “himself” to refer to people who may not be men?
-% - [ ]  If you have mentioned someone’s sex or gender, was it necessary to do so?
+% - [ ]  If you have mentioned someone's sex or gender, was it necessary to do so?
 % - [ ]  Do you use any occupational (or other) stereotypes?
 % - [ ]  Do you provide the same kinds of information and descriptions when writing about people of different genders?
 
 \section{User Study \& Methods}
 
-With this study we wanted to check user's readiness for collaboration with a computer during preconscious interaction intent.
+With this study we wanted to find out whether agency can be preseverd during physical actuation of the user's body when their own brain signals serve as the control signal. Specifically, our system leverages the brain signals known to reflect the volitional intent to interact, i.e. the EEG readiness potential, to trigger electrical muscle stimulation to initiate a reaching movement.
 
-We interviewed user's after they used a system that controlled their right forearm muscles to cue reaching movements. Our system uses electrical muscle stimulation (EMS) that is controlled by the output of a classifier based on the Electroencephalogram (EEG).
+To assess if agency was preserved we used a mixed methods approach including a psychometric test of intentional binding, questionnaires as well as qualitatitve interviews. Our interviews followed a phenomenelogical structure \todo{add reference from AH review paper mueller}.
 
-\subsection{Participants}
+\subsection{Apparatus}
+The experimental setup, depicted in Figure 2, comprised: (1) a wrist-mounted wearable HTC VIVE tracker leveraged for motion capture, (2) a 64-channel EEG system, and (3) a medically-compliant EMS device connected via two electrodes worn on the forearm. To assist readers in replicating our experiment, we provide the necessary technical details, the complete source code to the experiment, the collected data, and the analysis scripts\footnote{[anonymized]}.
 
-\todo{add actual number} Eight participants (\todo{add mean age and sd}) from our local institution were interviewed after they completed a writing task using only their right index finger. All participants were right handed, had normal or corrected to normal vision and had not experienced EMS before. Participants received 12 Euro per hour. Prior to their participation, participants were informed of the nature of the experiment, recording and anonymization procedures and signed a consent form approved by a fast track process of the local ethics committee.
+\indent\textbf{1} We used an HTC Vive Tracker, attached to the participant's wrist, to track their right hand.
+\indent\textbf{2} EEG data was recorded from 64 actively amplified electrodes using BrainAmp DC amplifiers from BrainProducts. Electrodes were placed according to the extended 10\% system \todo{ref}. After fitting the cap, all electrodes were filled with conductive gel to ensure proper conductivity and electrode impedance was brought below 10kOhm for all electrodes. EEG data was recorded with a sampling rate of 250 Hz. We used labstreaminglayer\footnote{Ref lsl} to make the EEG data stream available in the network and synchronize the recordings of EEG data, motion capture and an experiment marker stream that marked sections of the study procedure using labstreaminglayer\footnote{Ref lsl}.
+
+\indent\textbf{3} We actuated the index finger via electrical muscle stimulation (EMS), which was delivered via two electrodes attached to the participants' extensor digitorum muscle. We utilized the extensor digitorum since we found that we can robustly actuate it without inducing parasitical motion of neighboring muscles. This finger actuation was achieved via a medically-compliant battery powered muscle stimulator (\todo{EMS system}), which provides a maximum of 100mA. The EMS system's output was controlled by flipping a solid state relay connected via an Arduino Uno to the experiment computer. The EMS was pre-calibrated per participant to ensure a pain-free stimulation and robust actuation.
 
 \subsection{Task}
+\missingfigure{add an infographic of the task progression with a time axis here, this should be covering two columns and be at the top of the page!}
+Participants performed a simple reaching task: resting their hand on the table, participants were instructed to press a specified key on a notebook in front of them. The interaction flow for one trial of our task, depicted in Figure~\ref{task_flow}, was as follows: (1) participants waited for a new letter to appear on screen; (2) then, they were instructed to wait for a brief moment (~2s), before (3) reaching out and pressing the key. In line with the literature on the origin of the RP generating process they were told "to avoid preplanning the movement, avoid any obvious rhythm, and to press when they felt the spontaneous urge to move". (4) Two \todo{how many, but do keep this constant in order for them to focus on the duration of their action} seconds after they pressed the key, they were presented with a tone and asked to judge whether their movement, from the start of their reach to the button press, lasted longer or shorter than the tone. (5) When they perceived the tone to be longer, they had to press the up key or vice versa the down key for perceiving that the tone was shorter than their movement. Following an inter-trial-interval the next trial started.
 
-\todo{adapt this to the current task} Participants performed a 3D object selection task in VR. The interaction flow of our task, depicted in Figure~\ref{task_flow}, was as follows: (1) participants moved their hands from the \textit{resting position} to the \textit{ready position}, to indicate they were ready to start the next trial; (2) participants waited for a new target to appear (the time of a new target spawning was randomized between 1-2 s); (3) then, the target (a cube) would appear in one of three possible positions (center, left, right), all equidistant from the participant's \textit{ready position}; (4) then, participants acquired the target by moving and touching the target with their index finger. (5) After a target was acquired, participants moved back to the \textit{resting position}. Here, they could take a break before the next trial. 
+\subsubsection{Experiment Design and Procedure}
+Participants completed two experimental blocks. The first block consisted of 60 trials and was used to obtain training data for the single-trial classification system outlined below. 
 
-\missingfigure{add a infographic of the task progression with a time axis here, this should be covering two columns and be at the top of the page!}
+In the second block, participants completed 80 trials of the same task and trial order as in the first block. Now, the brain-computer interface (BCI) detecting readiness potentials from real-time EEG data was continuously running in the background. After the target letter was shown to the participants and they were preparing to reach out and press the corresponding key, the BCI was live. Whenever the BCI detected EEG signals to reflect an interaction intent, EMS was activated causing the participants index finger to lift. The second block was then followed by the mixed methods data collection of participants perceived agency. 
 
-\subsection{Interview \& Questionnaire}
-\todo{how where the results analyzed: sentiment analyses and statistics}
+In total, the experiment consisted of four phases: (1) a setup phase; (2) a first experimental block: the training phase; (3) a second experiment block: the test phase; and (4) a test battery of questionnaire and interview to inquire about their experienced agency.
 
-We decided against asking questions at the end of each trial, to not break the user's immersion in the task. We aimed to learn about the feelings of cooperation between users and our system. The focus was not on correlating the accuracy of our system with the user's impression of it. This would have required to obtain labels for every trial, significantly disturbing the user in the flow of the interaction.
+\subsection{Brain-Computer Interface to Detect EEG Readiness Potentials }
 
-\subsection{Recordings: Motion Capture and EEG}
-EEG was recorded using 64 active Ag/AgCl electrodes placed according to the extended international 10–20 system \cite{Chatrian1985-ys}. The electrode at position \todo{which one actually?}FP2 was detached from the cap and placed under the left eye to provide additional information about eye movements (EOG). Impedance was kept under 5k$\Omega$ where possible and the EEG was sampled at 250 Hz and amplified using BrainAmp DC amplifiers (Brainproducts GmbH, Gilching, Germany). Hand movements were sampled at 90 Hz. We repurposed the HTC Vive VR System for motion capture purposes. Through a Unity3D routine we streamed motion capture data of a HTC Vive Tracker Puck that was attached to the right hand, see \todo{add figure ref}. EEG, motion capture and an experiment marker stream were recorded and synchronized using labstreaminglayer \footnote{https://github.com/sccn/labstreaminglayer}.
+\subsubsection{Detecting EEG Readiness Potentials}
+% Classifiying EEG Signals of the Intent to Interact
 
-\missingfigure{show participant with measurement system and description next to each element}
+To classify single-trial EEG data we used a regularized linear discriminant analysis (LDA) that was trained for each participant individually. Using the data from the training phase of the experiment, we trained the classifier on 10 features from 20 select EEG channels for two classes: an idle class representing EEG background activity and a pre-movement class, representing the intent to interact.
 
-\subsubsection{Reproducing Results and Data Availability}
-\todo{Anonymize for submission} Data, experimental protocol, analyses code including scripts for a reproduction of the presented results are hosted at open science foundation \todo{add the correct links when uploaded} (OSF)\footnote{https://osf.io/x7hnm/}. BIDS formatted data is hosted on openneuro \cite{ds003846:1.0.0}.
+\missingfigure{some picture from the setup and prototype}
 
-\subsection{Classifying EEG Signals to Control Muscle Stimulation}
+\subsubsection{Best Channel Selection}
 
-% event labels
-
-\subsection{Labelling Pre-movement Segments}
-For classification of single-trial ERPs, a regularized linear discriminant analysis (LDA) classifier was trained per participant with all idle data segments constituting the first class and pre-move data segments making up the second class. 
-
+\subsubsection{Idle and Pre-movement Data: Labelling Pre-movement Segments}
 We developed a movement onset detector to label pre-movement segments of the hand movement time series. For this, the raw hand motion data was filtered with a 6Hz low-pass filter and re-sampled to match the EEG sample rate using \todo{reference bemobil pipeline}. Subsequently the first derivative was computed and velocity was extracted.
 
 Using the LDA implementation in the python toolbox scikit-learn, the classifier was trained on windowed means as features. First, EEG data were re-sampled to 100 Hz and band-pass filtered from 0.1 to 15 Hz. \todo{Refer to schultze-kraft paper here and adapt the following sentences accordingly, this is just copied from jne paper}Average amplitudes of 20 channels in 20 sequential 50 ms time windows between 0 and 400 ms after the cube was tapped were extracted as the windowed means feature vectors. A mean baseline taken in the -50 to 0 ms window was subtracted in order to compensate for event classes, match and mismatch, occurring at different stages of the ongoing movement. 
@@ -55,6 +56,25 @@ After this processing, we extracted the mean each 25 samples during the ~\textit
 
 For robust performance estimation, a 5 x 5 nested cross-validation was used to calculate the shrinkage regularization parameter and assess the classifiers performance.
 
-\subsection{Experiment Design}
+\subsubsection{EMS system and interface}
 
-% training and live phase with follow up interview
+% solid state relays hooked up to an arduino uno controlled using python
+
+\subsection{Participants}
+
+\todo{add actual number} Eight participants (\todo{add mean age and sd}) from our local institution participated in our study. All participants were right handed, had normal or corrected to normal vision and had not experienced EMS before. Participants were compensated with 12 Euro per hour of study participation. Prior to their participation, participants were informed of the nature of the experiment, recording and anonymization procedures and signed a consent form approved by a fast track process of the local ethics committee.
+
+\subsection{Interview \& Questionnaire}
+\todo{how where the results analyzed: sentiment analyses and statistics}
+
+We decided against asking questions at the end of each trial, to not break the user's immersion in the task. We aimed to learn about the feelings of cooperation between users and our system. The focus was not on correlating the accuracy of our system with the user's impression of it. This would have required to obtain labels for every trial, significantly disturbing the user in the flow of the interaction.
+
+% Questionnaire taken from Hornbaek
+
+\subsection{Recordings: Motion Capture and EEG}
+EEG was recorded using 64 active Ag/AgCl electrodes placed according to the extended international 10–20 system \cite{Chatrian1985-ys}. The electrode at position \todo{which one actually?}FP2 was detached from the cap and placed under the left eye to provide additional information about eye movements (EOG). Impedance was kept under 5k$\Omega$ where possible and the EEG was sampled at 250 Hz and amplified using BrainAmp DC amplifiers (Brainproducts GmbH, Gilching, Germany). Hand movements were sampled at 90 Hz. We repurposed the HTC Vive VR System for motion capture purposes. Through a Unity3D routine we streamed motion capture data of a HTC Vive Tracker Puck that was attached to the right hand, see \todo{add figure ref}. EEG, motion capture and an experiment marker stream were recorded and synchronized using labstreaminglayer \footnote{https://github.com/sccn/labstreaminglayer}.
+
+\missingfigure{show participant with measurement system and description next to each element}
+
+\subsubsection{Reproducing Results and Data Availability}
+\todo{Anonymize for submission} Data, experimental protocol, analyses code including scripts for a reproduction of the presented results are hosted at open science foundation \todo{add the correct links when uploaded} (OSF)\footnote{https://osf.io/x7hnm/}. BIDS formatted data is hosted on openneuro \cite{ds003846:1.0.0}.
