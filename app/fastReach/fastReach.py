@@ -16,6 +16,17 @@ import matplotlib.pyplot as plt
 EMS_RESET_TIME = time.time()
 
 class fastReach:
+    """Experiment triggering electrical muscle stimulation EMS directly from the output of a brain-computer interface (BCI)
+    This class initializes the different components, starts an EEG and motion classifier in separate threads, and draws the experiment to the screen.
+
+    The experiment shows different letters on screen and waits for them to be pressed, then an intentional binding task follows.
+    This plays a sound and asks the participant to estimate the duration of the sound.
+
+    Args:
+        pID (integer): participant ID used to save data
+        ems_on (boolean): whether to run with or without electrical muscle stimulation (EMS)
+        arduino_port (string): port of connected arduino device
+    """
 
     def __init__(self, pID, ems_on, arduino_port) -> None:
         self.lsl = LSL('fastReach')
@@ -75,6 +86,11 @@ class fastReach:
             # self.motion.start()
 
     def init_screen(self, fullscreen):
+        """Initialize screen object using pygame
+
+        Args:
+            fullscreen (boolean): Whether to run in fullscreen mode
+        """
         info = pg.display.Info()
         if fullscreen == True:
             self.screen = pg.display.set_mode((info.current_w, info.current_h), pg.FULLSCREEN) 
@@ -87,17 +103,35 @@ class fastReach:
         self.font = pg.font.Font(None, 45)
 
     def play_sound(self, duration):
+        """Plays a sound using pygame
+
+        Args:
+            duration (integer): Duration in seconds that the sound is played
+        """
         self.sound.play(-1)
         pg.time.delay(duration)
         self.sound.stop()
 
     def instruct(self, text, col = (0,0,0)):
+        """Writes text to the screen object
+
+        Args:
+            text (string): The text to draw
+            col (tuple, optional): Color of the text. Defaults to (0,0,0).
+        """
 
         self.screen.fill((240, 240, 240))
         ptext.draw(text, topleft=(200, 200), color=col, fontsize=40)  # Recognizes newline characters.
         pg.display.flip()
  
     def start(self, trial_type, num_trials, ems_on):
+        """_summary_
+
+        Args:
+            trial_type (string): Can be "training" or "experiment", "training" is always without EMS
+            num_trials (integer): Number of trials to complete
+            ems_on (boolean): Whether to EMS is presented or not
+        """
         
         while True:
             for event in pg.event.get():
@@ -109,6 +143,14 @@ class fastReach:
                         self.app(trial_type, num_trials, ems_on, start)
 
     def app(self, trial_type, num_trials, ems_on, start):
+        """Experiment logic. Runs different task components based on increasing time, then waits for button inputs to reset time and step through different experiment components.
+
+        Args:
+            trial_type (string): Can be "training" or "experiment", "training" is always without EMS
+            num_trials (integer): Number of trials to complete
+            ems_on (boolean): Whether to EMS is presented or not
+            start (time object): time.time() of the experiment start
+        """
 
         trial_counter = 0
         name = []
@@ -287,8 +329,12 @@ class fastReach:
                         reach_end_time = time.time()
                         print(elapsed)
                         
-
     def demo(self, mode):
+        """Runs the classifiers without any task.
+
+        Args:
+            mode (string): Can be "eeg" or "button". In EEG mode, waits for the EEG classifier to return True, then triggers EMS. In "button" mode, trigger EMS from button press.
+        """
 
         ems_time = time.time()
         ems_sent = False
@@ -341,7 +387,21 @@ class fastReach:
                             EMS_RESET_TIME = ems_time
 
 class Classifier(threading.Thread):
-    
+    """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded.
+
+    Args:
+        stream_name (string): Name of LSL data stream created to stream classifier output
+        classifier_srate (integer): Frame rate at which classifier is applied and streams out classification output
+        model_path (string): Location of pickled (LDA) model
+        type (string): "eeg" or "motion". This class can run classifier on EEG or Motion data
+        target_class (integer): Returns true when prediction equals target class
+        chans ([integer]): Channels (list) to be selected from LSL input data stream
+        threshold (float): To evaluate whether prediction matches target_class with the probability exceeding this threshold
+        frame_rate (integer): ?
+        window_size (integer): Buffer size
+        regression (boolean): [exploratory] When true, apply regression on features
+    """
+
     def __init__(self, stream_name, classifier_srate, model_path, type, target_class, chans, threshold, frame_rate, window_size, regression) -> None:
         self.model_path = model_path
 
@@ -435,6 +495,7 @@ class Classifier(threading.Thread):
 class EMSResetter(threading.Thread):
 
     def __init__(self, ems, lsl, markers):
+
         threading.Thread.__init__(self)
         self.ems = ems
         self.lsl = lsl
