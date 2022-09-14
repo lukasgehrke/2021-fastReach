@@ -33,7 +33,11 @@
 
 %%%% Generic manuscript mode, required for submission
 %%%% and peer review
-\documentclass[manuscript,screen,review]{acmart}
+% \documentclass[manuscript,screen,review]{acmart}
+\documentclass[sigconf]{acmart}
+
+\usepackage{todonotes}
+
 %% Fonts used in the template cannot be substituted; margin 
 %% adjustments are not allowed.
 %%
@@ -47,18 +51,20 @@
 %% values in them; it is your responsibility as an author to replace
 %% the commands and values with those provided to you when you
 %% complete the rights form.
-\setcopyright{acmcopyright}
-\copyrightyear{2018}
-\acmYear{2018}
-\acmDOI{10.1145/1122445.1122456}
+\setcopyright{none}
+
+% \setcopyright{acmcopyright}
+% \copyrightyear{2018}
+% \acmYear{2018}
+% \acmDOI{10.1145/1122445.1122456}
 
 %% These commands are for a PROCEEDINGS abstract or paper.
-\acmConference[Woodstock '18]{Woodstock '18: ACM Symposium on Neural
-  Gaze Detection}{June 03--05, 2018}{Woodstock, NY}
-\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
-  June 03--05, 2018, Woodstock, NY}
-\acmPrice{15.00}
-\acmISBN{978-1-4503-XXXX-X/18/06}
+% \acmConference[Woodstock '18]{Woodstock '18: ACM Symposium on Neural
+%   Gaze Detection}{June 03--05, 2018}{Woodstock, NY}
+% \acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+%   June 03--05, 2018, Woodstock, NY}
+% \acmPrice{15.00}
+% \acmISBN{978-1-4503-XXXX-X/18/06}
 
 
 %%
@@ -87,7 +93,10 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title{The Name of the Title is Hope}
+\title{Preserving Agency during Accelerated Human Action using Brain Signals reflecting Interaction Intent}
+% Using Brain Signals of Interaction Intent to Trigger Accelerated Human Action preserves Agency
+
+% Preconscious Interaction: Stimulating Muscles by Brain Signals of the Intent to Interact}
 
 %%
 %% The "author" command and its associated commands are used to define
@@ -192,6 +201,7 @@
 %% The next two lines define the bibliography style to be used, and
 %% the bibliography file.
 \bibliographystyle{ACM-Reference-Format}
+% \bibliography{input/paperpile}
 \bibliography{input/bibliography}
 
 %%
