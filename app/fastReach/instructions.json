@@ -1,10 +1,12 @@
 {
     "start": "dear participant. please rewrite this sentence below, one letter at a time.\n\n",
-    "isi": "wait...",
+    "isi": "+",
+    "blank": "",
     "back": "Please move your hand to the resting position",
     "task": "Please press the button ",
     "app start": "what to do",
     "wait": "please call for the experimenter.",
     "ib task wait": "+",
-    "ib task": "Was the time between starting to move your hand and the button press longer or short then the tone?"
+    "ib task": "Was the time between starting to move your hand and the button press longer or short then the tone?",
+    "ib answer": ""
 }

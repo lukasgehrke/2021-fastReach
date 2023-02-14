@@ -28,7 +28,7 @@ class fastReach:
         arduino_port (string): port of connected arduino device
     """
 
-    def __init__(self, pID, ems_on, arduino_port) -> None:
+    def __init__(self, pID, ems_on, arduino_port, num_trials) -> None:
         self.lsl = LSL('fastReach')
         
         self.pID = pID
@@ -37,20 +37,22 @@ class fastReach:
         self.markers = json.load(open(path+'markers.json', 'r'))
         self.instruction = json.load(open(path+'instructions.json', 'r'))
         
-        sampleRate = 44100
-        # 44.1kHz, 16-bit signed, mono
-        pg.mixer.pre_init(sampleRate, -16, 1) 
+        self.isi_range = [3.5, 4.5]
+        self.idle_marker_after_isi_start = self.isi_range[0] - 1
+
+        # ib task settings
+        ib_delays = np.array([200, 350, 500])
+        self.ib_times = np.repeat(ib_delays, num_trials/len(ib_delays), axis=0)
+        np.random.shuffle(self.ib_times)
+
         pg.init()
-        # 4096 : the peak ; volume ; loudness
-        # 440 : the frequency in hz
-        arr = np.array([4096 * np.sin(2.0 * np.pi * 440 * x / sampleRate) for x in range(0, sampleRate)]).astype(np.int16)
-        self.sound = pg.sndarray.make_sound(arr)
-
-        self.IB_DURATION = 500
-        self.IB_stepsize = 50
-
         self.init_screen(fullscreen=False)
         self.init_txt()
+        self.init_sound(path)
+        
+        self.num_trials = num_trials
+        self.trial_counter = 0
+        self.init_trial()
 
         if ems_on == True:
             
@@ -70,8 +72,7 @@ class fastReach:
             do_reg = False
             self.eeg = Classifier('eeg_classifier', (buffer_feat_comp_size_samples/windowed_mean_size_samples)-1,
                 model_path_eeg, "eeg", target_class, chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
-            
-            # self.eeg.start()
+            self.eeg.start()
 
             model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
             target_class = 1
@@ -81,9 +82,9 @@ class fastReach:
             windowed_mean_size_samples = 2
             do_reg = False
 
-            # self.motion = Classifier('motion_classifier', 45, model_path_motion, "motion", target_class,
-                # chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
-            # self.motion.start()
+            self.motion = Classifier('motion_classifier', 45, model_path_motion, "motion", target_class,
+                chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
+            self.motion.start()
 
     def init_screen(self, fullscreen):
         """Initialize screen object using pygame
@@ -102,15 +103,55 @@ class fastReach:
     def init_txt(self):
         self.font = pg.font.Font(None, 45)
 
+    def init_sound(self, sound_file_path):
+        
+        # sampleRate = 44100
+        # # 44.1kHz, 16-bit signed, mono
+        # pg.mixer.pre_init(sampleRate, -16, 1) 
+        # # 4096 : the peak ; volume ; loudness
+        # # 440 : the frequency in hz
+        # arr = np.array([4096 * np.sin(2.0 * np.pi * 440 * x / sampleRate) for x in range(0, sampleRate)]).astype(np.int16)
+        # self.sound = pg.sndarray.make_sound(arr)
+        # self.IB_DURATION = 500
+        # self.IB_stepsize = 50
+
+        # TODO prepare new IB task
+        pg.mixer.init()
+        pg.mixer.music.load(sound_file_path+'1glockenspiel.wav')
+
+    def init_trial(self):
+        
+        self.trial_counter += 1
+
+        # trial logic
+        self.fix_cross_shown = False
+        self.idle_marker_sent = False
+        self.blank_shown = False
+        self.button_pressed = False
+        self.sound_played = False
+
+        self.trial_marker_sent = False
+        self.run_ib_task = False
+        self.next_trial = False
+        self.ib_answered = False
+
+        # ib task
+        self.ib_answer = []
+
+        self.key_board_input_enabled = False
+        self.mouse_input_enabled = False
+
     def play_sound(self, duration):
         """Plays a sound using pygame
 
         Args:
             duration (integer): Duration in seconds that the sound is played
         """
-        self.sound.play(-1)
-        pg.time.delay(duration)
-        self.sound.stop()
+        # self.sound.play(-1)
+        # pg.time.delay(duration)
+        # self.sound.stop()
+
+        pg.mixer.music.play(loops=0)
 
     def instruct(self, text, col = (0,0,0)):
         """Writes text to the screen object
@@ -121,10 +162,11 @@ class fastReach:
         """
 
         self.screen.fill((240, 240, 240))
-        ptext.draw(text, topleft=(200, 200), color=col, fontsize=40)  # Recognizes newline characters.
+        w, h = pg.display.get_surface().get_size()
+        ptext.draw(text, center=(w/2, h/2), color=col, fontsize=120)  # Recognizes newline characters.
         pg.display.flip()
  
-    def start(self, trial_type, num_trials, ems_on):
+    def start(self, trial_type, ems_on):
         """_summary_
 
         Args:
@@ -138,9 +180,9 @@ class fastReach:
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_SPACE:
                         self.lsl.send(self.markers['start'],1)
-                        start = time.time()
-
-                        self.app(trial_type, num_trials, ems_on, start)
+                        
+                        # self.app(trial_type, num_trials, ems_on, start)
+                        self.app2(trial_type, ems_on, time.time())
 
     def app(self, trial_type, num_trials, ems_on, start):
         """Experiment logic. Runs different task components based on increasing time, then waits for button inputs to reset time and step through different experiment components.
@@ -153,7 +195,7 @@ class fastReach:
         """
 
         trial_counter = 0
-        name = []
+        ib_answer = []
         trial_marker_sent = False
         run_ib_task = False
         next_trial = False
@@ -165,7 +207,7 @@ class fastReach:
         
         if trial_type == 'training':
             trial_dur = 4
-            base_marker_sent = False
+            idle_marker_sent = False
 
         elif trial_type == 'experiment':
             trial_dur = 4
@@ -188,13 +230,13 @@ class fastReach:
             if trial_counter < num_trials:
             
                 # runs in training and shows ISI message for 2 seconds then sends a marker at the end
-                if trial_type == 'training' and base_marker_sent == False:
+                if trial_type == 'training' and idle_marker_sent == False:
                     self.instruct(self.instruction["isi"])
 
                     # send idle marker only in training condition
                     if elapsed > 2:
                         self.lsl.send(self.markers['idle'],1)
-                        base_marker_sent = True
+                        idle_marker_sent = True
 
                 # interactive part of each trial starts after some initial resting period. Shows the sentence written so far, then waits for a button press to occur which sets trial_marker_sent to true
                 if elapsed > trial_dur:
@@ -203,7 +245,7 @@ class fastReach:
                         if trial_type == 'training': # and time.time() - reach_end_time > 2: # next trial
                             # start = time.time()
                             trial_marker_sent = False
-                            # base_marker_sent = False
+                            # idle_marker_sent = False
                             run_ib_task = True
 
                         elif trial_type == 'experiment':
@@ -218,8 +260,8 @@ class fastReach:
                         else:
                             target = random.choice(['j','k','l'])
 
-                        # self.instruct(self.instruction["start"]+'\n\n'+''.join(name))
-                        self.instruct(target+'\n\n'+''.join(name))
+                        # self.instruct(self.instruction["start"]+'\n\n'+''.join(ib_answer))
+                        self.instruct(target+'\n\n'+''.join(ib_answer))
                         letter_written = True
 
                     elif run_ib_task == True:
@@ -228,8 +270,8 @@ class fastReach:
                         # print the adjusted IB so I can then add it to the live phase
                         
                         if time.time() - reach_end_time < 2:
-                            # self.instruct(self.instruction["start"]+'\n\n'+''.join(name))
-                            self.instruct(target+'\n\n'+''.join(name))
+                            # self.instruct(self.instruction["start"]+'\n\n'+''.join(ib_answer))
+                            self.instruct(target+'\n\n'+''.join(ib_answer))
 
                         # some interval
                         if time.time() - reach_end_time > 2 and time.time() - reach_end_time < 7:
@@ -251,7 +293,7 @@ class fastReach:
 
                     if next_trial == True:
                         if trial_type == 'training':
-                            base_marker_sent = False
+                            idle_marker_sent = False
                         
                         trial_end_time = time.time()
                         trial_counter += 1
@@ -264,7 +306,7 @@ class fastReach:
                         next_trial = False
                         
                         letter_written = False
-                        name = []
+                        ib_answer = []
 
             if trial_counter == num_trials:
                 if time.time() - trial_end_time > 2:
@@ -313,22 +355,167 @@ class fastReach:
 
                     if event.key == pg.K_UP:
                         self.IB_DURATION += self.IB_stepsize
-                        self.lsl.send(self.markers["ib_task"]+self.IB_stepsize,1)
+                        self.lsl.send(self.markers["ib_task"]+str(self.IB_stepsize),1)
                         ib_answered = True
                     if event.key == pg.K_DOWN:
                         self.IB_DURATION -= self.IB_stepsize              
-                        self.lsl.send(self.markers["ib_task"]+self.IB_stepsize,1)
+                        self.lsl.send(self.markers["ib_task"]+str(self.IB_stepsize),1)
                         ib_answered = True
 
                     if elapsed > trial_dur and trial_marker_sent == False and trial_counter < num_trials and run_ib_task == False:
-                        # name.append(event.unicode)
-                        name = event.unicode
+                        # ib_answer.append(event.unicode)
+                        ib_answer = event.unicode
                         # trial_counter += 1
                         self.lsl.send(self.markers["reach end"],1)
                         trial_marker_sent = True
                         reach_end_time = time.time()
                         print(elapsed)
+
+    def app2(self, trial_type, ems_on, start):
+        """Experiment logic. Runs different task components based on increasing time, then waits for button inputs to reset time and step through different experiment components.
+
+        Args:
+            trial_type (string): Can be "training" or "experiment", "training" is always without EMS
+            num_trials (integer): Number of trials to complete
+            ems_on (boolean): Whether to EMS is presented or not
+            start (time object): time.time() of the experiment start
+        """
+
+        # debug
+        print_states = False
+        
+        if ems_on == True:
+            ems_sent = False
+            ems_counter = self.trial_counter
+            ems_time = start
+        
+        while True:
+            
+            # trial logic
+            elapsed = time.time() - start
+
+            if self.trial_counter <= num_trials:
+
+                isi_dur = random.uniform(self.isi_range[0], self.isi_range[1])
+
+                # isi
+                if elapsed < isi_dur and self.fix_cross_shown == False:
+                    self.instruct(self.instruction["isi"])
+                    self.fix_cross_shown = True
+
+                # idle class marker
+                if elapsed > self.idle_marker_after_isi_start and self.idle_marker_sent == False:
+                    self.lsl.send(self.markers['idle']+';isi_duration:'+str(isi_dur),1)
+                    self.idle_marker_sent = True
+
+                # ib task following tap
+                if elapsed > isi_dur:
+
+                    if self.blank_shown == False:
+                        self.instruct(self.instruction["blank"])
+                        self.blank_shown = True
+                        self.mouse_input_enabled = True
+                    
+                    # alternatively break this in half after the first button press
+                    if self.button_pressed == True and ((time.time() - button_press_time) * 1000) > self.ib_times[self.trial_counter-1]:
+                        pg.mixer.music.play()
+                        self.lsl.send(self.markers["ib_task"]+"start",1)
                         
+                        self.sound_played = True
+                        self.button_pressed = False
+                        self.mouse_input_enabled = False
+                        self.key_board_input_enabled = True
+
+                    if self.sound_played == True:
+                        self.instruct("Antwort: "+answer_string)
+
+                    if self.ib_answered == True:
+                        
+                        self.lsl.send(self.markers["ib_task"]+"answer;estimated_delay:"+answer_string,1)
+                        
+                        self.init_trial()
+                        start = time.time()
+
+                        self.ib_answered = False
+                    
+            if self.trial_counter > num_trials:
+                self.lsl.send(self.markers['end'],1)
+                self.instruct(self.instruction["wait"])
+                ems_on = False
+                break
+
+            # ems behavior
+            if ems_on == True:
+
+                ems_duration = time.time() - ems_time
+                if ems_duration > .5 and ems_sent == True:
+                    ems_sent = False
+                    
+                    self.ems.write("r".encode('utf-8'))
+                    self.ems.write("e".encode('utf-8'))
+
+                    self.lsl.send(self.markers["ems off"],1)
+
+                if elapsed > trial_dur and ems_counter == trial_counter and trial_marker_sent == False:
+
+                    # print("ems live")
+
+                    if self.motion.state == True:
+                        ems_counter += 1
+                        self.lsl.send(self.markers["deactivate EMS due to movement"],1)
+
+                    if self.eeg.state == True and ems_sent == False and self.motion.state == False: # and self.ems_resetter.state == False:
+
+                        self.ems.write("r".encode('utf-8'))
+                        self.ems.write("e".encode('utf-8'))
+
+                        self.lsl.send(self.markers["ems on"],1)
+                        ems_sent = True
+                        ems_counter += 1
+                        ems_time = time.time()
+                        EMS_RESET_TIME = ems_time
+
+            # keyboard input
+            for event in pg.event.get():
+
+                if self.mouse_input_enabled == True and event.type == pg.MOUSEBUTTONDOWN:
+                    self.button_pressed = True
+                    button_press_time = time.time()
+                    self.lsl.send(self.markers["reach end"],1)
+                    answer_string = ''.join(self.ib_answer)
+
+                if self.key_board_input_enabled == True and event.type == pg.KEYDOWN:
+
+                    if event.key == pg.K_ESCAPE:
+                        pg.display.quit()
+
+                    # if event.key == pg.K_UP:
+                    #     self.button_pressed = True
+                    #     button_press_time = time.time()
+                    #     self.lsl.send(self.markers["reach end"],1)
+
+                    if event.key == pg.K_RETURN:
+                        self.ib_answered = True
+
+                    # if event.key == pg.K_UP:
+                    #     self.IB_DURATION += self.IB_stepsize
+                    #     self.lsl.send(self.markers["ib_task"]+str(self.IB_stepsize),1)
+                    #     ib_answered = True
+                    # if event.key == pg.K_DOWN:
+                    #     self.IB_DURATION -= self.IB_stepsize              
+                    #     self.lsl.send(self.markers["ib_task"]+str(self.IB_stepsize),1)
+                    #     ib_answered = True
+
+                    if button_press_time > self.ib_times[self.trial_counter-1] and not self.ib_answered == True:
+                        self.ib_answer.append(event.unicode)
+                        answer_string = ''.join(self.ib_answer)
+
+            # debug
+            if print_states:
+                # print('moving: '+str(self.motion.state))
+                # print('rp: '+str(self.eeg.state))
+                print([self.eeg.state, ems_sent, self.motion.state]) # , self.ems_resetter.state])
+
     def demo(self, mode):
         """Runs the classifiers without any task.
 
@@ -390,7 +577,7 @@ class Classifier(threading.Thread):
     """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded.
 
     Args:
-        stream_name (string): Name of LSL data stream created to stream classifier output
+        stream_ib_answer (string): ib_answer of LSL data stream created to stream classifier output
         classifier_srate (integer): Frame rate at which classifier is applied and streams out classification output
         model_path (string): Location of pickled (LDA) model
         type (string): "eeg" or "motion". This class can run classifier on EEG or Motion data
@@ -402,13 +589,13 @@ class Classifier(threading.Thread):
         regression (boolean): [exploratory] When true, apply regression on features
     """
 
-    def __init__(self, stream_name, classifier_srate, model_path, type, target_class, chans, threshold, frame_rate, window_size, regression) -> None:
+    def __init__(self, stream_ib_answer, classifier_srate, model_path, type, target_class, chans, threshold, frame_rate, window_size, regression) -> None:
         self.model_path = model_path
 
         threading.Thread.__init__(self)
 
         self.classifier_srate = classifier_srate
-        stream_info = StreamInfo(stream_name, 'Classifier', 3, self.classifier_srate, 'double64', 'myuid34234')
+        stream_info = StreamInfo(stream_ib_answer, 'Classifier', 3, self.classifier_srate, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
 
         # pickle load the model and good chans ix
@@ -422,7 +609,7 @@ class Classifier(threading.Thread):
             streams = resolve_stream('type', 'rigidBody')
             
         elif self.type == 'eeg':
-            streams = resolve_stream('name', 'BrainVision RDA')
+            streams = resolve_stream('ib_answer', 'BrainVision RDA')
 
         # create a new inlet to read from the stream
         self.inlet = StreamInlet(streams[0])
@@ -436,6 +623,8 @@ class Classifier(threading.Thread):
         # create empty numpy array (2D: m1 and m2)
         self.all_data = np.zeros((len(self.chans), self.window_size))
         self.reg_feats = np.zeros((len(self.chans), int(self.window_size/self.frame_rate)))
+
+        self.feat_data = np.array((len(self.chans), 11, 25))
 
         self.state = False
     
@@ -458,21 +647,21 @@ class Classifier(threading.Thread):
                         np.square(np.diff(self.all_data[2,:]))).reshape(1,-1)
 
                 if self.type == "eeg":
-                    feat_data = np.reshape(self.all_data, (len(self.chans), 11, 25))
+                    self.feat_data = np.reshape(self.all_data, (len(self.chans), 11, 25))
 
                 if self.do_reg == True:
                     try:
                         # t = time.time()
                         for i in range(len(self.chans)):
                             for j in range(10):
-                                self.reg_feats[i,j] = np.polyfit(feat_data[i,j,:], feat_data[-1,j,:],1)[1]
+                                self.reg_feats[i,j] = np.polyfit(self.feat_data[i,j,:], self.feat_data[-1,j,:],1)[1]
                                 feats = self.reg_feats.flatten().reshape(1,-1)
                         # elapsed = time.time() - t
                         # tmp.append(elapsed)
                     except:
                         print("waiting for buffer")
                 else:
-                    feats = np.mean(feat_data, axis = 2) # windowed mean features
+                    feats = np.mean(self.feat_data, axis = 2) # windowed mean features
                     feats -= feats[:,0][:,None] # base correct
                     feats = feats[:,1:]
                     feats = feats.flatten().reshape(1,-1)
@@ -524,18 +713,25 @@ class EMSResetter(threading.Thread):
                 EMS_RESET_TIME = time.time()
                 self.state = False
 
-arduino_port = '/dev/tty.usbmodem1401' # ls /dev/tty.*
 # pg.init()
 np.set_printoptions(precision=2)
-num_trials = 75
+arduino_port = '/dev/tty.usbmodem1301' # ls /dev/tty.*
 
 ### SET pID ###
-pID = 13
-trial_type = 'training' # training experiment
-with_ems = True
-###
+pID = 1
+num_trials = 60
 
-exp = fastReach(pID, with_ems, arduino_port)
+### Training ###
+# trial_type = 'training'
+# with_ems = False
+# exp = fastReach(pID, with_ems, arduino_port)
 # exp.start(trial_type, num_trials, with_ems)
-exp.demo(mode='button')
+
+### Experiment ###
+trial_type = 'experiment'
+with_ems = False
+exp = fastReach(pID, with_ems, arduino_port, num_trials)
+exp.start(trial_type, with_ems)
+
+# exp.demo(mode='button')
 # exp.demo(mode='eeg')
