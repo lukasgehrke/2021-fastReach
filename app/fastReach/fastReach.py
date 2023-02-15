@@ -121,6 +121,7 @@ class fastReach:
 
     def init_trial(self):
         
+        self.isi_dur = random.uniform(self.isi_range[0], self.isi_range[1])
         self.trial_counter += 1
 
         # trial logic
@@ -138,6 +139,10 @@ class fastReach:
         # ib task
         self.ib_answer = []
 
+        # ems
+        self.ems_active = False
+        self.ems_delay = random.uniform(EMS1MIN, EMS1MAX)
+
         self.key_board_input_enabled = False
         self.mouse_input_enabled = False
 
@@ -152,6 +157,20 @@ class fastReach:
         # self.sound.stop()
 
         pg.mixer.music.play(loops=0)
+
+    def send_ems_pulse(self, marker):
+        """Sends a pulse to the EMS device
+        """
+        self.ems.write("r".encode('utf-8'))
+        self.ems.write("e".encode('utf-8'))
+        self.lsl.send(self.markers[marker],1)
+
+        if marker == "ems on":
+            self.ems_active = True
+            return time.time()
+        elif marker == "ems off":
+            self.ems_active = False
+            return time.time()
 
     def instruct(self, text, col = (0,0,0)):
         """Writes text to the screen object
@@ -384,11 +403,6 @@ class fastReach:
         # debug
         print_states = False
         
-        if ems_on == True:
-            ems_sent = False
-            ems_counter = self.trial_counter
-            ems_time = start
-        
         while True:
             
             # trial logic
@@ -396,30 +410,41 @@ class fastReach:
 
             if self.trial_counter <= num_trials:
 
-                isi_dur = random.uniform(self.isi_range[0], self.isi_range[1])
-
                 # isi
-                if elapsed < isi_dur and self.fix_cross_shown == False:
+                if elapsed < self.isi_dur and self.fix_cross_shown == False:
                     self.instruct(self.instruction["isi"])
                     self.fix_cross_shown = True
 
                 # idle class marker
                 if elapsed > self.idle_marker_after_isi_start and self.idle_marker_sent == False:
-                    self.lsl.send(self.markers['idle']+';isi_duration:'+str(isi_dur),1)
+                    m = self.markers['idle']+';isi_duration:'+str(self.isi_dur)+';condition:'+trial_type
+                    self.lsl.send(m,1)
                     self.idle_marker_sent = True
 
-                # ib task following tap
-                if elapsed > isi_dur:
+                # "live"
+                if elapsed > self.isi_dur:
 
                     if self.blank_shown == False:
                         self.instruct(self.instruction["blank"])
                         self.blank_shown = True
                         self.mouse_input_enabled = True
-                    
-                    # alternatively break this in half after the first button press
+
+                    # ems behavior
+                    if ems_on == True and self.mouse_input_enabled == True and self.ems_active == False:
+                        if trial_type == 'ems1' and self.eeg.state == True:
+                            ems_time = self.send_ems_pulse("ems on")
+                        elif trial_type == 'ems2' and elapsed > self.ems_delay:
+                            ems_time = self.send_ems_pulse("ems on")
+                    if ems_on == True and self.ems_active == True:
+                        ems_duration = time.time() - ems_time
+                        if ems_duration > .5:
+                            self.send_ems_pulse("ems off")
+
+                    # ib task following tap
                     if self.button_pressed == True and ((time.time() - button_press_time) * 1000) > self.ib_times[self.trial_counter-1]:
                         pg.mixer.music.play()
-                        self.lsl.send(self.markers["ib_task"]+"start",1)
+                        m = self.markers["ib_task"]+"start" + ';condition:' + trial_type
+                        self.lsl.send(m,1)
                         
                         self.sound_played = True
                         self.button_pressed = False
@@ -430,50 +455,16 @@ class fastReach:
                         self.instruct("Antwort: "+answer_string)
 
                     if self.ib_answered == True:
-                        
-                        self.lsl.send(self.markers["ib_task"]+"answer;estimated_delay:"+answer_string,1)
-                        
+                        m = self.markers["ib_task"]+'answer' + ';real_delay:' + str(self.ib_times[self.trial_counter-1]) + ';estimated_delay:'+answer_string + ';condition:' + trial_type
+                        self.lsl.send(m,1)
                         self.init_trial()
                         start = time.time()
-
                         self.ib_answered = False
                     
             if self.trial_counter > num_trials:
                 self.lsl.send(self.markers['end'],1)
                 self.instruct(self.instruction["wait"])
-                ems_on = False
                 break
-
-            # ems behavior
-            if ems_on == True:
-
-                ems_duration = time.time() - ems_time
-                if ems_duration > .5 and ems_sent == True:
-                    ems_sent = False
-                    
-                    self.ems.write("r".encode('utf-8'))
-                    self.ems.write("e".encode('utf-8'))
-
-                    self.lsl.send(self.markers["ems off"],1)
-
-                if elapsed > trial_dur and ems_counter == trial_counter and trial_marker_sent == False:
-
-                    # print("ems live")
-
-                    if self.motion.state == True:
-                        ems_counter += 1
-                        self.lsl.send(self.markers["deactivate EMS due to movement"],1)
-
-                    if self.eeg.state == True and ems_sent == False and self.motion.state == False: # and self.ems_resetter.state == False:
-
-                        self.ems.write("r".encode('utf-8'))
-                        self.ems.write("e".encode('utf-8'))
-
-                        self.lsl.send(self.markers["ems on"],1)
-                        ems_sent = True
-                        ems_counter += 1
-                        ems_time = time.time()
-                        EMS_RESET_TIME = ems_time
 
             # keyboard input
             for event in pg.event.get():
@@ -481,7 +472,8 @@ class fastReach:
                 if self.mouse_input_enabled == True and event.type == pg.MOUSEBUTTONDOWN:
                     self.button_pressed = True
                     button_press_time = time.time()
-                    self.lsl.send(self.markers["reach end"],1)
+                    m = self.markers["reach end"] + ';rt:' + str(elapsed-self.isi_dur) + ';condition:' + trial_type
+                    self.lsl.send(m,1)
                     answer_string = ''.join(self.ib_answer)
 
                 if self.key_board_input_enabled == True and event.type == pg.KEYDOWN:
@@ -489,22 +481,8 @@ class fastReach:
                     if event.key == pg.K_ESCAPE:
                         pg.display.quit()
 
-                    # if event.key == pg.K_UP:
-                    #     self.button_pressed = True
-                    #     button_press_time = time.time()
-                    #     self.lsl.send(self.markers["reach end"],1)
-
                     if event.key == pg.K_RETURN:
                         self.ib_answered = True
-
-                    # if event.key == pg.K_UP:
-                    #     self.IB_DURATION += self.IB_stepsize
-                    #     self.lsl.send(self.markers["ib_task"]+str(self.IB_stepsize),1)
-                    #     ib_answered = True
-                    # if event.key == pg.K_DOWN:
-                    #     self.IB_DURATION -= self.IB_stepsize              
-                    #     self.lsl.send(self.markers["ib_task"]+str(self.IB_stepsize),1)
-                    #     ib_answered = True
 
                     if button_press_time > self.ib_times[self.trial_counter-1] and not self.ib_answered == True:
                         self.ib_answer.append(event.unicode)
@@ -713,25 +691,17 @@ class EMSResetter(threading.Thread):
                 EMS_RESET_TIME = time.time()
                 self.state = False
 
-# pg.init()
+### SET Experiment params ###
 np.set_printoptions(precision=2)
 arduino_port = '/dev/tty.usbmodem1301' # ls /dev/tty.*
-
-### SET pID ###
-pID = 1
 num_trials = 60
-
-### Training ###
-# trial_type = 'training'
-# with_ems = False
-# exp = fastReach(pID, with_ems, arduino_port)
-# exp.start(trial_type, num_trials, with_ems)
-
-### Experiment ###
-trial_type = 'experiment'
+pID = 1
 with_ems = False
+trial_type = 'baseline'
+# trial_type = 'ems1'
+# trial_type = 'ems2'
+EMS1MIN = 3.5
+EMS1MAX = 4.5
+
 exp = fastReach(pID, with_ems, arduino_port, num_trials)
 exp.start(trial_type, with_ems)
-
-# exp.demo(mode='button')
-# exp.demo(mode='eeg')
