@@ -1,8 +1,8 @@
 {
     "create": "marker stream created",
     "reach end": "class:reach_end",
-    "start": "app:start",
-    "end": "app:end",
+    "start": "block:start",
+    "end": "block:end",
     "idle": "class:idle_start",
     "isi": "isi:start",
     "ems on": "ems:on",

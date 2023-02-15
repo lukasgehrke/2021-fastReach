@@ -57,34 +57,34 @@ class fastReach:
         if ems_on == True:
             
             self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
-            self.ems.write("r".encode('utf-8')) # discharge into resistor
+
             # self.ems_resetter = EMSResetter(self.ems, self.lsl, self.markers)
             # self.ems_resetter.start()
 
             data_path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)
 
-            model_path_eeg = data_path+'/model_'+str(self.pID)+'_eeg.sav'
-            target_class = 1
-            chans = pickle.load(open(data_path+'/chans_'+str(self.pID)+'_eeg.sav', 'rb'))
-            threshold = .7
-            buffer_feat_comp_size_samples = 275
-            windowed_mean_size_samples = 25
-            do_reg = False
-            self.eeg = Classifier('eeg_classifier', (buffer_feat_comp_size_samples/windowed_mean_size_samples)-1,
-                model_path_eeg, "eeg", target_class, chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
-            self.eeg.start()
+            # model_path_eeg = data_path+'/model_'+str(self.pID)+'_eeg.sav'
+            # target_class = 1
+            # chans = pickle.load(open(data_path+'/chans_'+str(self.pID)+'_eeg.sav', 'rb'))
+            # threshold = .7
+            # buffer_feat_comp_size_samples = 275
+            # windowed_mean_size_samples = 25
+            # do_reg = False
+            # self.eeg = Classifier('eeg_classifier', (buffer_feat_comp_size_samples/windowed_mean_size_samples)-1,
+            #     model_path_eeg, "eeg", target_class, chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
+            # self.eeg.start()
 
-            model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
-            target_class = 1
-            chans = np.array([5,6,7])
-            threshold = 1.0
-            buffer_feat_comp_size_samples = 2
-            windowed_mean_size_samples = 2
-            do_reg = False
+            # model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
+            # target_class = 1
+            # chans = np.array([5,6,7])
+            # threshold = 1.0
+            # buffer_feat_comp_size_samples = 2
+            # windowed_mean_size_samples = 2
+            # do_reg = False
 
-            self.motion = Classifier('motion_classifier', 45, model_path_motion, "motion", target_class,
-                chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
-            self.motion.start()
+            # self.motion = Classifier('motion_classifier', 45, model_path_motion, "motion", target_class,
+            #     chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
+            # self.motion.start()
 
     def init_screen(self, fullscreen):
         """Initialize screen object using pygame
@@ -141,7 +141,8 @@ class fastReach:
 
         # ems
         self.ems_active = False
-        self.ems_delay = random.uniform(EMS1MIN, EMS1MAX)
+        self.ems_sent = False
+        self.ems_delay = random.uniform(EMS2MIN, EMS2MAX)
 
         self.key_board_input_enabled = False
         self.mouse_input_enabled = False
@@ -158,19 +159,26 @@ class fastReach:
 
         pg.mixer.music.play(loops=0)
 
-    def send_ems_pulse(self, marker):
+    def flip_ems(self):
+        
+        # open discharge into resistor
+        self.ems.write("r".encode('utf-8'))
+        self.ems.write("e".encode('utf-8'))
+
+    def send_ems_pulse(self, marker, trial_type):
         """Sends a pulse to the EMS device
         """
         self.ems.write("r".encode('utf-8'))
-        self.ems.write("e".encode('utf-8'))
-        self.lsl.send(self.markers[marker],1)
+        
+        m = self.markers[marker]+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
+        self.lsl.send(m,1)
 
         if marker == "ems on":
             self.ems_active = True
-            return time.time()
         elif marker == "ems off":
             self.ems_active = False
-            return time.time()
+        
+        return time.time()
 
     def instruct(self, text, col = (0,0,0)):
         """Writes text to the screen object
@@ -198,7 +206,12 @@ class fastReach:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_SPACE:
-                        self.lsl.send(self.markers['start'],1)
+
+                        m = self.markers['start']+';condition:'+trial_type
+                        self.lsl.send(m,1)
+
+                        if ems_on:
+                            self.flip_ems()
                         
                         # self.app(trial_type, num_trials, ems_on, start)
                         self.app2(trial_type, ems_on, time.time())
@@ -417,7 +430,7 @@ class fastReach:
 
                 # idle class marker
                 if elapsed > self.idle_marker_after_isi_start and self.idle_marker_sent == False:
-                    m = self.markers['idle']+';isi_duration:'+str(self.isi_dur)+';condition:'+trial_type
+                    m = self.markers['idle']+';isi_duration:'+str(self.isi_dur)+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
                     self.lsl.send(m,1)
                     self.idle_marker_sent = True
 
@@ -430,20 +443,21 @@ class fastReach:
                         self.mouse_input_enabled = True
 
                     # ems behavior
-                    if ems_on == True and self.mouse_input_enabled == True and self.ems_active == False:
+                    if ems_on == True and self.mouse_input_enabled == True and self.ems_active == False and self.ems_sent == False:
                         if trial_type == 'ems1' and self.eeg.state == True:
-                            ems_time = self.send_ems_pulse("ems on")
-                        elif trial_type == 'ems2' and elapsed > self.ems_delay:
-                            ems_time = self.send_ems_pulse("ems on")
-                    if ems_on == True and self.ems_active == True:
+                            ems_time = self.send_ems_pulse("ems on", trial_type)
+                        elif trial_type == 'ems2' and elapsed > (self.ems_delay + self.isi_dur):
+                            ems_time = self.send_ems_pulse("ems on", trial_type)
+                    if ems_on == True and self.ems_active == True and self.ems_sent == False:
                         ems_duration = time.time() - ems_time
                         if ems_duration > .5:
-                            self.send_ems_pulse("ems off")
+                            self.send_ems_pulse("ems off", trial_type)
+                            self.ems_sent = True
 
                     # ib task following tap
                     if self.button_pressed == True and ((time.time() - button_press_time) * 1000) > self.ib_times[self.trial_counter-1]:
                         pg.mixer.music.play()
-                        m = self.markers["ib_task"]+"start" + ';condition:' + trial_type
+                        m = self.markers["ib_task"]+"start"+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
                         self.lsl.send(m,1)
                         
                         self.sound_played = True
@@ -455,14 +469,16 @@ class fastReach:
                         self.instruct("Antwort: "+answer_string)
 
                     if self.ib_answered == True:
-                        m = self.markers["ib_task"]+'answer' + ';real_delay:' + str(self.ib_times[self.trial_counter-1]) + ';estimated_delay:'+answer_string + ';condition:' + trial_type
+                        m = self.markers["ib_task"]+'answer'+';real_delay:'+str(self.ib_times[self.trial_counter-1])+';estimated_delay:'+answer_string+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
                         self.lsl.send(m,1)
                         self.init_trial()
                         start = time.time()
                         self.ib_answered = False
                     
             if self.trial_counter > num_trials:
-                self.lsl.send(self.markers['end'],1)
+                
+                m = self.markers['end']+';condition:'+trial_type
+                self.lsl.send(m,1)
                 self.instruct(self.instruction["wait"])
                 break
 
@@ -472,7 +488,7 @@ class fastReach:
                 if self.mouse_input_enabled == True and event.type == pg.MOUSEBUTTONDOWN:
                     self.button_pressed = True
                     button_press_time = time.time()
-                    m = self.markers["reach end"] + ';rt:' + str(elapsed-self.isi_dur) + ';condition:' + trial_type
+                    m = self.markers["reach end"]+';rt:'+str(elapsed-self.isi_dur)+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
                     self.lsl.send(m,1)
                     answer_string = ''.join(self.ib_answer)
 
@@ -480,6 +496,8 @@ class fastReach:
 
                     if event.key == pg.K_ESCAPE:
                         pg.display.quit()
+                        if ems_on:
+                            self.flip_ems()
 
                     if event.key == pg.K_RETURN:
                         self.ib_answered = True
@@ -693,15 +711,15 @@ class EMSResetter(threading.Thread):
 
 ### SET Experiment params ###
 np.set_printoptions(precision=2)
-arduino_port = '/dev/tty.usbmodem1301' # ls /dev/tty.*
+arduino_port = '/dev/tty.usbmodem21401' # ls /dev/tty.*
 num_trials = 60
 pID = 1
-with_ems = False
-trial_type = 'baseline'
+with_ems = True
+# trial_type = 'baseline'
 # trial_type = 'ems1'
-# trial_type = 'ems2'
-EMS1MIN = 3.5
-EMS1MAX = 4.5
+trial_type = 'ems2'
+EMS2MIN = 3.5
+EMS2MAX = 4.5
 
 exp = fastReach(pID, with_ems, arduino_port, num_trials)
 exp.start(trial_type, with_ems)
