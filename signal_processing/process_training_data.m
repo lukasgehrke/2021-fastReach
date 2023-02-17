@@ -1,9 +1,9 @@
 %% init
 
-cfg.subject                = 13;
+cfg.subject                = 1;
 
 eeglab_ver("mac")
-cfg.fname                  = [num2str(cfg.subject), '.xdf'];
+cfg.fname                  = ['training_' num2str(cfg.subject), '.xdf'];
 
 %% run fastReach signal processing training data
 
@@ -183,9 +183,11 @@ end
 [best_chans_ixs, crit1, crit2] = rp_ERP_select_channels(rp.data, idle.data, EEG.srate/cfg.n_wins, 1); % extract informative channels
 sel_chans = best_chans_ixs(1:cfg.n_best_chans);
 
+% TODO fix this so channels are only added if not already present in the
+% selection
 % add in C3 and Cz so all participants have it
-c3cz = [8, 24, 25];
-sel_chans(end-2:end) = c3cz;
+% c3cz = [8, 24, 25];
+% sel_chans(end-2:end) = c3cz;
 
 eeg.idle = idle.data(sel_chans,:,:);
 eeg.rp = rp.data(sel_chans,:,:);
@@ -362,3 +364,11 @@ disp(['exports done, subject ', num2str(cfg.subject)])
 % 
 % end
 
+%% export IB task
+
+EEG = pi_parse_events(EEG);
+
+ib_task = {EEG.event.ib_task}';
+ib_task = ib_task(~cellfun('isempty',ib_task));
+ib_task(contains(ib_task, {'start', 'tone'})) = [];
+ib_task
