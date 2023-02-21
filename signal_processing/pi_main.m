@@ -2,12 +2,17 @@
 current_sys = "mac";
 eeglab_ver(current_sys);
 
-% load configuration
 addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
+addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
+
 pi_bemobil_config;
+
+pID = 1;
 
 %% load data and parse events
 
+% TODO make paths dynamic
+% bemobil_config.study_folder
 EEG = pop_loadxdf('/Users/lukasgehrke/Desktop/exp001/block_Default.xdf' , 'streamtype', 'EEG', 'exclude_markerstreams', {});
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
 EEG = pi_parse_events(EEG);
@@ -38,7 +43,7 @@ disp(delay);
 %% Extract EEG data for 2 classes: idle and pre-move
 
 pre_move_data = pop_select(pre_move_data, 'nochannel',{'EMG'});
-pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-1 + delay, 0 + delay]);
+pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-1.1 + delay, 0 + delay]);
 
 idle_event_ixs = find(contains({EEG.event.type}, 'idle_start'));
 idle_events = EEG.event(idle_event_ixs);
@@ -46,19 +51,12 @@ idle_data = EEG;
 idle_data = pop_select(idle_data, 'nochannel',{'EMG'});
 idle_data.event = idle_events;
 [idle_data.event.type] = deal('idle_start');
-idle_erp = pop_epoch(idle_data, {'idle_start'}, [-1, 0]);
+idle_erp = pop_epoch(idle_data, {'idle_start'}, [-1.1, 0]);
 
 %% reject noisy epochs
 
 [idle_erp, idle_noisy_epochs] = pop_autorej(idle_erp, 'nogui','on','eegplot','off');
 [pre_move_erp, pre_move_noisy_epochs] = pop_autorej(pre_move_erp, 'nogui','on','eegplot','off');
-
-%% baseline correct
-
-baseline_size = 10; % in samples
-
-idle_erp.data = idle_erp.data - mean(idle_erp.data(:,1:baseline_size,:),2);
-pre_move_erp.data = pre_move_erp.data - mean(pre_move_erp.data(:,1:baseline_size,:),2);
 
 %% select best channels
 
@@ -69,6 +67,18 @@ n_best_chans = 20;
 sel_chans = best_chans_ixs(1:n_best_chans);
 
 %% save
+
+path = [bemobil_config.study_folder, 'study/eeglab2python/', num2str(pID)];
+if ~exist(path, 'dir')
+    mkdir(path);
+end
+
+idle = idle_erp.data;
+pre_move = pre_move_erp.data;
+
+writematrix(sel_chans, fullfile(path, 'sel_chans.csv'));
+save(fullfile(path, 'pre_move'), 'pre_move');
+save(fullfile(path, 'idle'), 'idle');
 
 %% reaction time
 

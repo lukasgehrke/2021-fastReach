@@ -9,9 +9,8 @@ from LSL import LSL
 import threading
 import ptext
 import random
-
-
-import matplotlib.pyplot as plt
+from bci_funcs import windowed_mean, base_correct, reshape_trial, drop_baseline
+# import matplotlib.pyplot as plt
 
 EMS_RESET_TIME = time.time()
 
@@ -28,8 +27,10 @@ class fastReach:
         arduino_port (string): port of connected arduino device
     """
 
-    def __init__(self, pID, ems_on, arduino_port, num_trials) -> None:
+    def __init__(self, pID, ems_on, arduino_port, num_trials, debug) -> None:
         self.lsl = LSL('fastReach')
+
+        self.print_states = debug
         
         self.pID = pID
         path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/app/fastReach/'
@@ -38,7 +39,7 @@ class fastReach:
         self.instruction = json.load(open(path+'instructions.json', 'r'))
         
         self.isi_range = [3.5, 4.5]
-        self.idle_marker_after_isi_start = self.isi_range[0] - 1
+        self.idle_marker_after_isi_start = self.isi_range[0] - 2
 
         # ib task settings
         ib_delays = np.array([200, 350, 500])
@@ -63,16 +64,24 @@ class fastReach:
 
             data_path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)
 
-            # model_path_eeg = data_path+'/model_'+str(self.pID)+'_eeg.sav'
-            # target_class = 1
-            # chans = pickle.load(open(data_path+'/chans_'+str(self.pID)+'_eeg.sav', 'rb'))
-            # threshold = .7
+            model_path_eeg = data_path+'/model_'+str(self.pID)+'_eeg.sav'
+            chans = pickle.load(open(data_path+'/chans_'+str(self.pID)+'_eeg.sav', 'rb'))
+            
+            classifier_update_rate = 25
+            data_srate = 250
+            windows = 11
+            baseline_ix = 1
+            target_class = 1
+            threshold = .7
+
+            self.eeg = Classifier2('eeg_classifier', classifier_update_rate, data_srate, model_path_eeg, target_class, chans, threshold, windows, baseline_ix)
+            self.eeg.start()
+            
             # buffer_feat_comp_size_samples = 275
             # windowed_mean_size_samples = 25
-            # do_reg = False
+            # do_reg = False            
             # self.eeg = Classifier('eeg_classifier', (buffer_feat_comp_size_samples/windowed_mean_size_samples)-1,
             #     model_path_eeg, "eeg", target_class, chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
-            # self.eeg.start()
 
             # model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
             # target_class = 1
@@ -205,13 +214,14 @@ class fastReach:
         while True:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
+
+                    if event.key == pg.K_e:
+                        self.flip_ems()
+
                     if event.key == pg.K_SPACE:
 
                         m = self.markers['start']+';condition:'+trial_type
                         self.lsl.send(m,1)
-
-                        if ems_on:
-                            self.flip_ems()
                         
                         # self.app(trial_type, num_trials, ems_on, start)
                         self.app2(trial_type, ems_on, time.time())
@@ -412,9 +422,6 @@ class fastReach:
             ems_on (boolean): Whether to EMS is presented or not
             start (time object): time.time() of the experiment start
         """
-
-        # debug
-        print_states = False
         
         while True:
             
@@ -507,10 +514,10 @@ class fastReach:
                         answer_string = ''.join(self.ib_answer)
 
             # debug
-            if print_states:
+            if self.print_states:
                 # print('moving: '+str(self.motion.state))
-                # print('rp: '+str(self.eeg.state))
-                print([self.eeg.state, ems_sent, self.motion.state]) # , self.ems_resetter.state])
+                print('rp: '+str(self.eeg.state) + ', class: ' + str(self.eeg.prediction) + ', probs: ' + str(self.eeg.probs))
+                # print([self.eeg.state, self.ems_sent, self.motion.state]) # , self.ems_resetter.state])
 
     def demo(self, mode):
         """Runs the classifiers without any task.
@@ -569,11 +576,87 @@ class fastReach:
                             ems_time = time.time()
                             EMS_RESET_TIME = ems_time
 
+class Classifier2(threading.Thread):
+    """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded.
+
+    Args:
+        stream_name (string): ib_answer of LSL data stream created to stream classifier output
+        classifier_srate (integer): Frame rate at which classifier is applied and streams out classification output
+        model_path (string): Location of pickled (LDA) model
+        type (string): "eeg" or "motion". This class can run classifier on EEG or Motion data
+        target_class (integer): Returns true when prediction equals target class
+        chans ([integer]): Channels (list) to be selected from LSL input data stream
+        threshold (float): To evaluate whether prediction matches target_class with the probability exceeding this threshold
+        frame_rate (integer): ?
+        window_size (integer): Buffer size
+        regression (boolean): [exploratory] When true, apply regression on features
+    """
+    def __init__(self, stream_name, classifier_srate, data_srate, model_path, target_class, chans, threshold, window_size, baseline_index) -> None:
+        
+        threading.Thread.__init__(self)
+
+        # LSL outlet
+        self.classifier_srate = classifier_srate
+        stream_info = StreamInfo(stream_name, 'Classifier', 3, self.classifier_srate, 'double64', 'myuid34234')
+        self.outlet = StreamOutlet(stream_info)
+        
+        # LSL inlet
+        streams = resolve_stream('name', 'BrainVision RDA')
+        self.inlet = StreamInlet(streams[0])
+
+        self.model_path = model_path
+        self.clf = pickle.load(open(self.model_path, 'rb'))
+        self.target_class = target_class
+        self.probs = 0
+        self.prediction = 0
+        self.chans = chans
+        self.threshold = threshold
+        self.window_size = window_size
+        self.baseline_ix = baseline_index
+        self.srate = data_srate
+
+        self.all_data = np.zeros((len(self.chans), self.srate+int(self.srate/(self.window_size-self.baseline_ix))))
+        self.feat_data = np.zeros((len(self.chans), self.window_size-self.baseline_ix))
+
+        self.state = False
+    
+    def run(self):
+
+        frame = 1
+        while True:
+            start = time.time()
+
+            # get a new sample (you can also omit the timestamp part if you're not interested in it)
+            sample = np.array(self.inlet.pull_sample()[0])
+            self.all_data[:,-1] = sample[self.chans-1]
+
+            if frame == self.classifier_srate: # every X ms
+
+                tmp = base_correct(windowed_mean(self.all_data, windows = self.window_size))
+                feats = drop_baseline(tmp, self.baseline_ix).flatten().reshape(1,-1)
+        
+                self.prediction = int(self.clf.predict(feats)[0]) #predicted class
+                probs = self.clf.predict_proba(feats) #probability for class prediction
+                self.outlet.push_sample([self.prediction,probs[0][0],probs[0][1]])
+                self.probs = probs[0][0]
+
+                if self.prediction == self.target_class and self.probs >= self.threshold:
+                    self.state = True
+                else:
+                    self.state = False
+
+                frame = 0
+
+            frame += 1
+            self.all_data = np.roll(self.all_data,-1) # Speed could be increased here, something like all_data[:,0:-2] = all_data[:,1:-1]
+
+            time.sleep(max(1./self.srate - (time.time() - start), 0))
+
 class Classifier(threading.Thread):
     """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded.
 
     Args:
-        stream_ib_answer (string): ib_answer of LSL data stream created to stream classifier output
+        stream_name (string): ib_answer of LSL data stream created to stream classifier output
         classifier_srate (integer): Frame rate at which classifier is applied and streams out classification output
         model_path (string): Location of pickled (LDA) model
         type (string): "eeg" or "motion". This class can run classifier on EEG or Motion data
@@ -585,13 +668,13 @@ class Classifier(threading.Thread):
         regression (boolean): [exploratory] When true, apply regression on features
     """
 
-    def __init__(self, stream_ib_answer, classifier_srate, model_path, type, target_class, chans, threshold, frame_rate, window_size, regression) -> None:
+    def __init__(self, stream_name, classifier_srate, model_path, type, target_class, chans, threshold, frame_rate, window_size, regression) -> None:
         self.model_path = model_path
 
         threading.Thread.__init__(self)
 
         self.classifier_srate = classifier_srate
-        stream_info = StreamInfo(stream_ib_answer, 'Classifier', 3, self.classifier_srate, 'double64', 'myuid34234')
+        stream_info = StreamInfo(stream_name, 'Classifier', 3, self.classifier_srate, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
 
         # pickle load the model and good chans ix
@@ -605,7 +688,7 @@ class Classifier(threading.Thread):
             streams = resolve_stream('type', 'rigidBody')
             
         elif self.type == 'eeg':
-            streams = resolve_stream('ib_answer', 'BrainVision RDA')
+            streams = resolve_stream('name', 'BrainVision RDA')
 
         # create a new inlet to read from the stream
         self.inlet = StreamInlet(streams[0])
@@ -630,9 +713,11 @@ class Classifier(threading.Thread):
 
         while True:
 
+            start = time.time()
+
             # get a new sample (you can also omit the timestamp part if you're not interested in it)
             sample = np.array(self.inlet.pull_sample()[0])
-            self.all_data[:,-1] = sample[self.chans-1].flatten()
+            self.all_data[:,-1] = sample[self.chans-1].flatten() # TODO why flatten?
 
             if frame == self.classifier_srate: # every X ms
 
@@ -643,7 +728,8 @@ class Classifier(threading.Thread):
                         np.square(np.diff(self.all_data[2,:]))).reshape(1,-1)
 
                 if self.type == "eeg":
-                    self.feat_data = np.reshape(self.all_data, (len(self.chans), 11, 25))
+                    # self.feat_data = np.reshape(self.all_data, (len(self.chans), 11, 25))
+                    self.feat_data = base_correct(windowed_mean(self.all_data, windows = self.window_size))
 
                 if self.do_reg == True:
                     try:
@@ -657,10 +743,11 @@ class Classifier(threading.Thread):
                     except:
                         print("waiting for buffer")
                 else:
-                    feats = np.mean(self.feat_data, axis = 2) # windowed mean features
-                    feats -= feats[:,0][:,None] # base correct
+                    # feats = np.mean(self.feat_data, axis = 2) # windowed mean features
+                    # feats -= feats[:,0][:,None] # base correct
                     feats = feats[:,1:]
-                    feats = feats.flatten().reshape(1,-1)
+                    # feats = feats.flatten().reshape(1,-1)
+                    feats = reshape_trial(feats)
         
                 prediction = self.clf.predict(feats)[0] #predicted class
                 probs = self.clf.predict_proba(feats) #probability for class prediction
@@ -676,6 +763,8 @@ class Classifier(threading.Thread):
 
             frame += 1
             self.all_data = np.roll(self.all_data,-1) # Speed could be increased here, something like all_data[:,0:-2] = all_data[:,1:-1]
+
+            time.sleep(max(1./250 - (time.time() - start), 0))
 
 class EMSResetter(threading.Thread):
 
@@ -712,14 +801,23 @@ class EMSResetter(threading.Thread):
 ### SET Experiment params ###
 np.set_printoptions(precision=2)
 arduino_port = '/dev/tty.usbmodem21401' # ls /dev/tty.*
-num_trials = 60
+
+
+num_trials = 15 # muss durch 3 teilbar sein
 pID = 1
-with_ems = True
+
 # trial_type = 'baseline'
 # trial_type = 'ems1'
 trial_type = 'ems2'
-EMS2MIN = 3.5
-EMS2MAX = 4.5
+EMS2MIN = 1
+EMS2MAX = 2
 
-exp = fastReach(pID, with_ems, arduino_port, num_trials)
+if trial_type == 'baseline':
+    with_ems = False
+else:
+    with_ems = True
+
+###
+debug = False
+exp = fastReach(pID, with_ems, arduino_port, num_trials, debug)
 exp.start(trial_type, with_ems)
