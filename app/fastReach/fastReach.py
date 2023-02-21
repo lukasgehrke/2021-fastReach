@@ -63,7 +63,6 @@ class fastReach:
             # self.ems_resetter.start()
 
             data_path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)
-
             model_path_eeg = data_path+'/model_'+str(self.pID)+'_eeg.sav'
             chans = pickle.load(open(data_path+'/chans_'+str(self.pID)+'_eeg.sav', 'rb'))
             
@@ -217,6 +216,9 @@ class fastReach:
 
                     if event.key == pg.K_e:
                         self.flip_ems()
+
+                    if event.key == pg.K_p:
+                        self.ems.write("r".encode('utf-8'))
 
                     if event.key == pg.K_SPACE:
 
