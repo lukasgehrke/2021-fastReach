@@ -10,6 +10,7 @@ figures/
 *.pyc
 *.mat
 app/fastReach/ptext.py
-*.docx
+# *.docx
 *.pdf
 admin/Questionnaire/
+admin/BPN_VP-Gelder-fastReach.docx
