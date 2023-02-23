@@ -33,7 +33,7 @@ class fastReach:
         self.print_states = debug
         
         self.pID = pID
-        path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/app/fastReach/'
+        path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\app\\fastReach\\'
         self.config = json.load(open(path+'config.json', 'r'))
         self.markers = json.load(open(path+'markers.json', 'r'))
         self.instruction = json.load(open(path+'instructions.json', 'r'))
@@ -62,9 +62,9 @@ class fastReach:
             # self.ems_resetter = EMSResetter(self.ems, self.lsl, self.markers)
             # self.ems_resetter.start()
 
-            data_path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)
-            model_path_eeg = data_path+'/model_'+str(self.pID)+'_eeg.sav'
-            chans = pickle.load(open(data_path+'/chans_'+str(self.pID)+'_eeg.sav', 'rb'))
+            data_path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\data\\study\\eeglab2python\\'+str(self.pID)
+            model_path_eeg = data_path+'\\model_'+str(self.pID)+'_eeg.sav'
+            chans = pickle.load(open(data_path+'\\chans_'+str(self.pID)+'_eeg.sav', 'rb'))
             
             classifier_update_rate = 25
             data_srate = 250
@@ -802,13 +802,13 @@ class EMSResetter(threading.Thread):
 
 ### SET Experiment params ###
 np.set_printoptions(precision=2)
-arduino_port = '/dev/tty.usbmodem21401' # ls /dev/tty.*
+arduino_port = 'COM3' #'/dev/tty.usbmodem21401' # ls /dev/tty.*
 
 
-num_trials = 15 # muss durch 3 teilbar sein
+num_trials = 90 # muss durch 3 teilbar sein
 pID = 1
 
-# trial_type = 'baseline'
+#trial_type = 'baseline'
 # trial_type = 'ems1'
 trial_type = 'ems2'
 EMS2MIN = 1
