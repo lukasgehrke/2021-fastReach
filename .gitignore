@@ -1,6 +1,9 @@
 *.icloud
 processing/**
-data/
+data/study/pilot_data
+data/study/0_source-data
+data/willy_test
+data/how_to_run_experiment.mp4
 old_processing/
 figures/
 *.asv
