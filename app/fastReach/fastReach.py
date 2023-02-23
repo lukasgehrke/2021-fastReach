@@ -630,7 +630,7 @@ class Classifier2(threading.Thread):
 
             # get a new sample (you can also omit the timestamp part if you're not interested in it)
             sample = np.array(self.inlet.pull_sample()[0])
-            self.all_data[:,-1] = sample[self.chans-1]
+            self.all_data[:,-1] = sample[self.chans]
 
             if frame == self.classifier_srate: # every X ms
 

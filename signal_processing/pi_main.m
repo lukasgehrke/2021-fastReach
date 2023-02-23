@@ -1,3 +1,6 @@
+
+pID = 1;
+
 %% config
 current_sys = "mac";
 eeglab_ver(current_sys);
@@ -7,13 +10,11 @@ addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent
 
 pi_bemobil_config;
 
-pID = 1;
-
 %% load data and parse events
 
-% TODO make paths dynamic
-% bemobil_config.study_folder
-EEG = pop_loadxdf('/Users/lukasgehrke/Desktop/exp001/block_Default.xdf' , 'streamtype', 'EEG', 'exclude_markerstreams', {});
+EEG = pop_loadxdf(fullfile(bemobil_config.study_folder, 'study', bemobil_config.source_data_folder, ...
+    ['sub-' sprintf('%03d', pID)], 'Baseline.xdf'), ...
+    'streamtype', 'EEG', 'exclude_markerstreams', {});
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
 EEG = pi_parse_events(EEG);
 
@@ -66,9 +67,11 @@ n_best_chans = 20;
 [best_chans_ixs, crit1, crit2] = rp_ERP_select_channels(pre_move_erp.data, idle_erp.data, EEG.srate/n_wins, 1); % extract informative channels
 sel_chans = best_chans_ixs(1:n_best_chans);
 
+% TODO include typical RP Channels so also I can plot one
+
 %% save
 
-path = [bemobil_config.study_folder, 'study/eeglab2python/', num2str(pID)];
+path = fullfile(bemobil_config.study_folder, 'study', 'eeglab2python', ['sub-' sprintf('%03d', pID)]);
 if ~exist(path, 'dir')
     mkdir(path);
 end

@@ -4,7 +4,7 @@ eeglab_ver("mac")
 % config
 pID = 13;
 study_folder = '/Users/lukasgehrke/Documents/publications/2021-fastReach/';
-subject_folder = fullfile(study_folder, 'data/study/0_raw-data/', num2str(pID));
+subject_folder = fullfile(study_folder, 'data/study/0_source-data/', num2str(pID));
 fname = num2str(pID);
 
 % load data
