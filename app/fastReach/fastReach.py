@@ -32,7 +32,7 @@ class fastReach:
 
         self.print_states = debug
         
-        self.pID = pID
+        self.pID = 'sub-0' + "%02d" % (pID)
         path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\app\\fastReach\\'
         self.config = json.load(open(path+'config.json', 'r'))
         self.markers = json.load(open(path+'markers.json', 'r'))
@@ -73,8 +73,8 @@ class fastReach:
             target_class = 1
             threshold = .7
 
-            self.eeg = Classifier2('eeg_classifier', classifier_update_rate, data_srate, model_path_eeg, target_class, chans, threshold, windows, baseline_ix)
-            self.eeg.start()
+            #self.eeg = Classifier2('eeg_classifier', classifier_update_rate, data_srate, model_path_eeg, target_class, chans, threshold, windows, baseline_ix)
+            #self.eeg.start()
             
             # buffer_feat_comp_size_samples = 275
             # windowed_mean_size_samples = 25
@@ -811,8 +811,8 @@ pID = 1
 #trial_type = 'baseline'
 # trial_type = 'ems1'
 trial_type = 'ems2'
-EMS2MIN = 1
-EMS2MAX = 2
+EMS2MIN = 2
+EMS2MAX = 2.5
 
 if trial_type == 'baseline':
     with_ems = False
