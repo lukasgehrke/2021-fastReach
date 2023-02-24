@@ -92,10 +92,17 @@ save(fullfile(path, 'idle'), 'idle');
 rt = {EEG.event.rt};
 rt = rt(~cellfun('isempty', rt));
 rt = cellfun(@str2num, rt);
-% disp(['min rt: ', num2str(round(min(rt),2)), '; max rt: ', num2str(round(max(rt),2))])
+disp(['min rt: ', num2str(round(min(rt),2)), '; max rt: ', num2str(round(max(rt),2))])
 
 delay(1) = prctile(rt,5);
 delay(2) = prctile(rt,95);
 
 writematrix(delay, fullfile(path, 'delay.csv'));
 
+%% save Cz ERP for plotting
+
+pre_move_cz = squeeze(pre_move_erp.data(cz_ix,:,:));
+writematrix(pre_move_cz, fullfile(path, 'pre_move_cz.csv'));
+
+idle_cz = squeeze(idle_erp.data(cz_ix,:,:));
+writematrix(idle_cz, fullfile(path, 'idle_cz.csv'));
