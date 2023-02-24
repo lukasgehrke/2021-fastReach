@@ -1,9 +1,10 @@
 
-import re
+import os
 import pygame as pg
 from pygame.locals import *
 from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
 import numpy as np
+import pandas as pd
 import serial, time, pickle, json, sys
 from LSL import LSL
 import threading
@@ -27,16 +28,16 @@ class fastReach:
         arduino_port (string): port of connected arduino device
     """
 
-    def __init__(self, pID, ems_on, arduino_port, num_trials, debug) -> None:
+    def __init__(self, pID, path, ems_on, arduino_port, num_trials, debug) -> None:
         self.lsl = LSL('fastReach')
 
         self.print_states = debug
         
         self.pID = 'sub-0' + "%02d" % (pID)
-        path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\app\\fastReach\\'
-        self.config = json.load(open(path+'config.json', 'r'))
-        self.markers = json.load(open(path+'markers.json', 'r'))
-        self.instruction = json.load(open(path+'instructions.json', 'r'))
+        self.code_path = path+os.sep+'app'+os.sep+'fastReach'+os.sep
+        self.config = json.load(open(self.code_path+'config.json', 'r'))
+        self.markers = json.load(open(self.code_path+'markers.json', 'r'))
+        self.instruction = json.load(open(self.code_path+'instructions.json', 'r'))
         
         self.isi_range = [3.5, 4.5]
         self.idle_marker_after_isi_start = self.isi_range[0] - 2
@@ -49,23 +50,32 @@ class fastReach:
         pg.init()
         self.init_screen(fullscreen=False)
         self.init_txt()
-        self.init_sound(path)
+        self.init_sound(self.code_path)
         
         self.num_trials = num_trials
         self.trial_counter = 0
+
+        # default values
+        self.ems2min = 0
+        self.ems2max = 1
+
         self.init_trial()
 
         if ems_on == True:
             
-            self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
+            # self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
 
             # self.ems_resetter = EMSResetter(self.ems, self.lsl, self.markers)
             # self.ems_resetter.start()
 
-            data_path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\data\\study\\eeglab2python\\'+str(self.pID)
-            model_path_eeg = data_path+'\\model_'+str(self.pID)+'_eeg.sav'
-            chans = pickle.load(open(data_path+'\\chans_'+str(self.pID)+'_eeg.sav', 'rb'))
-            
+            data_path = path+os.sep+'data'+os.sep+'study'+os.sep+'eeglab2python'+os.sep+str(self.pID)+os.sep
+            model_path_eeg = data_path+'model_'+str(self.pID)+'_eeg.sav'
+            chans = pickle.load(open(data_path+'chans_'+str(self.pID)+'_eeg.sav', 'rb'))
+
+            stim_delay = pd.read_csv(data_path+'delay.csv')
+            self.ems2min = float(stim_delay.columns[0])
+            self.ems2max = float(stim_delay.columns[1])
+
             classifier_update_rate = 25
             data_srate = 250
             windows = 11
@@ -123,9 +133,8 @@ class fastReach:
         # self.IB_DURATION = 500
         # self.IB_stepsize = 50
 
-        # TODO prepare new IB task
         pg.mixer.init()
-        pg.mixer.music.load(sound_file_path+'1glockenspiel.wav')
+        pg.mixer.music.load(sound_file_path+os.sep+'1glockenspiel.wav')
 
     def init_trial(self):
         
@@ -150,7 +159,7 @@ class fastReach:
         # ems
         self.ems_active = False
         self.ems_sent = False
-        self.ems_delay = random.uniform(EMS2MIN, EMS2MAX)
+        self.ems_delay = random.uniform(self.ems2min, self.ems2max)
 
         self.key_board_input_enabled = False
         self.mouse_input_enabled = False
@@ -512,7 +521,11 @@ class fastReach:
                         self.ib_answered = True
 
                     if button_press_time > self.ib_times[self.trial_counter-1] and not self.ib_answered == True:
-                        self.ib_answer.append(event.unicode)
+
+                        if event.key == pg.K_BACKSPACE and not len(self.ib_answer) == 0:
+                            self.ib_answer.pop()    
+                        elif not event.key == pg.K_BACKSPACE:
+                            self.ib_answer.append(event.unicode)
                         answer_string = ''.join(self.ib_answer)
 
             # debug
@@ -719,7 +732,7 @@ class Classifier(threading.Thread):
 
             # get a new sample (you can also omit the timestamp part if you're not interested in it)
             sample = np.array(self.inlet.pull_sample()[0])
-            self.all_data[:,-1] = sample[self.chans-1].flatten() # TODO why flatten?
+            self.all_data[:,-1] = sample[self.chans-1].flatten()
 
             if frame == self.classifier_srate: # every X ms
 
@@ -803,23 +816,24 @@ class EMSResetter(threading.Thread):
 ### SET Experiment params ###
 np.set_printoptions(precision=2)
 arduino_port = 'COM3' #'/dev/tty.usbmodem21401' # ls /dev/tty.*
-
-
+path = '/Users/lukasgehrke/Documents/publications/2021-fastReach' # 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\'
 num_trials = 90 # muss durch 3 teilbar sein
-pID = 1
 
-#trial_type = 'baseline'
-# trial_type = 'ems1'
-trial_type = 'ems2'
-EMS2MIN = 2
-EMS2MAX = 2.5
+
+
+### Settings for each participant ###
+pID = 1
+trial_type = 'baseline'
+#trial_type = 'ems1'
+# trial_type = 'ems2'
+###
+
+
 
 if trial_type == 'baseline':
     with_ems = False
 else:
     with_ems = True
-
-###
 debug = False
-exp = fastReach(pID, with_ems, arduino_port, num_trials, debug)
+exp = fastReach(pID, path, with_ems, arduino_port, num_trials, debug)
 exp.start(trial_type, with_ems)

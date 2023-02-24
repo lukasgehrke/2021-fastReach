@@ -67,7 +67,11 @@ n_best_chans = 20;
 [best_chans_ixs, crit1, crit2] = rp_ERP_select_channels(pre_move_erp.data, idle_erp.data, EEG.srate/n_wins, 1); % extract informative channels
 sel_chans = best_chans_ixs(1:n_best_chans);
 
-% TODO include typical RP Channels so also I can plot one
+cz_ix = find(contains({EEG.chanlocs.labels},'Cz'));
+
+if sum(ismember(sel_chans, cz_ix)) < 1
+    sel_chans(end) = cz_ix;
+end
 
 %% save
 
@@ -88,6 +92,10 @@ save(fullfile(path, 'idle'), 'idle');
 rt = {EEG.event.rt};
 rt = rt(~cellfun('isempty', rt));
 rt = cellfun(@str2num, rt);
-disp(['min rt: ', num2str(round(min(rt),2)), '; max rt: ', num2str(round(max(rt),2))])
+% disp(['min rt: ', num2str(round(min(rt),2)), '; max rt: ', num2str(round(max(rt),2))])
 
+delay(1) = prctile(rt,5);
+delay(2) = prctile(rt,95);
+
+writematrix(delay, fullfile(path, 'delay.csv'));
 
