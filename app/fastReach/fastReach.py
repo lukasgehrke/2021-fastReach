@@ -70,11 +70,11 @@ class fastReach:
 
             data_path = path+os.sep+'data'+os.sep+'study'+os.sep+'eeglab2python'+os.sep+str(self.pID)+os.sep
             model_path_eeg = data_path+'model_'+str(self.pID)+'_eeg.sav'
-            # chans = pickle.load(open(data_path+'chans_'+str(self.pID)+'_eeg.sav', 'rb'))
+            chans = pickle.load(open(data_path+'chans_'+str(self.pID)+'_eeg.sav', 'rb'))
 
-            # stim_delay = pd.read_csv(data_path+'delay.csv')
-            # self.ems2min = float(stim_delay.columns[0])
-            # self.ems2max = float(stim_delay.columns[1])
+            stim_delay = pd.read_csv(data_path+'delay.csv')
+            self.ems2min = float(stim_delay.columns[0])
+            self.ems2max = float(stim_delay.columns[1])
 
             classifier_update_rate = 25
             data_srate = 250
@@ -83,8 +83,8 @@ class fastReach:
             target_class = 1
             threshold = .7
 
-            #self.eeg = Classifier2('eeg_classifier', classifier_update_rate, data_srate, model_path_eeg, target_class, chans, threshold, windows, baseline_ix)
-            #self.eeg.start()
+            self.eeg = Classifier2('eeg_classifier', classifier_update_rate, data_srate, model_path_eeg, target_class, chans, threshold, windows, baseline_ix)
+            self.eeg.start()
             
             # buffer_feat_comp_size_samples = 275
             # windowed_mean_size_samples = 25
@@ -510,7 +510,7 @@ class fastReach:
                     self.lsl.send(m,1)
                     answer_string = ''.join(self.ib_answer)
 
-                if event.key == pg.K_ESCAPE:
+                if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                     pg.display.quit()
                     if ems_on:
                         self.flip_ems()
@@ -816,11 +816,11 @@ class EMSResetter(threading.Thread):
 ### SET Experiment params ###
 np.set_printoptions(precision=2)
 
-system = 'mac' # 'mac' or 'windows'
+system = 'win' # 'mac' or 'windows'
 if system == 'mac':
     arduino_port = '/dev/tty.usbmodem21401'
     path = path = '/Users/lukasgehrke/Documents/publications/2021-fastReach'
-else:
+elif system == 'win':
     arduino_port = 'COM3' # ls /dev/tty.*
     path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\'
 
