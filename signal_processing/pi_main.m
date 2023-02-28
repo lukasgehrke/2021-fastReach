@@ -106,3 +106,24 @@ writematrix(pre_move_cz, fullfile(path, 'pre_move_cz.csv'));
 
 idle_cz = squeeze(idle_erp.data(cz_ix,:,:));
 writematrix(idle_cz, fullfile(path, 'idle_cz.csv'));
+
+%% 
+
+rd = {EEG.event.real_delay};
+rd = rd(~cellfun('isempty', rd));
+rd = cellfun(@str2num, rd)';
+
+ed = {EEG.event.estimated_delay};
+ed = ed(~cellfun('isempty', ed));
+ed = cellfun(@str2num, ed)';
+
+cond = {EEG.event.condition};
+cond = cond(1:size(ed))';
+
+tr_nr = [1:size(rd)]';
+
+id = repelem(pID, numel(tr_nr))';
+
+behavior = table(id, cond, tr_nr, rd, ed);
+
+writetable(behavior, fullfile(path, 'behavior.csv'));
