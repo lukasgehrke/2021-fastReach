@@ -21,7 +21,7 @@ EEG = pi_parse_events(EEG);
 %% filter EMG
 
 EMG = pop_eegfiltnew(EEG, 20, 100); % only filter EMG channel
-EEG.data(end,:) = abs(EMG.data(end,:));
+EEG.data(end,:) = EMG.data(end,:).^2;
 
 %% determine delay from EMG onset to button press
 
@@ -40,6 +40,8 @@ emg_onset_fine = max(find(diff(pre_move_erp(1:emg_onset_raw)) < 0));
 
 delay = (emg_onset_fine - EEG.srate) / EEG.srate;
 disp(delay);
+
+figure;plot(pre_move_erp);xline(emg_onset_fine);
 
 %% Extract EEG data for 2 classes: idle and pre-move
 
@@ -91,7 +93,7 @@ save(fullfile(path, 'idle'), 'idle');
 
 rt = {EEG.event.rt};
 rt = rt(~cellfun('isempty', rt));
-rt = cellfun(@str2num, rt);
+rt = cellfun(@str2num, rt)';
 disp(['min rt: ', num2str(round(min(rt),2)), '; max rt: ', num2str(round(max(rt),2))])
 
 delay(1) = prctile(rt,5);
@@ -124,6 +126,6 @@ tr_nr = [1:size(rd)]';
 
 id = repelem(pID, numel(tr_nr))';
 
-behavior = table(id, cond, tr_nr, rd, ed);
+behavior = table(id, cond, tr_nr, rd, ed, rt);
 
 writetable(behavior, fullfile(path, 'behavior.csv'));

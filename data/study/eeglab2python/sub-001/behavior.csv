@@ -1,6 +1,6 @@
-id,cond,tr_nr,rd,ed
-1,baseline,1,200,50
-1,baseline,2,500,200
-1,baseline,3,200,100
-1,baseline,4,200,50
-1,baseline,5,200,50
+id,cond,tr_nr,rd,ed,rt
+1,baseline,1,200,50,2.69462000598963
+1,baseline,2,500,200,5.30912738133975
+1,baseline,3,200,100,1.52344145849782
+1,baseline,4,200,50,3.02428166679333
+1,baseline,5,200,50,2.25112085703534
