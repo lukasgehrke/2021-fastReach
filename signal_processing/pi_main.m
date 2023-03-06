@@ -2,11 +2,13 @@
 pID = 1;
 
 %% config
-current_sys = "mac";
-eeglab_ver(current_sys);
+current_sys = "win";
+eeglab
+%eeglab_ver(current_sys);
 
-addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
-addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
+addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
+%addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
+%addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
 
 pi_bemobil_config;
 
@@ -58,8 +60,14 @@ idle_erp = pop_epoch(idle_data, {'idle_start'}, [-1.1, 0]);
 
 %% reject noisy epochs
 
-[idle_erp, idle_noisy_epochs] = pop_autorej(idle_erp, 'nogui','on','eegplot','off');
-[pre_move_erp, pre_move_noisy_epochs] = pop_autorej(pre_move_erp, 'nogui','on','eegplot','off');
+thresh = max(abs(idle_erp.data(:))) / 2;
+idle_erp = pop_eegthresh(idle_erp,1,[1:size(idle_erp.data,1)],-thresh,thresh,idle_erp.xmin,idle_erp.xmax,0,0);
+idle_erp = pop_rejepoch(idle_erp, idle_erp.reject.rejthresh,0); % actually reject high prob epochs
+
+%[pre_move_erp, pre_move_noisy_epochs] = pop_autorej(pre_move_erp, 'nogui','on','eegplot','off');
+thresh = max(abs(pre_move_erp.data(:))) / 2;
+pre_move_erp = pop_eegthresh(pre_move_erp,1,[1:size(pre_move_erp.data,1)],-thresh,thresh,pre_move_erp.xmin,pre_move_erp.xmax,0,0);
+pre_move_erp = pop_rejepoch(pre_move_erp, pre_move_erp.reject.rejthresh,0); % actually reject high prob epochs
 
 %% select best channels
 
@@ -82,8 +90,10 @@ if ~exist(path, 'dir')
     mkdir(path);
 end
 
-idle = idle_erp.data;
-pre_move = pre_move_erp.data;
+% make same size
+epochs = min([size(idle_erp.data,3), size(pre_move_erp.data,3)]);
+idle = idle_erp.data(:,:,1:epochs);
+pre_move = pre_move_erp.data(:,:,1:epochs);
 
 writematrix(sel_chans, fullfile(path, 'sel_chans.csv'));
 save(fullfile(path, 'pre_move'), 'pre_move');

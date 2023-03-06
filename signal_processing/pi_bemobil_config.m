@@ -2,7 +2,8 @@ clear bemobil_config
 
 %% General Setup
 
-path = '/Users/lukasgehrke/Documents/publications/2021-fastReach';
+path = 'P:\Lukas_Gehrke\2021-fastReach';
+%'/Users/lukasgehrke/Documents/publications/2021-fastReach';
 
 bemobil_config.study_folder = [path filesep 'data' filesep]; %(NEEDS to have a filesep at the end, sorry!) 
 bemobil_config.filename_prefix = 'sub-';
