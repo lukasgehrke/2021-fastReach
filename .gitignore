@@ -14,3 +14,4 @@ app/fastReach/ptext.py
 *.pdf
 admin/Questionnaire/
 admin/BPN_VP-Gelder-fastReach.docx
+*.DS_Store
