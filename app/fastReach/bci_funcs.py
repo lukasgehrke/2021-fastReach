@@ -1,15 +1,33 @@
 import numpy as np
 
 def windowed_mean(data, windows = 10):
+    """Computes windowed mean of data
+
+    Args:
+        data (_type_): 2D array, usually chans x time
+        windows (int, optional): Number of windows data is split into . Defaults to 10.
+
+    Returns:
+        _type_: Windowed mean of data, of shape chans x windows
+    """
     stepsize = data.shape[1] // windows
     win_data = np.reshape(data, (data.shape[0], windows, stepsize))
     return np.mean(win_data, axis = 2)
 
 def base_correct(data):
+    """Subtracts baseline from data
+
+    Args:
+        data (_type_): 2D array, usually chans x time
+
+    Returns:
+        _type_: Baseline corrected 2D array, usually chans x time
+    """
     data_base_correct = data - data[:,0][:,None]
     return data_base_correct
 
 def drop_baseline(data, baseline_end_ix):
+    """Drops baseline from data"""
     data = data[:,baseline_end_ix:]
     return data
 
