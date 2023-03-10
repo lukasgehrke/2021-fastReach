@@ -1,14 +1,22 @@
 
-eeglab_ver("mac")
+pID = 2;
 
-% config
-pID = 13;
-study_folder = '/Users/lukasgehrke/Documents/publications/2021-fastReach/';
-subject_folder = fullfile(study_folder, 'data/study/0_source-data/', num2str(pID));
-fname = num2str(pID);
+%% config
+current_sys = "mac";
+% eeglab
+eeglab_ver(current_sys);
 
-% load data
-EEG = pop_loadxdf([fullfile(subject_folder, fname), '.xdf'] , 'streamname', 'BrainVision RDA', 'exclude_markerstreams', {});
+% addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
+%addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
+addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
+
+pi_bemobil_config;
+
+%% load data and parse events
+
+EEG = pop_loadxdf(fullfile(bemobil_config.study_folder, 'study', bemobil_config.source_data_folder, ...
+    ['sub-' sprintf('%03d', pID)], 'EMS1.xdf'), ...
+    'streamtype', 'EEG', 'exclude_markerstreams', {});
 
 % EEG = pop_eegfiltnew(EMG, 10);
 allEventsLats = [EEG.event.latency];
