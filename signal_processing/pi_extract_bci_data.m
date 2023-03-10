@@ -82,10 +82,15 @@ n_best_chans = 20;
 [best_chans_ixs, crit1, crit2] = rp_ERP_select_channels(pre_move_erp.data, idle_erp.data, EEG.srate/n_wins, 1); % extract informative channels
 sel_chans = best_chans_ixs(1:n_best_chans);
 
-cz_ix = find(contains({EEG.chanlocs.labels},'Cz'));
+chans_to_keep = {'C3', 'C4', 'Cz'};
 
-if sum(ismember(sel_chans, cz_ix)) < 1
-    sel_chans(end) = cz_ix;
+for chan = chans_to_keep
+    chan_ix = find(strcmp({EEG.chanlocs.labels}, chan{1}));
+
+    if sum(ismember(sel_chans, chan_ix)) < 1
+        sel_chans(2:end) = sel_chans(1:end-1);
+        sel_chans(1) = chan_ix;
+    end
 end
 
 %% save

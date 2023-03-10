@@ -23,7 +23,7 @@ for pID = pIDs
             'streamtype', 'EEG', 'exclude_markerstreams', {});
         [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
         EEG = pi_parse_events(EEG);
-        cz_ix = find(contains({EEG.chanlocs.labels},'Cz'));
+        cz_ix = find(strcmp({EEG.chanlocs.labels},'Cz'));
 
         %% behavior
         rt = {EEG.event.rt};
