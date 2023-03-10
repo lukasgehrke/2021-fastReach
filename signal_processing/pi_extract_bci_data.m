@@ -108,6 +108,7 @@ end
 idle = idle_erp.data;
 pre_move = pre_move_erp.data;
 
+writematrix(table({EEG.chanlocs.labels}'), fullfile(path, 'sel_chans_names.csv'));
 writematrix(sel_chans, fullfile(path, 'sel_chans.csv'));
 save(fullfile(path, 'pre_move'), 'pre_move');
 save(fullfile(path, 'idle'), 'idle');
