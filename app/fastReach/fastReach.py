@@ -10,7 +10,7 @@ from LSL import LSL
 import threading
 import ptext
 import random
-from bci_funcs import windowed_mean, base_correct, reshape_trial, drop_baseline
+from bci_funcs import windowed_mean, base_correct, drop_baseline, reshape_trial
 # import matplotlib.pyplot as plt
 
 EMS_RESET_TIME = time.time()
@@ -24,8 +24,11 @@ class fastReach:
 
     Args:
         pID (integer): participant ID used to save data
+        path (string): path to the data folder
         ems_on (boolean): whether to run with or without electrical muscle stimulation (EMS)
         arduino_port (string): port of connected arduino device
+        num_trials (integer): Number of trials to complete
+        debug (boolean): whether to print debug messages
     """
 
     def __init__(self, pID, path, ems_on, arduino_port, num_trials, debug) -> None:
@@ -72,16 +75,17 @@ class fastReach:
             model_path_eeg = data_path+'model_'+str(self.pID)+'_eeg.sav'
             chans = pickle.load(open(data_path+'chans_'+str(self.pID)+'_eeg.sav', 'rb'))
 
+            self.ems_training_delay = 2
             stim_delay = pd.read_csv(data_path+'delay.csv')
             self.ems2min = float(stim_delay.columns[0])
             self.ems2max = float(stim_delay.columns[1])
 
-            classifier_update_rate = 25
+            classifier_update_rate = 5
             data_srate = 250
             windows = 11
             baseline_ix = 1
             target_class = 1
-            threshold = .7
+            threshold = .8
 
             self.eeg = Classifier2('eeg_classifier', classifier_update_rate, data_srate, model_path_eeg, target_class, chans, threshold, windows, baseline_ix)
             self.eeg.start()
@@ -428,8 +432,12 @@ class fastReach:
         """Experiment logic. Runs different task components based on increasing time, then waits for button inputs to reset time and step through different experiment components.
 
         Args:
-            trial_type (string): Can be "training" or "experiment", "training" is always without EMS
-            num_trials (integer): Number of trials to complete
+            trial_type (string): Can be "training", "baseline", "ems1" or "ems2". 
+                - In 'training' mode, the ems is trigger 2 seconds after the fixation cross dissapears. 
+                This can be used to make participants comfortable with the EMS stimulation device in the trial logic.
+                - In 'baseline' mode, the ems is not triggered at all. This trial_type is used to obtain physiological training data.
+                - In 'ems1' mode, the ems is controlled (after the fixation cross dissapears and until the touchscreen is touched) by a Brain-Computer Interface, see class Classifier2
+                - In 'ems2' mode, the ems is randomly activated in the time interval of the 5th and 95th percentile of the reaction times in the baseline data.
             ems_on (boolean): Whether to EMS is presented or not
             start (time object): time.time() of the experiment start
         """
@@ -466,11 +474,17 @@ class fastReach:
                             ems_time = self.send_ems_pulse("ems on", trial_type)
                         elif trial_type == 'ems2' and elapsed > (self.ems_delay + self.isi_dur):
                             ems_time = self.send_ems_pulse("ems on", trial_type)
+                        elif trial_type == 'training' and elapsed > (self.ems_training_delay + self.isi_dur):
+                            ems_time = self.send_ems_pulse("ems on", trial_type)
                     if ems_on == True and self.ems_active == True and self.ems_sent == False:
                         ems_duration = time.time() - ems_time
                         if ems_duration > .5:
                             self.send_ems_pulse("ems off", trial_type)
                             self.ems_sent = True
+
+                    # deactivates that ems can be triggered after tap, since the sound appears with a delay, the ems could be triggered after the tap but before the sound was played, this fixes that
+                    if self.button_pressed == True:
+                        self.mouse_input_enabled = False
 
                     # ib task following tap
                     if self.button_pressed == True and ((time.time() - button_press_time) * 1000) > self.ib_times[self.trial_counter-1]:
@@ -480,7 +494,6 @@ class fastReach:
                         
                         self.sound_played = True
                         self.button_pressed = False
-                        self.mouse_input_enabled = False
                         self.key_board_input_enabled = True
 
                     if self.sound_played == True:
@@ -503,6 +516,7 @@ class fastReach:
             # keyboard input
             for event in pg.event.get():
 
+                # touchscreen tap to start ib task
                 if self.mouse_input_enabled == True and event.type == pg.MOUSEBUTTONDOWN:
                     self.button_pressed = True
                     button_press_time = time.time()
@@ -517,7 +531,9 @@ class fastReach:
 
                 if self.key_board_input_enabled == True and event.type == pg.KEYDOWN:
 
-                    if event.key == pg.K_RETURN:
+                    # if event.key == pg.K_RETURN:
+                    # TODO test this
+                    if event.key == K_KP_ENTER:
                         self.ib_answered = True
 
                     if button_press_time > self.ib_times[self.trial_counter-1] and not self.ib_answered == True:
@@ -592,19 +608,19 @@ class fastReach:
                             EMS_RESET_TIME = ems_time
 
 class Classifier2(threading.Thread):
-    """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded.
+    """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded. 
+    Smoothes the class label (median) and probability (mean) over 5 consecutive predictions.
 
     Args:
-        stream_name (string): ib_answer of LSL data stream created to stream classifier output
+        stream_name (string): name of LSL data stream created to stream classifier output
         classifier_srate (integer): Frame rate at which classifier is applied and streams out classification output
+        data_srate (integer): Frame rate of incoming LSL data stream
         model_path (string): Location of pickled (LDA) model
-        type (string): "eeg" or "motion". This class can run classifier on EEG or Motion data
-        target_class (integer): Returns true when prediction equals target class
+        target_class (integer): Value of target class in the trained model
         chans ([integer]): Channels (list) to be selected from LSL input data stream
         threshold (float): To evaluate whether prediction matches target_class with the probability exceeding this threshold
-        frame_rate (integer): ?
         window_size (integer): Buffer size
-        regression (boolean): [exploratory] When true, apply regression on features
+        baseline_index (integer): Index of baseline window in buffer
     """
     def __init__(self, stream_name, classifier_srate, data_srate, model_path, target_class, chans, threshold, window_size, baseline_index) -> None:
         
@@ -612,7 +628,8 @@ class Classifier2(threading.Thread):
 
         # LSL outlet
         self.classifier_srate = classifier_srate
-        stream_info = StreamInfo(stream_name, 'Classifier', 3, self.classifier_srate, 'double64', 'myuid34234')
+        self.srate = data_srate
+        stream_info = StreamInfo(stream_name, 'Classifier', 2, self.srate/self.classifier_srate, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
         
         # LSL inlet
@@ -628,10 +645,12 @@ class Classifier2(threading.Thread):
         self.threshold = threshold
         self.window_size = window_size
         self.baseline_ix = baseline_index
-        self.srate = data_srate
 
         self.all_data = np.zeros((len(self.chans), self.srate+int(self.srate/(self.window_size-self.baseline_ix))))
         self.feat_data = np.zeros((len(self.chans), self.window_size-self.baseline_ix))
+        
+        self.smooth_class = np.zeros(5)
+        self.smooth_proba = np.zeros(5)
 
         self.state = False
     
@@ -652,20 +671,32 @@ class Classifier2(threading.Thread):
         
                 self.prediction = int(self.clf.predict(feats)[0]) #predicted class
                 probs = self.clf.predict_proba(feats) #probability for class prediction
-                self.outlet.push_sample([self.prediction,probs[0][0],probs[0][1]])
-                self.probs = probs[0][0]
 
-                if self.prediction == self.target_class and self.probs >= self.threshold:
+                self.probs = probs[0][self.target_class]
+
+                self.smooth_class[-1] = self.prediction
+                self.smooth_proba[-1] = self.probs
+
+                # if self.prediction == self.target_class and self.probs >= self.threshold:
+                # print(self.smooth_proba.mean())
+                # self.outlet.push_sample([self.prediction,probs[0][0],probs[0][1]])
+
+                self.outlet.push_sample([np.median(self.smooth_class),self.smooth_proba.mean()])
+
+                if np.median(self.smooth_class) == self.target_class and self.smooth_proba.mean() >= self.threshold:
                     self.state = True
                 else:
                     self.state = False
+
+                self.smooth_class = np.roll(self.smooth_class,-1)
+                self.smooth_proba = np.roll(self.smooth_proba,-1)
 
                 frame = 0
 
             frame += 1
             self.all_data = np.roll(self.all_data,-1) # Speed could be increased here, something like all_data[:,0:-2] = all_data[:,1:-1]
 
-            time.sleep(max(1./self.srate - (time.time() - start), 0))
+            time.sleep(max(1./self.srate - (time.time() - start), 0)) # maintain sampling rate
 
 class Classifier(threading.Thread):
     """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded.
@@ -816,22 +847,28 @@ class EMSResetter(threading.Thread):
 ### SET Experiment params ###
 np.set_printoptions(precision=2)
 
-system = 'win' # 'mac' or 'windows'
+system = 'mac' # 'mac' or 'windows'
 if system == 'mac':
     arduino_port = '/dev/tty.usbmodem21401'
-    path = path = '/Users/lukasgehrke/Documents/publications/2021-fastReach'
+    # path = '/Users/lukasgehrke/Documents/publications/2021-fastReach'
+    path = '/Volumes/projects/Lukas_Gehrke/2021-fastReach'
 elif system == 'win':
     arduino_port = 'COM3' # ls /dev/tty.*
     path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\'
 
 ### Settings for each participant ###
-pID = 1
+pID = 2
 # trial_type = 'baseline'
-#trial_type = 'ems1'
-trial_type = 'ems2'
+# trial_type = 'ems1'
+# trial_type = 'ems2'
+trial_type = 'training'
 ###
 
-num_trials = 90 # muss durch 3 teilbar sein
+if trial_type == 'training':
+    num_trials = 9
+else:
+    num_trials = 75
+
 if trial_type == 'baseline':
     with_ems = False
 else:
