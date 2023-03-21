@@ -165,7 +165,8 @@ def plot_3_cats_hue(data, x, y, hue, ylabel, xlabel,cats,palette,data_means,hue2
         fig.savefig('results/'+ title + '_' + ylabel + '_' + xlabel + '.png', format='png', transparent=False, bbox_inches='tight', dpi=300)
         fig.savefig('results/'+title + '_' + ylabel + '_' + xlabel + '.eps', format='eps', transparent=True, bbox_inches='tight', dpi=300)
 
-# plot eeg data with in timeline with 3 conditions
+# plot eeg data with in timeline with 3 conditions using means of all trials
+
 def plot_erp_timeline(data,id_vars, delete_vars, sample_rate,window_start,hue,palette,title):
 
      with sns.plotting_context('paper', font_scale = 1.8):
@@ -178,17 +179,20 @@ def plot_erp_timeline(data,id_vars, delete_vars, sample_rate,window_start,hue,pa
         # prep data
         # remove unnesseary columns 
         data = data.loc[:,data.columns!= delete_vars]
-
+       
          # to long format
 
         data_long = pd.melt(data, id_vars= id_vars, var_name='timepoint', value_name='µV', col_level=None, ignore_index=True)
-
+        
         # adjust time axis
         data_long['timepoint'] = (((1/sample_rate) * (data_long["timepoint"].str.replace("erp","").astype(int)))*1000) +window_start
+        
 
-        # plot
+        # plot mean (delete ci = None for shaded confidence interval)
+
         ax = sns.lineplot(data = data_long, x = 'timepoint', y = 'µV',hue =hue,palette = palette[3:6],style = hue)
-
+ 
+        
         ax.axhline(0,color = 'black' )
 
         # Label and show
@@ -198,5 +202,40 @@ def plot_erp_timeline(data,id_vars, delete_vars, sample_rate,window_start,hue,pa
 
         plt.show()
 
-        fig.savefig(d+'results/'+ title + '.png', format='png', transparent=False, bbox_inches='tight', dpi=300)
-        fig.savefig(d+'results/'+title + '.eps', format='eps', transparent=True, bbox_inches='tight', dpi=300)
+        fig.savefig('results/'+ title + '.png', format='png', transparent=False, bbox_inches='tight', dpi=300)
+        fig.savefig('results/'+title + '.eps', format='eps', transparent=True, bbox_inches='tight', dpi=300)
+
+# plot eeg data with in timeline with 3 conditions using means of all trials
+
+def plot_erp_timeline_2(data_2, id_vars_2,sample_rate,window_start,hue,palette,title):
+
+     with sns.plotting_context('paper', font_scale = 1.8):
+
+        ### Create new plot
+        fig, ax = plt.subplots(1, 1, figsize=(9,5))
+        fig.patch.set_alpha(1)
+
+        sns.despine() #bottom=True, left=True 
+      
+       # data_long = pd.melt(data, id_vars= id_vars, var_name='timepoint', value_name='µV', col_level=None, ignore_index=True)
+        data_2_long = pd.melt(data_2, id_vars= id_vars_2, var_name='timepoint', value_name='µV', col_level=None, ignore_index=True)
+        
+        # adjust time axis
+       
+        data_2_long['timepoint'] = (((1/sample_rate) * (data_2_long["timepoint"].str.replace("erp","").astype(int)))*1000) +window_start
+
+      
+        ax = sns.lineplot(data = data_2_long, x = 'timepoint', y = 'µV',hue =hue,palette = palette[3:6],style = hue)
+ 
+        
+        ax.axhline(0,color = 'black' )
+
+        # Label and show
+
+        ax.set_title(title)
+
+
+        plt.show()
+
+        fig.savefig('results/'+ title + '.png', format='png', transparent=False, bbox_inches='tight', dpi=300)
+        fig.savefig('results/'+title + '.eps', format='eps', transparent=True, bbox_inches='tight', dpi=300)
