@@ -1,5 +1,5 @@
 
-pID = 2;
+pID = 3;
 
 %% config
 current_sys = "mac";
@@ -34,7 +34,13 @@ pre_move_data.event = pre_move_events;
 [pre_move_data.event.type] = deal('reach');
 pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-1, 0]);
 
-pre_move_erp = mean(pre_move_erp.data(end,:,:),3);
+% reject noisy trials
+amplitude_means = squeeze(mean(pre_move_erp.data(end,:,:),2));
+amp_outliers = find(isoutlier(amplitude_means,'mean'));
+pre_move_erp_data = squeeze(pre_move_erp.data(end,:,:));
+pre_move_erp_data(:,amp_outliers) = []; 
+
+pre_move_erp = mean(pre_move_erp_data,2);
 pre_move_erp = movmean(pre_move_erp, 10);
 
 emg_onset_raw = min(find(pre_move_erp > prctile(pre_move_erp, 95)));
@@ -73,6 +79,19 @@ idle_erp = pop_rejepoch(idle_erp, idle_erp.reject.rejthresh,0); % actually rejec
 thresh = max(abs(pre_move_erp.data(:))) / 2;
 pre_move_erp = pop_eegthresh(pre_move_erp,1,[1:size(pre_move_erp.data,1)],-thresh,thresh,pre_move_erp.xmin,pre_move_erp.xmax,0,0);
 pre_move_erp = pop_rejepoch(pre_move_erp, pre_move_erp.reject.rejthresh,0); % actually reject high prob epochs
+
+% %% data exploration 21.03.2023
+% 
+% c = 40;
+% p = mean(squeeze(pre_move_erp.data(c,:,:)),2);
+% i = mean(squeeze(idle_erp.data(c,:,:)),2);
+% 
+% p = p-mean(p(1:25,:),1);
+% i = i-mean(i(1:25,:),1);
+% 
+% figure;
+% subplot(2,1,1);plot(p)
+% subplot(2,1,2);plot(i)
 
 %% select best channels
 
@@ -127,9 +146,11 @@ writematrix(delay, fullfile(path, 'delay.csv'));
 
 %% save Cz ERP for plotting
 
+pre_move_erp = pop_eegfiltnew(pre_move_erp, .1, 15); % only filter EMG channel
 pre_move_cz = squeeze(pre_move_erp.data(cz_ix,:,:));
 writematrix(pre_move_cz, fullfile(path, 'pre_move_cz.csv'));
 
+idle_erp = pop_eegfiltnew(idle_erp, .1, 15); % only filter EMG channel
 idle_cz = squeeze(idle_erp.data(cz_ix,:,:));
 writematrix(idle_cz, fullfile(path, 'idle_cz.csv'));
 
