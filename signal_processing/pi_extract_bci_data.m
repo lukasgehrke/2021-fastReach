@@ -71,14 +71,29 @@ idle_erp = pop_epoch(idle_data, {'idle_start'}, [-1.1, 0]);
 
 %% reject noisy epochs
 
-thresh = max(abs(idle_erp.data(:))) / 2;
-idle_erp = pop_eegthresh(idle_erp,1,[1:size(idle_erp.data,1)],-thresh,thresh,idle_erp.xmin,idle_erp.xmax,0,0);
-idle_erp = pop_rejepoch(idle_erp, idle_erp.reject.rejthresh,0); % actually reject high prob epochs
+% compute mean and sd and remove outliers
+idle_epoch_mean = squeeze(mean(idle_erp.data,2));
+mean_outlier = find(isoutlier(mean(idle_epoch_mean,1)));
+idle_epoch_std = squeeze(std(idle_erp.data,0,2));
+std_outlier = find(isoutlier(mean(idle_epoch_std)));
+noisy_trials_idle = union(mean_outlier, std_outlier);
+idle_erp = pop_rejepoch(idle_erp, noisy_trials_idle, 0); % actually reject high prob epochs
 
-%[pre_move_erp, pre_move_noisy_epochs] = pop_autorej(pre_move_erp, 'nogui','on','eegplot','off');
-thresh = max(abs(pre_move_erp.data(:))) / 2;
-pre_move_erp = pop_eegthresh(pre_move_erp,1,[1:size(pre_move_erp.data,1)],-thresh,thresh,pre_move_erp.xmin,pre_move_erp.xmax,0,0);
-pre_move_erp = pop_rejepoch(pre_move_erp, pre_move_erp.reject.rejthresh,0); % actually reject high prob epochs
+pre_move_epoch_mean = squeeze(mean(pre_move_erp.data,2));
+mean_outlier = find(isoutlier(mean(pre_move_epoch_mean,1)));
+pre_move_epoch_std = squeeze(std(pre_move_erp.data,0,2));
+std_outlier = find(isoutlier(mean(pre_move_epoch_std)));
+noisy_trials_pre_move = union(mean_outlier, std_outlier);
+pre_move_erp = pop_rejepoch(pre_move_erp, noisy_trials_pre_move, 0); % actually reject high prob epochs
+
+% thresh = max(abs(idle_erp.data(:))) / 2;
+% idle_erp = pop_eegthresh(idle_erp,1,[1:size(idle_erp.data,1)],-thresh,thresh,idle_erp.xmin,idle_erp.xmax,0,0);
+% idle_erp = pop_rejepoch(idle_erp, idle_erp.reject.rejthresh,0); % actually reject high prob epochs
+% 
+% %[pre_move_erp, pre_move_noisy_epochs] = pop_autorej(pre_move_erp, 'nogui','on','eegplot','off');
+% thresh = max(abs(pre_move_erp.data(:))) / 2;
+% pre_move_erp = pop_eegthresh(pre_move_erp,1,[1:size(pre_move_erp.data,1)],-thresh,thresh,pre_move_erp.xmin,pre_move_erp.xmax,0,0);
+% pre_move_erp = pop_rejepoch(pre_move_erp, pre_move_erp.reject.rejthresh,0); % actually reject high prob epochs
 
 % %% data exploration 21.03.2023
 % 
@@ -127,7 +142,7 @@ end
 idle = idle_erp.data;
 pre_move = pre_move_erp.data;
 
-writematrix(table({EEG.chanlocs.labels}'), fullfile(path, 'sel_chans_names.csv'));
+writetable(table({EEG.chanlocs.labels}'), fullfile(path, 'sel_chans_names.csv'));
 writematrix(sel_chans, fullfile(path, 'sel_chans.csv'));
 save(fullfile(path, 'pre_move'), 'pre_move');
 save(fullfile(path, 'idle'), 'idle');
@@ -144,15 +159,16 @@ delay(2) = prctile(rt,95);
 
 writematrix(delay, fullfile(path, 'delay.csv'));
 
-%% save Cz ERP for plotting
-
-pre_move_erp = pop_eegfiltnew(pre_move_erp, .1, 15); % only filter EMG channel
-pre_move_cz = squeeze(pre_move_erp.data(cz_ix,:,:));
-writematrix(pre_move_cz, fullfile(path, 'pre_move_cz.csv'));
-
-idle_erp = pop_eegfiltnew(idle_erp, .1, 15); % only filter EMG channel
-idle_cz = squeeze(idle_erp.data(cz_ix,:,:));
-writematrix(idle_cz, fullfile(path, 'idle_cz.csv'));
+% %% save Cz ERP for plotting
+% 
+% cz_ix = 8;
+% pre_move_erp = pop_eegfiltnew(pre_move_erp, .1, 15); % only filter EMG channel
+% pre_move_cz = squeeze(pre_move_erp.data(cz_ix,:,:));
+% writematrix(pre_move_cz, fullfile(path, 'pre_move_cz.csv'));
+% 
+% idle_erp = pop_eegfiltnew(idle_erp, .1, 15); % only filter EMG channel
+% idle_cz = squeeze(idle_erp.data(cz_ix,:,:));
+% writematrix(idle_cz, fullfile(path, 'idle_cz.csv'));
 
 %% 
 

@@ -3,14 +3,14 @@
 current_sys = "mac";
 eeglab_ver(current_sys);
 
-addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
-addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
+% addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
+% addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
 
 pi_bemobil_config;
 
 %% load data and parse events
 
-pIDs = 2; %1:10;
+pIDs = 2:3; %1:10;
 conds = {'Baseline', 'EMS1', 'EMS2'};
 results = [];
 
@@ -23,7 +23,7 @@ for pID = pIDs
             'streamtype', 'EEG', 'exclude_markerstreams', {});
         [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
         EEG = pi_parse_events(EEG);
-        cz_ix = find(strcmp({EEG.chanlocs.labels},'Cz'));
+        cz_ix = find(strcmp({EEG.chanlocs.labels},'C3'));
 
         %% behavior
         rt = {EEG.event.rt};
@@ -44,6 +44,14 @@ for pID = pIDs
         tr_nr = [1:size(rd)]';
         
         id = repelem(pID, numel(tr_nr))';
+
+        if pID == 3 && strcmp(cond, 'EMS1')
+            id(1) = [];
+            condition(1) = [];
+            tr_nr(1) = [];
+            rd(1) = [];
+            ed(1) = [];
+        end
     
         design_tmp = table(id, condition, tr_nr, rd, ed, rt);
     
@@ -65,6 +73,12 @@ for pID = pIDs
             [pre_move_data.event.type] = deal('reach');
             pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-1, 0]);
             
+            % reject noisy trials
+            amplitude_means = squeeze(mean(pre_move_erp.data(end,:,:),2));
+            amp_outliers = find(isoutlier(amplitude_means,'mean'));
+            pre_move_erp_data = squeeze(pre_move_erp.data(end,:,:));
+            pre_move_erp_data(:,amp_outliers) = []; 
+
             pre_move_erp = mean(pre_move_erp.data(end,:,:),3);
             pre_move_erp = movmean(pre_move_erp, 10);
             
@@ -102,17 +116,25 @@ for pID = pIDs
             end
         end
 
-        thresh = max(abs(pre_move_erp.data(:))) / 2;
-        [~, bad_trials_ixs] = pop_eegthresh(pre_move_erp,1,[1:size(pre_move_erp.data,1)],-thresh,thresh,pre_move_erp.xmin,pre_move_erp.xmax,0,0);
-%         pre_move_erp = pop_rejepoch(pre_move_erp, pre_move_erp.reject.rejthresh,0); % actually reject high prob epochs
-        valid_trials(bad_trials_ixs) = [];
-        
+        pre_move_epoch_mean = squeeze(mean(pre_move_erp.data,2));
+        mean_outlier = find(isoutlier(mean(pre_move_epoch_mean,1)));
+        pre_move_epoch_std = squeeze(std(pre_move_erp.data,0,2));
+        std_outlier = find(isoutlier(mean(pre_move_epoch_std)));
+        noisy_trials_pre_move = union(mean_outlier, std_outlier);
+        valid_trials(noisy_trials_pre_move) = [];
+
+        pre_move_erp = pop_eegfiltnew(pre_move_erp, .1, 15); % only filter EMG channel
         cz_erp = pre_move_erp.data(cz_ix,26:end,:);
         cz_baseline = mean(pre_move_erp.data(cz_ix,1:25,:));
         cz_erp = squeeze(cz_erp - cz_baseline);
-        cz_erp(:,bad_trials_ixs) = [];
+        cz_erp(:,noisy_trials_pre_move) = [];
 
         erp(valid_trials,:) = cz_erp';
+
+        if pID == 3 && strcmp(cond, 'EMS1')
+            erp(1,:) = [];
+            valid_trials = valid_trials-1;
+        end
         
         %% fuse data
 
