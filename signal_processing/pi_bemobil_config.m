@@ -8,7 +8,7 @@ else
     path = '/Volumes/projects/Lukas_Gehrke/2021-fastReach';
 end
 
-bemobil_config.study_folder = [path filesep 'data' filesep]; %(NEEDS to have a filesep at the end, sorry!) 
+bemobil_config.study_folder = [path filesep 'data' filesep 'study' filesep]; %(NEEDS to have a filesep at the end, sorry!) 
 bemobil_config.filename_prefix = 'sub-';
 
 % foldernames (NEED to have a filesep at the end, sorry!) 
@@ -23,7 +23,7 @@ bemobil_config.motion_analysis_folder = ['6_single-subject-motion-analysis' file
 bemobil_config.physio_analysis_folder = ['7_single-subject-eye-analysis' filesep];
 
 % filenames
-bemobil_config.merged_filename = 'pi_EEG.set';
+bemobil_config.merged_filename = 'merged_EEG.set';
 bemobil_config.basic_prepared_filename = 'basic_prepared.set';
 bemobil_config.preprocessed_filename = 'preprocessed.set';
 bemobil_config.filtered_filename = 'filtered.set';
@@ -32,10 +32,7 @@ bemobil_config.dipfitted_filename = 'dipfitted.set';
 bemobil_config.preprocessed_and_ICA_filename = 'preprocessed_and_ICA.set';
 bemobil_config.single_subject_cleaned_ICA_filename = 'cleaned_with_ICA.set';
 
-bemobil_config.merged_motion_filename = 'merged_MOTION.set';
-bemobil_config.processed_motion_filename = 'motion_processed.set';
-
-bemobil_config.merged_physio_filename = 'merge_PHYSIO.set';
+bemobil_config.merged_physio_filename = 'merged_PHYSIO.set';
 bemobil_config.processed_physio_filename = 'physio_processed.set';
 
 %% Preprocessing
@@ -169,13 +166,6 @@ bemobil_config.iclabel_threshold = -1;
 % filtering the final dataset
 bemobil_config.final_filter_lower_edge = 0.2; % this should not lead to any issues downstream but remove all very slow drifts
 bemobil_config.final_filter_higher_edge = [];
-
-%% Motion Processing Parameters
-
-bemobil_config.lowpass_motion = 6;
-bemobil_config.lowpass_motion_after_derivative = 18;
-% bemobil_config.lowpass_motion = [];
-% bemobil_config.lowpass_motion_after_derivative = [];
 
 %%
 % make sure the data is stored in double precision, large datafiles are supported, no memory mapped objects are

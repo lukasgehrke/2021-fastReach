@@ -7,19 +7,19 @@
 current_sys = "mac";
 eeglab_ver(current_sys);
 
-% load configuration
+%% load configuration
 pi_bemobil_config;
 
 %% preprocess TODO adapt below
 
 % set to 1 if all files should be recomputed and overwritten
 force_recompute = 1;
+subjects = 2:3;
 
 for subject = subjects
-    cps_import(bemobil_config, subject, 0);
-    cps_preprocess_EEG;
-    cps_preprocess_Motion;
-    cps_preprocess_Physio;
+    pi_import(bemobil_config, subject, 0);
+    pi_preprocess_EEG;
+    pi_preprocess_Physio;
 end
 
 %% export features
