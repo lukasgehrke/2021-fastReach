@@ -15,3 +15,4 @@ app/fastReach/ptext.py
 admin/Questionnaire/
 admin/BPN_VP-Gelder-fastReach.docx
 *.DS_Store
+*.fdt
