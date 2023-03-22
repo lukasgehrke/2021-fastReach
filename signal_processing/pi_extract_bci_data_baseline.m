@@ -1,5 +1,5 @@
 
-pID = 3;
+pID = 2;
 
 %% config
 current_sys = "mac";
@@ -14,7 +14,7 @@ pi_bemobil_config;
 
 %% load data and parse events
 
-EEG = pop_loadxdf(fullfile(bemobil_config.study_folder, 'study', bemobil_config.source_data_folder, ...
+EEG = pop_loadxdf(fullfile(bemobil_config.study_folder, bemobil_config.source_data_folder, ...
     ['sub-' sprintf('%03d', pID)], 'Baseline.xdf'), ...
     'streamtype', 'EEG', 'exclude_markerstreams', {});
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
@@ -59,7 +59,7 @@ end
 %% Extract EEG data for 2 classes: idle and pre-move
 
 pre_move_data = pop_select(pre_move_data, 'nochannel',{'EMG'});
-pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-1.1 + delay, 0 + delay]);
+pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-1 + delay, 0 + delay]);
 
 idle_event_ixs = find(contains({EEG.event.type}, 'idle_start'));
 idle_events = EEG.event(idle_event_ixs);
@@ -67,7 +67,7 @@ idle_data = EEG;
 idle_data = pop_select(idle_data, 'nochannel',{'EMG'});
 idle_data.event = idle_events;
 [idle_data.event.type] = deal('idle_start');
-idle_erp = pop_epoch(idle_data, {'idle_start'}, [-1.1, 0]);
+idle_erp = pop_epoch(idle_data, {'idle_start'}, [-1, 0]);
 
 %% reject noisy epochs
 
@@ -114,8 +114,12 @@ n_wins = 10;
 n_best_chans = 20;
 
 [best_chans_ixs, crit1, crit2] = rp_ERP_select_channels(pre_move_erp.data, idle_erp.data, EEG.srate/n_wins, 1); % extract informative channels
-sel_chans = best_chans_ixs(1:n_best_chans);
 
+% exclude EOG
+eog_ix = find(strcmp({EEG.chanlocs.labels}, 'VEOG'));
+best_chans_ixs(best_chans_ixs==eog_ix) = [];
+
+sel_chans = best_chans_ixs(1:n_best_chans);
 chans_to_keep = {'C3', 'C4', 'Cz'};
 
 for chan = chans_to_keep
@@ -129,7 +133,7 @@ end
 
 %% save
 
-path = fullfile(bemobil_config.study_folder, 'study', 'eeglab2python', ['sub-' sprintf('%03d', pID)]);
+path = fullfile(bemobil_config.study_folder, 'eeglab2python', ['sub-' sprintf('%03d', pID)]);
 if ~exist(path, 'dir')
     mkdir(path);
 end
