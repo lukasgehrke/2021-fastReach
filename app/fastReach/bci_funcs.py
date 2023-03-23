@@ -14,7 +14,7 @@ def windowed_mean(data, windows = 10):
     win_data = np.reshape(data, (data.shape[0], windows, stepsize))
     return np.mean(win_data, axis = 2)
 
-def base_correct(data):
+def base_correct(data, baseline_end_ix):
     """Subtracts baseline from data
 
     Args:
@@ -23,7 +23,8 @@ def base_correct(data):
     Returns:
         _type_: Baseline corrected 2D array, usually chans x time
     """
-    data_base_correct = data - data[:,0][:,None]
+    base = np.mean(data[:,:int(baseline_end_ix)], axis = 1)
+    data_base_correct = data - base[:,None]
     return data_base_correct
 
 def drop_baseline(data, baseline_end_ix):

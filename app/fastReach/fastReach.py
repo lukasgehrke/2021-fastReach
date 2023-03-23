@@ -38,7 +38,7 @@ class fastReach:
         
         self.pID = 'sub-0' + "%02d" % (pID)
         self.code_path = path+os.sep+'app'+os.sep+'fastReach'+os.sep
-        self.config = json.load(open(self.code_path+'config.json', 'r'))
+        # self.config = json.load(open(self.code_path+'config.json', 'r'))
         self.markers = json.load(open(self.code_path+'markers.json', 'r'))
         self.instruction = json.load(open(self.code_path+'instructions.json', 'r'))
         
@@ -82,10 +82,10 @@ class fastReach:
 
             classifier_update_rate = 5
             data_srate = 250
-            windows = 11
-            baseline_ix = 1
+            windows = 10
+            baseline_ix = int(data_srate/windows) # 100 ms baseline
             target_class = 1
-            threshold = .8
+            threshold = .99
 
             self.eeg = Classifier2('eeg_classifier', classifier_update_rate, data_srate, model_path_eeg, target_class, chans, threshold, windows, baseline_ix)
             self.eeg.start()
@@ -646,8 +646,10 @@ class Classifier2(threading.Thread):
         self.window_size = window_size
         self.baseline_ix = baseline_index
 
-        self.all_data = np.zeros((len(self.chans), self.srate+int(self.srate/(self.window_size-self.baseline_ix))))
-        self.feat_data = np.zeros((len(self.chans), self.window_size-self.baseline_ix))
+        # self.all_data = np.zeros((len(self.chans), self.srate+int(self.srate/(self.window_size-self.baseline_ix))))
+        # self.feat_data = np.zeros((len(self.chans), self.window_size-self.baseline_ix))
+        self.all_data = np.zeros((len(self.chans), self.srate))
+        self.feat_data = np.zeros((len(self.chans), self.window_size))
         
         self.smooth_class = np.zeros(5)
         self.smooth_proba = np.zeros(5)
@@ -666,8 +668,11 @@ class Classifier2(threading.Thread):
 
             if frame == self.classifier_srate: # every X ms
 
-                tmp = base_correct(windowed_mean(self.all_data, windows = self.window_size))
-                feats = drop_baseline(tmp, self.baseline_ix).flatten().reshape(1,-1)
+                # tmp = base_correct(windowed_mean(self.all_data, windows = self.window_size))
+                # feats = drop_baseline(tmp, self.baseline_ix).flatten().reshape(1,-1)
+
+                tmp = base_correct(self.all_data, self.baseline_ix-1)
+                feats = windowed_mean(tmp, self.window_size).flatten().reshape(1,-1)
         
                 self.prediction = int(self.clf.predict(feats)[0]) #predicted class
                 probs = self.clf.predict_proba(feats) #probability for class prediction
@@ -678,7 +683,7 @@ class Classifier2(threading.Thread):
                 self.smooth_proba[-1] = self.probs
 
                 # if self.prediction == self.target_class and self.probs >= self.threshold:
-                # print(self.smooth_proba.mean())
+                # print(np.round(self.smooth_proba.mean(),2))
                 # self.outlet.push_sample([self.prediction,probs[0][0],probs[0][1]])
 
                 self.outlet.push_sample([np.median(self.smooth_class),self.smooth_proba.mean()])
@@ -859,9 +864,9 @@ elif system == 'win':
 ### Settings for each participant ###
 pID = 2
 # trial_type = 'baseline'
-# trial_type = 'ems1'
+trial_type = 'ems1'
 # trial_type = 'ems2'
-trial_type = 'training'
+# trial_type = 'training'
 ###
 
 if trial_type == 'training':
