@@ -16,3 +16,12 @@ admin/Questionnaire/
 admin/BPN_VP-Gelder-fastReach.docx
 *.DS_Store
 *.fdt
+comment.cut
+main.aux
+main.synctex.gz
+main.out
+main.log
+main.fls
+main.fdb_latexmk
+main.blg
+main.bbl
