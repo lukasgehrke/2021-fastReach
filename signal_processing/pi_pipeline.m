@@ -14,11 +14,11 @@ pi_bemobil_config;
 
 % set to 1 if all files should be recomputed and overwritten
 force_recompute = 1;
-subjects = 3;
+subjects = 2:3;
 
 for subject = subjects
-    pi_import(bemobil_config, subject, 0);
-%     pi_preprocess_EEG;
+%     pi_import(bemobil_config, subject, 0);
+    pi_preprocess_EEG;
 %     pi_preprocess_Physio;
 end
 

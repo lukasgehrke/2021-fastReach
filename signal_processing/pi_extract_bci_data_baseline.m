@@ -1,5 +1,5 @@
 
-pID = 2;
+pID = 3;
 
 %% config
 current_sys = "mac";
@@ -47,29 +47,33 @@ emg_onset_raw = min(find(pre_move_erp > prctile(pre_move_erp, 95)));
 emg_onset_fine = max(find(diff(pre_move_erp(1:emg_onset_raw)) < 0));
 
 delay = (emg_onset_fine - EEG.srate) / EEG.srate;
-disp(delay);
 
 figure;plot(pre_move_erp);
 if isempty(delay)
-    delay = .08;
+    delay = -.08;
 else
     xline(emg_onset_fine);
 end
+disp(delay);
 
 %% Extract EEG data for 2 classes: idle and pre-move
 
-pre_move_data = pop_select(pre_move_data, 'nochannel',{'EMG'});
-pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-1 + delay, 0 + delay]);
+eeg_delay = .06;
+
+pre_move_data = pop_select(pre_move_data, 'nochannel',{'EMG', 'VEOG'});
+pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-1 + delay + eeg_delay, 0 + delay + eeg_delay]);
 
 idle_event_ixs = find(contains({EEG.event.type}, 'idle_start'));
 idle_events = EEG.event(idle_event_ixs);
 idle_data = EEG;
-idle_data = pop_select(idle_data, 'nochannel',{'EMG'});
+idle_data = pop_select(idle_data, 'nochannel',{'EMG', 'VEOG'});
 idle_data.event = idle_events;
 [idle_data.event.type] = deal('idle_start');
-idle_erp = pop_epoch(idle_data, {'idle_start'}, [-1, 0]);
+idle_erp = pop_epoch(idle_data, {'idle_start'}, [1 + eeg_delay, 2 + eeg_delay]);
 
 %% reject noisy epochs
+
+% TODO pool the noisy trials and reject for both idle and movement segment
 
 % compute mean and sd and remove outliers
 idle_epoch_mean = squeeze(mean(idle_erp.data,2));
@@ -115,10 +119,6 @@ n_best_chans = 20;
 
 [best_chans_ixs, crit1, crit2] = rp_ERP_select_channels(pre_move_erp.data, idle_erp.data, EEG.srate/n_wins, 1); % extract informative channels
 
-% exclude EOG
-eog_ix = find(strcmp({EEG.chanlocs.labels}, 'VEOG'));
-best_chans_ixs(best_chans_ixs==eog_ix) = [];
-
 sel_chans = best_chans_ixs(1:n_best_chans);
 chans_to_keep = {'C3', 'C4', 'Cz'};
 
@@ -146,10 +146,10 @@ end
 idle = idle_erp.data;
 pre_move = pre_move_erp.data;
 
-writetable(table({EEG.chanlocs.labels}'), fullfile(path, 'sel_chans_names.csv'));
+writetable(table({pre_move_erp.chanlocs.labels}'), fullfile(path, 'sel_chans_names.csv'));
 writematrix(sel_chans, fullfile(path, 'sel_chans.csv'));
-save(fullfile(path, 'pre_move'), 'pre_move');
-save(fullfile(path, 'idle'), 'idle');
+save(fullfile(path, 'pre_move_Baseline'), 'pre_move');
+save(fullfile(path, 'idle_Baseline'), 'idle');
 
 %% reaction time
 
@@ -162,17 +162,6 @@ delay(1) = prctile(rt,5);
 delay(2) = prctile(rt,95);
 
 writematrix(delay, fullfile(path, 'delay.csv'));
-
-% %% save Cz ERP for plotting
-% 
-% cz_ix = 8;
-% pre_move_erp = pop_eegfiltnew(pre_move_erp, .1, 15); % only filter EMG channel
-% pre_move_cz = squeeze(pre_move_erp.data(cz_ix,:,:));
-% writematrix(pre_move_cz, fullfile(path, 'pre_move_cz.csv'));
-% 
-% idle_erp = pop_eegfiltnew(idle_erp, .1, 15); % only filter EMG channel
-% idle_cz = squeeze(idle_erp.data(cz_ix,:,:));
-% writematrix(idle_cz, fullfile(path, 'idle_cz.csv'));
 
 %% 
 
