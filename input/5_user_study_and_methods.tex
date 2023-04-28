@@ -1,17 +1,25 @@
 
 \section{Methods}
 
-With this study we wanted to find out whether agency can be preserved during \textit{physical actuation} of the user's body when their own brain signals serve as the control signal. To this end, we build a system that leverages the brain signals known to reflect the volitional intent to interact, i.e. the EEG readiness potential, to trigger electrical muscle stimulation to cue a reaching movement.
+% With this study we wanted to find out whether agency can be preserved during \textit{physical actuation} of the user's body when their own brain signals serve as the control signal. To this end, we build a system that leverages the brain signals known to reflect the volitional intent to interact, i.e. the EEG readiness potential, to trigger electrical muscle stimulation to cue a reaching movement.
 
-To assess if agency was preserved, we used a mixed methods approach including a psychometric test of intentional binding, questionnaires as well as qualitative interviews. Our interviews followed a phenomenological structure \todo{add reference from AH review paper mueller}. We t
+Our idea to overcome this disruption in agency is to use EEG signals reflecting the intent to (inter)act and leverage them for the control of an end-effector, here EMS. We trained an EEG classifier to discriminate between two user states and applied it in real-time: either the user is predicted to be in an \textit{idle}-- or a \textit{pre-movement} state. Is the user predicted to be in a \textit{pre-movement} state, EMS is triggered, augmenting their action.
 
-\subsection{Participants}
+\input{input/4_prototype}
+
+To assess whether our prototype preserves agency during action augmentation, we used a mixed methods approach including a psychometric test of intentional binding, questionnaires as well as qualitative interviews. Our interviews followed a phenomenological structure~\citep{Danry2022-xk}.
+
+\subsection{User study}
+
+\subsubsection{Participants}
 
 \todo{add actual number} Ten participants (\todo{add mean age and sd}) from our local institution participated in our study. All participants were right handed, had normal or corrected to normal vision and had not experienced EMS before. Participants were compensated with 12 Euro per hour of study participation. Prior to their participation, participants were informed of the nature of the experiment, recording and anonymization procedures and signed a consent form.
 
-\subsection{Apparatus}
+\subsubsection{Apparatus}
+\todo{add the components that were used to run the STUDY, touchpad, keyboard etc.}
 The experimental setup, depicted in Figure~\ref{}, comprised: (1) a wrist-mounted wearable HTC VIVE tracker for motion capture, (2) a 64-channel EEG system, and (3) a medically-compliant EMS device connected via two electrodes worn on the forearm. To assist readers in replicating our experiment, we provide the necessary technical details, the complete source code to the experiment, the collected data, and the analysis scripts\footnote{[anonymized]}.
 
+% TODO change this to the use of EMG for now
 \indent\textbf{(1) Hand Tracking.} We used an HTC Vive Tracker, attached to the participant's wrist, to track their right hand at 90Hz. Therefore, we ran a simple Unity3D scene and streamed the data via the labstreaminglatyer (LSL)\footnote{https://github.com/sccn/labstreaminglayer}.
 
 \indent\textbf{(2) EEG Recording.} EEG data was recorded from 64 actively amplified Ag/AgCl electrodes in an actiCap Snap cap using BrainAmp DC amplifiers from BrainProducts. Electrodes were placed according to the extended international 10–20 system \cite{Chatrian1985-ys}. One electrode was placed under the left eye to provide additional information about eye movements (vEOG). After fitting the cap, all electrodes were filled with conductive gel to ensure proper conductivity and electrode impedance was brought below 10k$\Omega$ for all electrodes. EEG data was recorded with a sampling rate of 250 Hz. We used LSL to make the EEG data stream available in the network and synchronize the recordings of EEG data, motion capture and an experiment marker stream that marked sections of the study procedure.
@@ -20,7 +28,7 @@ The experimental setup, depicted in Figure~\ref{}, comprised: (1) a wrist-mounte
 
 \indent\textbf{(3) Electrical Muscle Stimulation.} We actuated the index finger via electrical muscle stimulation (EMS), which was delivered via two electrodes attached to the participants' extensor digitorum muscle. We utilized the extensor digitorum since we found that we can robustly actuate it without inducing parasitical motion of neighboring muscles. This finger actuation was achieved via a medically-compliant battery powered muscle stimulator (prorelax TENS/EMS Super Duo Plus). The EMS system's output was controlled by flipping a solid state relay connected via an Arduino Uno to the experiment computer. The EMS was pre-calibrated per participant to ensure a pain-free stimulation and robust actuation.
 
-\subsection{Task}
+\subsubsection{Task}
 \missingfigure{add an infographic of the task progression with a time axis here, this should be covering two columns and be at the top of the page!}
 Participants performed a simple reaching task: resting their hand on the table, participants were instructed to press a specified key on a notebook in front of them. For each trial, a key was randomly selected from one of two groups of letters: (1) 'a', 's', 'd' or (2) 'j', 'k', 'l'. The selected group was then changed with every trial. This was done to keep the task engaging while maintaining a comparable reaching movement between trials.
 
@@ -33,39 +41,11 @@ Participants completed three experimental blocks. The first block consisted of 6
 
 In a second block, participants completed 80 trials of the same task and trial order as in the first block. Now, the brain-computer interface (BCI) detecting readiness potentials from real-time EEG data was continuously running in the background. After the target letter was shown to the participants and they were preparing to reach out and press the corresponding key, the BCI was live. Whenever the BCI detected EEG signals to reflect an interaction intent, EMS was activated causing the participants index finger to lift. 
 
-
 Both experimental blocks two and three were followed by a mixed methods data collection of participants' perceived agency.
 
 In summary, the experiment consisted of four phases: (1) a setup phase; (2) a first experimental block: the training phase; (3) a second experiment block: the test phase; and (4) a test battery of questionnaire and interview to inquire about their experienced agency.
 
-\subsection{Training of Classifiers from Training Phase Data}
-% Brain-Computer Interface to Detect EEG Readiness Potentials }
-% Classifiying EEG Signals of the Intent to Interact
-
-Before the test phase of our experiment, the data recorded during the training phase was processed in three consecutive steps: (1) we extracted movement onsets in each trial to construct three event classes: an \textit{idle} class representing resting background activity, a \textit{movement} class and a \textit{pre-movement} class, representing the intent to interact. Next, (2) a motion classifier was trained on \textit{movement} and \textit{idle} data segments and (3) an EEG classifier was trained on \textit{pre-movement} and \textit{idle} data segments using 10 features from the 20 most informative EEG channels. To classify single-trial motion and EEG data we used a regularized linear discriminant analysis (LDA) that was trained for each participant individually. The EEG classifier was then used in the test phase to detect RPs and trigger EMS. The motion classifier was used to make the interaction more robust. When it detected the participants hand to be moving, it deactivated the control loop from RP to EMS.
-
-\missingfigure{some picture from the setup and prototype}
-
-\indent\textbf{(1) Labelling Pre-movement, Movement and Idle Data Segments.}
-In order to obtain training data segments for the \textit{pre-movement} class, a detection algorithm was applied on the hand velocity time series. From the training data, the raw hand motion data was filtered with a 6Hz low-pass filter and re-sampled to match the EEG sample rate using BeMoBIL Pipeline functions \textit{xdf2bids} and \textit{bids2set}\footnote{https://github.com/BeMoBIL/bemobil-pipeline}. Subsequently the first derivative was computed and velocity was extracted. Then, for each trial a two step thresholding process was applied to extract the exact time of movement onset: (1) the first time point when the velocity exceeded 70\% of the maximum velocity in the trial was selected, then (2) the signal was flipped at that time point and the time point where the flipped signal first fell below 10\% of the maximum in the remaining data was selected as the movement onset.
-
-The three event classes were then defined as follows: \textit{pre-movement} from -1000 to 0 ms preceding the movement onsets, \textit{movement} from 0 to 1000 ms succeeding the movement onsets and \textit{idle}, a one second data segment that fell exactly between two succeeding trials, i.e. time-locked to the inter-trial-interval. Here, participants where looking at a fixation cross on the screen with their hand resting on the table.
-
-\indent\textbf{(2) Training of Hand Motion Classifier.}
-An LDA was trained using the mean velocity per trial and movement and idle time segment. Hence, 60 values for each class were subjected to train the motion classifier. Since in the idle time segments almost no movement occurred we added some artificial noise. To this end, the idle features were multiplied by a factor of 3, chosen by simple trial and error. In the real-time feedback, this rendered the classifier less susceptible to false positives, i.e. detecting a movement when there was none.
-
-\indent\textbf{(3) Channel Selection \& Training of EEG Classifier.}
-For the EEG classifier, we followed the approach outlined by Schultze-Kraft et al.\cite{} with slight modifications. First, the 20 channels with the strongest discrimination between \textit{pre-movement} and \textit{idle} segments were selected with the following procedure. For both \textit{pre-movement} and \textit{idle} the mean signal in the last 100 ms of each segment was subtracted from the mean signal in the first 100ms of the segment. The resulting value thus indicated how much the signal had changed in the course of the 1s segments. In line with the literature there should be a change over time in the \textit{pre-movement} segment but not in the \textit{idle} segment. Then, all channels were sorted (1) in descending order by the signal difference in the \textit{pre-movement} segments and (2) in ascending order by the signal difference in the \textit{idle} segments. The idea was, that an ideal channel shows a strong change in signal over the course of a \textit{pre-movement} segment but shows no difference during a \textit{idle} segment. The ranks were joined and the 20 best channels were selected. In any case, channels C3, C4 and Cz were kept for every participant as these are most frequently reported in studies on the RP.
-
-To train the LDA EEG classifier, we extracted spatiotemporal features from the EEG; 10 windowed means were extracted for each segment and channel. These were baseline corrected by subtracting the mean of the last 100 ms preceding the segment. The features were concatenated across all 20 selected channels and 10 time windows to obtain a 200 dimensional spatiotemporal feature vector per \textit{pre-movement} and \textit{idle} segment.
-
-\subsubsection{Real-time Feedback}
-
-During the test phase, both classifiers were applied to the real-time data. With the motion data streaming at 90 Hz we subjected the current sample to the motion classifier. For the EEG data streaming at 250 Hz, the EEG data of the last 1000ms was buffered for the selected best channels and 10 windowed means per channel were computed. Identical to the training data, these features were baseline corrected by subtracting the mean from the last 100 ms preceding the last second, i.e. -1100 ms to -1000 ms, resulting in a 200 dimensional baseline corrected spatiotemporal feature vector. Hence, both classifiers yielded one output value at each sample point.
-
-The EMS was triggered whenever the EEG classifier predicted the \textit{pre-movement} class with an above .7 probability. Additionally, EMS was only triggered when the hand was \textit{not} moving. In each trial, as soon as the hand was in motion once after trial start, the EEG-EMS control was deactivated for the rest of the trial. This guaranteed that participants experienced EMS only during movement preparation.
-
-\subsection{Interview \& Questionnaire}
+\subsubsection{Measures of agency experience: Intentional Binding, Questionnaire \& Interview}
 
 To assess if agency was preserved, three measures were recorded during and after the test phase.
 
@@ -80,7 +60,7 @@ We interviewed user's about the experience with the EMS integration. We asked op
 
 To not break the user's immersion by disturbing the flow of the interaction we decided against asking qualitative questions at the end of each and every trial.
 
-\subsection{Statistical Analyses}
+\subsubsection{Statistical Analyses}
 \todo{how where the results analyzed: sentiment analyses and statistics of IB data and questionnaire results}
 
 % ERP with significance mask for Cz? Assessing significance of classifier
@@ -96,5 +76,5 @@ To not break the user's immersion by disturbing the flow of the interaction we d
 
 % evaluation of EEG classifier: can report false negatives, how often was it missing to predict a movement onset? hand was moving without EMS being triggered occurred how often? Not possible to evlaute false positives as no ground truth available
 
-\subsection{Reproducing Results and Data Availability}
+\subsubsection{Reproducing Results and Data Availability}
 Data, experimental protocol, analyses code including scripts for a reproduction of the presented results are hosted at open science foundation (OSF)\footnote{[anonymized]}. BIDS formatted data is hosted on openneuro \cite{}.
