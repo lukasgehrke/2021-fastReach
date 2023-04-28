@@ -3,27 +3,30 @@
 % Functions as a starting point and a common basis. Therefore it primarily contains recognizable and agreed points.
 % 2. What is the complication, challenge identified
 % Spells the reason for acting now. It contains threats / opportunities and the hurdles that need to be overcome.
-Technological advances in hardware that augment a user's physical actions have reignited dreams of overcoming human limitations, recovering lost abilities as well as simplifying skill acquisition. Wearable exoskeletons move a user's body by applying forces to the extremities, for example by pulling on the fingertips (see Dexmo Haptic Glove \footnote{https://www.dextarobotics.com/}) while electrical muscle stimulation (EMS) makes the user's extremities move by sending current into the muscle activating nerves. These technologies are becoming increasingly seamless to use. However, augmented user's frequently report dissociative experiences during or following augmented action. They do not experience agency.
 
-The sense of agency refers to the experience of being in control of our own voluntary actions, instead of them feeling as though they randomly happen to us. This being in the "driving seat when it comes to our own actions"~\cite{Moore2016-ub} can be subdivided into the \textit{feeling} of agency, a low level pre-reflective sensory process, and a more higher level reflective cognitive process, the \textit{judgement} of agency~\cite{Moore2016-ub, Danry2022-xk}. The key challenge in human \textit{physical augmentation} is to create an experience of pre-reflective agency, so user's feel as though they are in the "driving seat" once again.
+Advances in hardware that augment a user's physical actions have reignited dreams of overcoming human limitations, recovering lost abilities as well as simplifying skill acquisition~\citep{Kasahara2019-sk, Goto2020-mw}. There are two main technologies to physically augment users' actions: First, through the use of mechanical actuators, exoskeletons, a user's body can be moved by applying forces to the extremities, for example by pulling on the fingertips, and second, by making the user's extremities move by sending current into their muscle activating nerves using electrical muscle stimulation (EMS). However, augmented user's frequently report dissociative experiences during or following augmented action~\citep{}. They do not experience agency.
+\todo{this needs a good citation}
+
+The experience of agency means being in control of our own voluntary actions, instead of them feeling as though they randomly happen to us. It has frequently been shown that if users have a strong sense of agency, they are more likely to feel engaged and satisfied with an interaction, and are more likely to trust a system~\citep{Berberian2012-do, Miller2007-rb}. The key challenge to drive adoption of human \textit{action augmentation} then is to design for agency experience, so user's feel as though they are in the ``driving seat'' once again.
 % if something happens for you in an interaction there is a cost to that:
-% - impacts sense of agency which in turn makes user's engage less
-% - impacts precision and accuracy, which can be very critical in high stakes scenarios, e.g. air traffic control
+% - impacts sense of agency which in turn may makes user's engage less -> citation?
+% - may impact precision and accuracy, which can be very critical in high stakes scenarios, e.g. air traffic control -> citation?
 
 % 3. Question
 % Asks the question how the hurdles of the Complication can be overcome. How can we prevent the threat or seize the opportunity? Also, what would be the benefits if the complication would be overcome?
 % What have others done to address this and what do we propose "instead"
-In physical augmentation, this experience of agency positively impacts performance.~\citet{Kasahara2019-sk} have shown that reaction times when tapping targets on a touchscreen can be increased by augmenting the user. Critically they found an optimal increase in reaction time, \textit{pre-emptive} gain, that preserves agency. At around 80 ms preceding the naturally occurring action, user's integrate the augmentation and maintain an experience of agency. However, setting this gain factor is dependent on each specific task and requires fitting the parameters over and over again. A key question remains: How can we maintain agency during physical augmentation without training and over-fitting parameters? In other words, how can we create closed systems for users to experience \textit{natural} augmentation?
+Previously, ~\citet{Kasahara2019-sk} have shown that reaction times when tapping targets on a touchscreen can be increased by augmenting the user through the use of EMS while maintaining their sense of agency. The authors found a relation between the experience of agency and the \textit{pre-emptive} gain, i.e. how much earlier the action of the user can be elicited. However, setting this gain factor may depend on each specific task and requires fitting the parameters over and over again. A key question then remains: How can we maintain agency during physical action augmentation without any training or running the risk of over-fitting task specific parameters? In other words, how can we design closed systems without the need for external tuning, to deliver an integrated, \textit{natural}, experience of user's augmented actions?
+% At around 80 ms preceding the naturally occurring action, user's integrate the augmentation and maintain an experience of agency. 
+
+\missingfigure{maybe small infographic here showing the connection from EEG volitional RP thought to EMS trigger on the Arm. <- better use this for the teaser image. Here better present the main results, i.e. sense of agency scores?}
+\input{input/1_teaser_figure}
 
 % 4. (short) Answer Teaser
 % Provides the answer on how to overcome the hurdles. Explains how this will help deflect the threats or seize the opportunities.
 % keep this short
-In this paper, we present a system that establishes a fast communication channel between the user's brain signals and a physical end effector, here EMS. The system controls the user's muscles through EMS at the time of the user's intent to act, as measured through readiness potentials (RP) present in the user's electroencephalogram (EEG). In our user study we then applied a mixed-methods research approach to investigate whether keeping the physical impact on the user's body in line with their intention to move, preserves their sense of agency.
+In this paper, we present a fast communication channel between the user's brain signals and a physical end effector, here EMS. Crucially, our system controls the user's muscles through EMS at the time of the user's \textit{intent to act}, as measured through readiness potentials (RP) present in the user's electroencephalogram (EEG). In our user study we applied a mixed-methods research approach to investigate whether keeping the physical impact on the user's body in line with their intention to move preserves their sense of agency.
+% We found ... rendering the augmentation a \textit{natural}, integrated expansion of the user's body.
 
-\subsection{Preserving Agency using Brain Signals of the Intent to (Inter)act}
+% \subsection{Preserving Agency using Brain Signals of the Intent to (Inter)act}
 % 4. (long) Anwser with teaser image
 % Provides the answer on how to overcome the hurdles. Explains how this will help deflect the threats or seize the opportunities.
-
-%- not only physical integration but also other adpative interfaces, or control of mobile phone
-\missingfigure{maybe small infographic here showing the connection from EEG volitional RP thought to EMS trigger on the Arm. <- better use this for the teaser image. Here better present the main results, i.e. sense of agency scores?}
-\input{input/1_teaser_figure}
