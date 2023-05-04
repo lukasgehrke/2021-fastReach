@@ -1,5 +1,5 @@
 
-pID = 2;
+pID = 3;
 
 %% config
 current_sys = "mac";
@@ -32,10 +32,16 @@ info = lsl_streaminfo(lib,'BrainVision RDA','EEG',64,250,'cf_float32','sdfwerr32
 disp('Opening an outlet...');
 outlet = lsl_outlet(info);
 
+% make a new stream outlet
+info_marker = lsl_streaminfo(lib,'fastReach_restream','Markers',1,0,'cf_string','sdfwerr32432');
+disp('Opening an outlet...');
+outlet_marker = lsl_outlet(info_marker);
+
 %% send data into the outlet, sample by sample
 disp('Now transmitting data...');
 
 i = 1;
+last_event = '';
 while true
     data = double(EEG.data(:,i));
     outlet.push_sample(data);
@@ -49,7 +55,12 @@ while true
     current_ev_ix = max(find(i>allEventsLats));
     if ~isempty(current_ev_ix)
         event = EEG.event(current_ev_ix).type;
-        disp(event);
+
+        if ~strcmp(event, last_event)
+            disp(event);
+            outlet_marker.push_sample({event});
+            last_event = event;
+        end
     end
 
 end

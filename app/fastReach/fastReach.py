@@ -2,18 +2,14 @@
 import os
 import pygame as pg
 from pygame.locals import *
-from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
 import numpy as np
 import pandas as pd
-import serial, time, pickle, json, sys
+import serial, time, json
 from LSL import LSL
-import threading
 import ptext
 import random
-from bci_funcs import windowed_mean, base_correct, drop_baseline, reshape_trial
-# import matplotlib.pyplot as plt
 
-EMS_RESET_TIME = time.time()
+from Classifier import Classifier
 
 class fastReach:
     """Experiment triggering electrical muscle stimulation EMS directly from the output of a brain-computer interface (BCI)
@@ -25,20 +21,17 @@ class fastReach:
     Args:
         pID (integer): participant ID used to save data
         path (string): path to the data folder
-        ems_on (boolean): whether to run with or without electrical muscle stimulation (EMS)
+        self.ems_on (boolean): whether to run with or without electrical muscle stimulation (EMS)
         arduino_port (string): port of connected arduino device
         num_trials (integer): Number of trials to complete
         debug (boolean): whether to print debug messages
     """
 
-    def __init__(self, pID, path, ems_on, arduino_port, num_trials, debug) -> None:
+    def __init__(self, pID, path, ems_on, trial_type, arduino_port, num_trials, debug) -> None:
         self.lsl = LSL('fastReach')
-
-        self.print_states = debug
         
         self.pID = 'sub-0' + "%02d" % (pID)
         self.code_path = path+os.sep+'app'+os.sep+'fastReach'+os.sep
-        # self.config = json.load(open(self.code_path+'config.json', 'r'))
         self.markers = json.load(open(self.code_path+'markers.json', 'r'))
         self.instruction = json.load(open(self.code_path+'instructions.json', 'r'))
         
@@ -55,58 +48,36 @@ class fastReach:
         self.init_txt()
         self.init_sound(self.code_path)
         
+        self.trial_type = trial_type
         self.num_trials = num_trials
         self.trial_counter = 0
 
         # default values
-        self.ems2min = 0
-        self.ems2max = 1
+        self.ems_randommin = 0
+        self.ems_randommax = 1
+        self.ems_on = ems_on
 
         self.init_trial()
 
-        if ems_on == True:
+        data_path = path+os.sep+'data'+os.sep+'study'+os.sep+'eeglab2python'+os.sep+str(self.pID)+os.sep
+        if self.ems_on == True:
             
-            self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
-
-            # self.ems_resetter = EMSResetter(self.ems, self.lsl, self.markers)
-            # self.ems_resetter.start()
-
-            data_path = path+os.sep+'data'+os.sep+'study'+os.sep+'eeglab2python'+os.sep+str(self.pID)+os.sep
-            model_path_eeg = data_path+'model_'+str(self.pID)+'_eeg.sav'
-            chans = pickle.load(open(data_path+'chans_'+str(self.pID)+'_eeg.sav', 'rb'))
-
+            # self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
             self.ems_training_delay = 2
             stim_delay = pd.read_csv(data_path+'delay.csv')
-            self.ems2min = float(stim_delay.columns[0])
-            self.ems2max = float(stim_delay.columns[1])
+            self.ems_randommin = float(stim_delay.columns[0])
+            self.ems_randommax = float(stim_delay.columns[1])
 
-            classifier_update_rate = 5
-            data_srate = 250
-            windows = 10
-            baseline_ix = int(data_srate/windows) # 100 ms baseline
-            target_class = 1
-            threshold = .99
+        if self.trial_type == 'ems_bci':
 
-            self.eeg = Classifier2('eeg_classifier', classifier_update_rate, data_srate, model_path_eeg, target_class, chans, threshold, windows, baseline_ix)
+            model_path_eeg = data_path+'model_'+str(self.pID)+'_eeg.sav'
+            with open(data_path+os.sep+'bci_params.json', 'r') as f:
+                bci_params = json.load(f)
+
+            self.eeg = Classifier('eeg_classifier', bci_params['classifier_update_rate'], bci_params['data_srate'], model_path_eeg, 
+                                     bci_params['target_class'], bci_params['chans'], bci_params['threshold'], bci_params['windows'], bci_params['baseline'],
+                                     debug)
             self.eeg.start()
-            
-            # buffer_feat_comp_size_samples = 275
-            # windowed_mean_size_samples = 25
-            # do_reg = False            
-            # self.eeg = Classifier('eeg_classifier', (buffer_feat_comp_size_samples/windowed_mean_size_samples)-1,
-            #     model_path_eeg, "eeg", target_class, chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
-
-            # model_path_motion = '/Users/lukasgehrke/Documents/publications/2021-fastReach/data/study/eeglab2python/'+str(self.pID)+'/model_'+str(self.pID)+'_motion.sav'
-            # target_class = 1
-            # chans = np.array([5,6,7])
-            # threshold = 1.0
-            # buffer_feat_comp_size_samples = 2
-            # windowed_mean_size_samples = 2
-            # do_reg = False
-
-            # self.motion = Classifier('motion_classifier', 45, model_path_motion, "motion", target_class,
-            #     chans, threshold, windowed_mean_size_samples, buffer_feat_comp_size_samples, do_reg)
-            # self.motion.start()
 
     def init_screen(self, fullscreen):
         """Initialize screen object using pygame
@@ -126,16 +97,6 @@ class fastReach:
         self.font = pg.font.Font(None, 45)
 
     def init_sound(self, sound_file_path):
-        
-        # sampleRate = 44100
-        # # 44.1kHz, 16-bit signed, mono
-        # pg.mixer.pre_init(sampleRate, -16, 1) 
-        # # 4096 : the peak ; volume ; loudness
-        # # 440 : the frequency in hz
-        # arr = np.array([4096 * np.sin(2.0 * np.pi * 440 * x / sampleRate) for x in range(0, sampleRate)]).astype(np.int16)
-        # self.sound = pg.sndarray.make_sound(arr)
-        # self.IB_DURATION = 500
-        # self.IB_stepsize = 50
 
         pg.mixer.init()
         pg.mixer.music.load(sound_file_path+os.sep+'1glockenspiel.wav')
@@ -163,7 +124,7 @@ class fastReach:
         # ems
         self.ems_active = False
         self.ems_sent = False
-        self.ems_delay = random.uniform(self.ems2min, self.ems2max)
+        self.ems_delay = random.uniform(self.ems_randommin, self.ems_randommax)
 
         self.key_board_input_enabled = False
         self.mouse_input_enabled = False
@@ -214,13 +175,13 @@ class fastReach:
         ptext.draw(text, center=(w/2, h/2), color=col, fontsize=120)  # Recognizes newline characters.
         pg.display.flip()
  
-    def start(self, trial_type, ems_on):
+    def start(self):
         """_summary_
 
         Args:
             trial_type (string): Can be "training" or "experiment", "training" is always without EMS
             num_trials (integer): Number of trials to complete
-            ems_on (boolean): Whether to EMS is presented or not
+            self.ems_on (boolean): Whether to EMS is presented or not
         """
         
         while True:
@@ -235,283 +196,87 @@ class fastReach:
 
                     if event.key == pg.K_SPACE:
 
-                        m = self.markers['start']+';condition:'+trial_type
+                        m = self.markers['start']+';condition:'+self.trial_type
                         self.lsl.send(m,1)
                         
-                        # self.app(trial_type, num_trials, ems_on, start)
-                        self.app2(trial_type, ems_on, time.time())
+                        # self.app(trial_type, num_trials, self.ems_on, start)
+                        self.app(time.time())
 
-    def app(self, trial_type, num_trials, ems_on, start):
+    def app(self, start):
         """Experiment logic. Runs different task components based on increasing time, then waits for button inputs to reset time and step through different experiment components.
 
         Args:
-            trial_type (string): Can be "training" or "experiment", "training" is always without EMS
-            num_trials (integer): Number of trials to complete
-            ems_on (boolean): Whether to EMS is presented or not
-            start (time object): time.time() of the experiment start
-        """
-
-        trial_counter = 0
-        ib_answer = []
-        trial_marker_sent = False
-        run_ib_task = False
-        next_trial = False
-        ib_answered = False
-        sound_played = False
-        letter_written = False
-
-        global EMS_RESET_TIME
-        
-        if trial_type == 'training':
-            trial_dur = 4
-            idle_marker_sent = False
-
-        elif trial_type == 'experiment':
-            trial_dur = 4
-        
-        if ems_on == True:
-            ems_sent = False
-            ems_counter = trial_counter
-            ems_time = start
-
-        print_states = False
-        while True:
-
-            if print_states:
-                # print('moving: '+str(self.motion.state))
-                # print('rp: '+str(self.eeg.state))
-                print([self.eeg.state, ems_sent, self.motion.state]) # , self.ems_resetter.state])
-            
-            # trial logic
-            elapsed = time.time() - start
-            if trial_counter < num_trials:
-            
-                # runs in training and shows ISI message for 2 seconds then sends a marker at the end
-                if trial_type == 'training' and idle_marker_sent == False:
-                    self.instruct(self.instruction["isi"])
-
-                    # send idle marker only in training condition
-                    if elapsed > 2:
-                        self.lsl.send(self.markers['idle'],1)
-                        idle_marker_sent = True
-
-                # interactive part of each trial starts after some initial resting period. Shows the sentence written so far, then waits for a button press to occur which sets trial_marker_sent to true
-                if elapsed > trial_dur:
-                    
-                    if trial_marker_sent == True:
-                        if trial_type == 'training': # and time.time() - reach_end_time > 2: # next trial
-                            # start = time.time()
-                            trial_marker_sent = False
-                            # idle_marker_sent = False
-                            run_ib_task = True
-
-                        elif trial_type == 'experiment':
-                            # start = time.time()
-                            trial_marker_sent = False
-                            ems_counter = trial_counter    
-                            run_ib_task = True
-
-                    if run_ib_task == False and letter_written == False:
-                        if (trial_counter % 2) == 0:
-                            target = random.choice(['a','s','d'])
-                        else:
-                            target = random.choice(['j','k','l'])
-
-                        # self.instruct(self.instruction["start"]+'\n\n'+''.join(ib_answer))
-                        self.instruct(target+'\n\n'+''.join(ib_answer))
-                        letter_written = True
-
-                    elif run_ib_task == True:
-
-                        # after Xs after button press, play a sound and let participants judge whether they think this was longer than their reach to press lasted
-                        # print the adjusted IB so I can then add it to the live phase
-                        
-                        if time.time() - reach_end_time < 2:
-                            # self.instruct(self.instruction["start"]+'\n\n'+''.join(ib_answer))
-                            self.instruct(target+'\n\n'+''.join(ib_answer))
-
-                        # some interval
-                        if time.time() - reach_end_time > 2 and time.time() - reach_end_time < 7:
-                            self.instruct(self.instruction["ib task wait"])
-                            self.lsl.send(self.markers["ib_task"]+"start",1)
-
-                        if time.time() - reach_end_time > 4 and sound_played == False:
-                            print(self.IB_DURATION)
-                            self.lsl.send(self.markers["ib_task"]+"tone",1)
-                            self.play_sound(self.IB_DURATION)
-                            sound_played = True
-
-                        # Listen to the sound:
-                        if time.time() - reach_end_time > 7:
-                            self.instruct(self.instruction["ib task"])
-
-                        if ib_answered == True:
-                            next_trial = True
-
-                    if next_trial == True:
-                        if trial_type == 'training':
-                            idle_marker_sent = False
-                        
-                        trial_end_time = time.time()
-                        trial_counter += 1
-                        
-                        sound_played = False
-                        ib_answered = False
-                        run_ib_task = False
-                        
-                        start = time.time()
-                        next_trial = False
-                        
-                        letter_written = False
-                        ib_answer = []
-
-            if trial_counter == num_trials:
-                if time.time() - trial_end_time > 2:
-                    self.lsl.send(self.markers['end'],1)
-                    self.instruct(self.instruction["wait"])
-                    ems_on = False
-                    trial_counter += 1
-
-            # ems behavior
-            if ems_on == True:
-
-                ems_duration = time.time() - ems_time
-                if ems_duration > .5 and ems_sent == True:
-                    ems_sent = False
-                    
-                    self.ems.write("r".encode('utf-8'))
-                    self.ems.write("e".encode('utf-8'))
-
-                    self.lsl.send(self.markers["ems off"],1)
-
-                if elapsed > trial_dur and ems_counter == trial_counter and trial_marker_sent == False:
-
-                    # print("ems live")
-
-                    if self.motion.state == True:
-                        ems_counter += 1
-                        self.lsl.send(self.markers["deactivate EMS due to movement"],1)
-
-                    if self.eeg.state == True and ems_sent == False and self.motion.state == False: # and self.ems_resetter.state == False:
-    
-                        self.ems.write("r".encode('utf-8'))
-                        self.ems.write("e".encode('utf-8'))
-
-                        self.lsl.send(self.markers["ems on"],1)
-                        ems_sent = True
-                        ems_counter += 1
-                        ems_time = time.time()
-                        EMS_RESET_TIME = ems_time
-
-            # keyboard input
-            for event in pg.event.get():
-                if event.type == pg.KEYDOWN:
-
-                    if event.key == pg.K_ESCAPE:
-                        pg.display.quit()
-
-                    if event.key == pg.K_UP:
-                        self.IB_DURATION += self.IB_stepsize
-                        self.lsl.send(self.markers["ib_task"]+str(self.IB_stepsize),1)
-                        ib_answered = True
-                    if event.key == pg.K_DOWN:
-                        self.IB_DURATION -= self.IB_stepsize              
-                        self.lsl.send(self.markers["ib_task"]+str(self.IB_stepsize),1)
-                        ib_answered = True
-
-                    if elapsed > trial_dur and trial_marker_sent == False and trial_counter < num_trials and run_ib_task == False:
-                        # ib_answer.append(event.unicode)
-                        ib_answer = event.unicode
-                        # trial_counter += 1
-                        self.lsl.send(self.markers["reach end"],1)
-                        trial_marker_sent = True
-                        reach_end_time = time.time()
-                        print(elapsed)
-
-    def app2(self, trial_type, ems_on, start):
-        """Experiment logic. Runs different task components based on increasing time, then waits for button inputs to reset time and step through different experiment components.
-
-        Args:
-            trial_type (string): Can be "training", "baseline", "ems1" or "ems2". 
+            trial_type (string): Can be "training", "baseline", "ems_bci" or "ems_random". 
                 - In 'training' mode, the ems is trigger 2 seconds after the fixation cross dissapears. 
                 This can be used to make participants comfortable with the EMS stimulation device in the trial logic.
                 - In 'baseline' mode, the ems is not triggered at all. This trial_type is used to obtain physiological training data.
-                - In 'ems1' mode, the ems is controlled (after the fixation cross dissapears and until the touchscreen is touched) by a Brain-Computer Interface, see class Classifier2
-                - In 'ems2' mode, the ems is randomly activated in the time interval of the 5th and 95th percentile of the reaction times in the baseline data.
-            ems_on (boolean): Whether to EMS is presented or not
+                - In 'ems_bci' mode, the ems is controlled (after the fixation cross dissapears and until the touchscreen is touched) by a Brain-Computer Interface, see class Classifier2
+                - In 'ems_random' mode, the ems is randomly activated in the time interval of the 5th and 95th percentile of the reaction times in the baseline data.
+            self.ems_on (boolean): Whether to EMS is presented or not
             start (time object): time.time() of the experiment start
         """
         
-        while True:
+        while self.trial_counter <= self.num_trials:
             
             # trial logic
             elapsed = time.time() - start
 
-            if self.trial_counter <= num_trials:
+            # isi
+            if elapsed < self.isi_dur and self.fix_cross_shown == False:
+                self.instruct(self.instruction["isi"])
+                self.fix_cross_shown = True
 
-                # isi
-                if elapsed < self.isi_dur and self.fix_cross_shown == False:
-                    self.instruct(self.instruction["isi"])
-                    self.fix_cross_shown = True
-
-                # idle class marker
-                if elapsed > self.idle_marker_after_isi_start and self.idle_marker_sent == False:
-                    m = self.markers['idle']+';isi_duration:'+str(self.isi_dur)+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
-                    self.lsl.send(m,1)
-                    self.idle_marker_sent = True
-
-                # "live"
-                if elapsed > self.isi_dur:
-
-                    if self.blank_shown == False:
-                        self.instruct(self.instruction["blank"])
-                        self.blank_shown = True
-                        self.mouse_input_enabled = True
-
-                    # ems behavior
-                    if ems_on == True and self.mouse_input_enabled == True and self.ems_active == False and self.ems_sent == False:
-                        if trial_type == 'ems1' and self.eeg.state == True:
-                            ems_time = self.send_ems_pulse("ems on", trial_type)
-                        elif trial_type == 'ems2' and elapsed > (self.ems_delay + self.isi_dur):
-                            ems_time = self.send_ems_pulse("ems on", trial_type)
-                        elif trial_type == 'training' and elapsed > (self.ems_training_delay + self.isi_dur):
-                            ems_time = self.send_ems_pulse("ems on", trial_type)
-                    if ems_on == True and self.ems_active == True and self.ems_sent == False:
-                        ems_duration = time.time() - ems_time
-                        if ems_duration > .5:
-                            self.send_ems_pulse("ems off", trial_type)
-                            self.ems_sent = True
-
-                    # deactivates that ems can be triggered after tap, since the sound appears with a delay, the ems could be triggered after the tap but before the sound was played, this fixes that
-                    if self.button_pressed == True:
-                        self.mouse_input_enabled = False
-
-                    # ib task following tap
-                    if self.button_pressed == True and ((time.time() - button_press_time) * 1000) > self.ib_times[self.trial_counter-1]:
-                        pg.mixer.music.play()
-                        m = self.markers["ib_task"]+"start"+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
-                        self.lsl.send(m,1)
-                        
-                        self.sound_played = True
-                        self.button_pressed = False
-                        self.key_board_input_enabled = True
-
-                    if self.sound_played == True:
-                        self.instruct("Antwort: "+answer_string)
-
-                    if self.ib_answered == True:
-                        m = self.markers["ib_task"]+'answer'+';real_delay:'+str(self.ib_times[self.trial_counter-1])+';estimated_delay:'+answer_string+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
-                        self.lsl.send(m,1)
-                        self.init_trial()
-                        start = time.time()
-                        self.ib_answered = False
-                    
-            if self.trial_counter > num_trials:
-                
-                m = self.markers['end']+';condition:'+trial_type
+            # idle class marker
+            if elapsed > self.idle_marker_after_isi_start and self.idle_marker_sent == False:
+                m = self.markers['idle']+';isi_duration:'+str(self.isi_dur)+';condition:'+self.trial_type+';trial_nr:'+str(self.trial_counter)
                 self.lsl.send(m,1)
-                self.instruct(self.instruction["wait"])
-                break
+                self.idle_marker_sent = True
+
+            # "live"
+            if elapsed > self.isi_dur:
+
+                if self.blank_shown == False:
+                    self.instruct(self.instruction["blank"])
+                    self.blank_shown = True
+                    self.mouse_input_enabled = True
+
+                # ems behavior
+                if self.ems_on == True and self.mouse_input_enabled == True and self.ems_active == False and self.ems_sent == False:
+                    if self.trial_type == 'ems_bci' and self.eeg.state == True:
+                        ems_time = self.send_ems_pulse("ems on", self.trial_type)
+                    elif self.trial_type == 'ems_random' and elapsed > (self.ems_delay + self.isi_dur):
+                        ems_time = self.send_ems_pulse("ems on", self.trial_type)
+                    elif self.trial_type == 'training' and elapsed > (self.ems_training_delay + self.isi_dur):
+                        ems_time = self.send_ems_pulse("ems on", self.trial_type)
+                if self.ems_on == True and self.ems_active == True and self.ems_sent == False:
+                    ems_duration = time.time() - ems_time
+                    if ems_duration > .5:
+                        self.send_ems_pulse("ems off", self.trial_type)
+                        self.ems_sent = True
+
+                # deactivates that ems can be triggered after tap, since the sound appears with a delay, the ems could be triggered after the tap but before the sound was played, this fixes that
+                if self.button_pressed == True:
+                    self.mouse_input_enabled = False
+
+                # ib task following tap
+                if self.button_pressed == True and ((time.time() - button_press_time) * 1000) > self.ib_times[self.trial_counter-1]:
+                    pg.mixer.music.play()
+                    m = self.markers["ib_task"]+"start"+';condition:'+self.trial_type+';trial_nr:'+str(self.trial_counter)
+                    self.lsl.send(m,1)
+                    
+                    self.sound_played = True
+                    self.button_pressed = False
+                    self.key_board_input_enabled = True
+
+                if self.sound_played == True:
+                    self.instruct("Antwort: "+answer_string)
+
+                if self.ib_answered == True:
+                    m = self.markers["ib_task"]+'answer'+';real_delay:'+str(self.ib_times[self.trial_counter-1])+';estimated_delay:'+answer_string+';condition:'+self.trial_type+';trial_nr:'+str(self.trial_counter)
+                    self.lsl.send(m,1)
+                    self.init_trial()
+                    start = time.time()
+                    self.ib_answered = False
 
             # keyboard input
             for event in pg.event.get():
@@ -520,20 +285,18 @@ class fastReach:
                 if self.mouse_input_enabled == True and event.type == pg.MOUSEBUTTONDOWN:
                     self.button_pressed = True
                     button_press_time = time.time()
-                    m = self.markers["reach end"]+';rt:'+str(elapsed-self.isi_dur)+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
+                    m = self.markers["reach end"]+';rt:'+str(elapsed-self.isi_dur)+';condition:'+self.trial_type+';trial_nr:'+str(self.trial_counter)
                     self.lsl.send(m,1)
                     answer_string = ''.join(self.ib_answer)
 
                 if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                     pg.display.quit()
-                    if ems_on:
+                    if self.ems_on:
                         self.flip_ems()
 
                 if self.key_board_input_enabled == True and event.type == pg.KEYDOWN:
 
-                    # if event.key == pg.K_RETURN:
-                    # TODO test this
-                    if event.key == K_KP_ENTER:
+                    if event.key == pg.K_RETURN or event.key == pg.K_KP_ENTER:
                         self.ib_answered = True
 
                     if button_press_time > self.ib_times[self.trial_counter-1] and not self.ib_answered == True:
@@ -544,340 +307,7 @@ class fastReach:
                             self.ib_answer.append(event.unicode)
                         answer_string = ''.join(self.ib_answer)
 
-            # debug
-            if self.print_states:
-                # print('moving: '+str(self.motion.state))
-                print('rp: '+str(self.eeg.state) + ', class: ' + str(self.eeg.prediction) + ', probs: ' + str(self.eeg.probs))
-                # print([self.eeg.state, self.ems_sent, self.motion.state]) # , self.ems_resetter.state])
-
-    def demo(self, mode):
-        """Runs the classifiers without any task.
-
-        Args:
-            mode (string): Can be "eeg" or "button". In EEG mode, waits for the EEG classifier to return True, then triggers EMS. In "button" mode, trigger EMS from button press.
-        """
-
-        ems_time = time.time()
-        ems_sent = False
-        ems_timeout = True
-        global EMS_RESET_TIME
-
-        while True:
-
-            ems_duration = time.time() - ems_time
-
-            if ems_duration > .5 and ems_sent == True:
-                ems_sent = False
-
-                self.ems.write("r".encode('utf-8'))
-                self.ems.write("e".encode('utf-8'))
-
-                self.lsl.send(self.markers["ems off"],1)
-            
-            if ems_duration > 4:
-                ems_timeout = False
-        
-            if mode == 'eeg':
-                if self.eeg.state == True and ems_sent == False and self.motion.state == False and ems_timeout == False: # and self.ems_resetter.state == False:
-                    
-                    self.ems.write("r".encode('utf-8'))
-                    self.ems.write("e".encode('utf-8'))
-
-                    self.lsl.send(self.markers["ems on"],1)
-                    ems_sent = True
-                    ems_timeout = True
-                    ems_time = time.time()
-                    EMS_RESET_TIME = ems_time
-
-            elif mode == 'button':
-
-                for event in pg.event.get():
-                    if event.type == pg.KEYDOWN:
-
-                        if event.key == pg.K_ESCAPE:
-                            pg.display.quit()
-                            sys.exit()
-                        else:
-        
-                            self.ems.write("r".encode('utf-8'))
-                            self.ems.write("e".encode('utf-8'))
-
-                            self.lsl.send(self.markers["ems on"],1)
-                            ems_sent = True
-                            ems_time = time.time()
-                            EMS_RESET_TIME = ems_time
-
-class Classifier2(threading.Thread):
-    """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded. 
-    Smoothes the class label (median) and probability (mean) over 5 consecutive predictions.
-
-    Args:
-        stream_name (string): name of LSL data stream created to stream classifier output
-        classifier_srate (integer): Frame rate at which classifier is applied and streams out classification output
-        data_srate (integer): Frame rate of incoming LSL data stream
-        model_path (string): Location of pickled (LDA) model
-        target_class (integer): Value of target class in the trained model
-        chans ([integer]): Channels (list) to be selected from LSL input data stream
-        threshold (float): To evaluate whether prediction matches target_class with the probability exceeding this threshold
-        window_size (integer): Buffer size
-        baseline_index (integer): Index of baseline window in buffer
-    """
-    def __init__(self, stream_name, classifier_srate, data_srate, model_path, target_class, chans, threshold, window_size, baseline_index) -> None:
-        
-        threading.Thread.__init__(self)
-
-        # LSL outlet
-        self.classifier_srate = classifier_srate
-        self.srate = data_srate
-        stream_info = StreamInfo(stream_name, 'Classifier', 2, self.srate/self.classifier_srate, 'double64', 'myuid34234')
-        self.outlet = StreamOutlet(stream_info)
-        
-        # LSL inlet
-        streams = resolve_stream('name', 'BrainVision RDA')
-        self.inlet = StreamInlet(streams[0])
-
-        self.model_path = model_path
-        self.clf = pickle.load(open(self.model_path, 'rb'))
-        self.target_class = target_class
-        self.probs = 0
-        self.prediction = 0
-        self.chans = chans
-        self.threshold = threshold
-        self.window_size = window_size
-        self.baseline_ix = baseline_index
-
-        # self.all_data = np.zeros((len(self.chans), self.srate+int(self.srate/(self.window_size-self.baseline_ix))))
-        # self.feat_data = np.zeros((len(self.chans), self.window_size-self.baseline_ix))
-        self.all_data = np.zeros((len(self.chans), self.srate))
-        self.feat_data = np.zeros((len(self.chans), self.window_size))
-        
-        self.smooth_class = np.zeros(5)
-        self.smooth_proba = np.zeros(5)
-
-        self.state = False
-    
-    def run(self):
-
-        frame = 1
-        while True:
-            start = time.time()
-
-            # get a new sample (you can also omit the timestamp part if you're not interested in it)
-            sample = np.array(self.inlet.pull_sample()[0])
-            self.all_data[:,-1] = sample[self.chans]
-
-            if frame == self.classifier_srate: # every X ms
-
-                # tmp = base_correct(windowed_mean(self.all_data, windows = self.window_size))
-                # feats = drop_baseline(tmp, self.baseline_ix).flatten().reshape(1,-1)
-
-                tmp = base_correct(self.all_data, self.baseline_ix-1)
-                feats = windowed_mean(tmp, self.window_size).flatten().reshape(1,-1)
-        
-                self.prediction = int(self.clf.predict(feats)[0]) #predicted class
-                probs = self.clf.predict_proba(feats) #probability for class prediction
-
-                self.probs = probs[0][self.target_class]
-
-                self.smooth_class[-1] = self.prediction
-                self.smooth_proba[-1] = self.probs
-
-                # if self.prediction == self.target_class and self.probs >= self.threshold:
-                # print(np.round(self.smooth_proba.mean(),2))
-                # self.outlet.push_sample([self.prediction,probs[0][0],probs[0][1]])
-
-                self.outlet.push_sample([np.median(self.smooth_class),self.smooth_proba.mean()])
-
-                if np.median(self.smooth_class) == self.target_class and self.smooth_proba.mean() >= self.threshold:
-                    self.state = True
-                else:
-                    self.state = False
-
-                self.smooth_class = np.roll(self.smooth_class,-1)
-                self.smooth_proba = np.roll(self.smooth_proba,-1)
-
-                frame = 0
-
-            frame += 1
-            self.all_data = np.roll(self.all_data,-1) # Speed could be increased here, something like all_data[:,0:-2] = all_data[:,1:-1]
-
-            time.sleep(max(1./self.srate - (time.time() - start), 0)) # maintain sampling rate
-
-class Classifier(threading.Thread):
-    """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded.
-
-    Args:
-        stream_name (string): ib_answer of LSL data stream created to stream classifier output
-        classifier_srate (integer): Frame rate at which classifier is applied and streams out classification output
-        model_path (string): Location of pickled (LDA) model
-        type (string): "eeg" or "motion". This class can run classifier on EEG or Motion data
-        target_class (integer): Returns true when prediction equals target class
-        chans ([integer]): Channels (list) to be selected from LSL input data stream
-        threshold (float): To evaluate whether prediction matches target_class with the probability exceeding this threshold
-        frame_rate (integer): ?
-        window_size (integer): Buffer size
-        regression (boolean): [exploratory] When true, apply regression on features
-    """
-
-    def __init__(self, stream_name, classifier_srate, model_path, type, target_class, chans, threshold, frame_rate, window_size, regression) -> None:
-        self.model_path = model_path
-
-        threading.Thread.__init__(self)
-
-        self.classifier_srate = classifier_srate
-        stream_info = StreamInfo(stream_name, 'Classifier', 3, self.classifier_srate, 'double64', 'myuid34234')
-        self.outlet = StreamOutlet(stream_info)
-
-        # pickle load the model and good chans ix
-        self.clf = pickle.load(open(self.model_path, 'rb'))
-        self.target_class = target_class
-
-        self.type = type
-        self.chans = chans
-
-        if self.type == 'motion':
-            streams = resolve_stream('type', 'rigidBody')
-            
-        elif self.type == 'eeg':
-            streams = resolve_stream('name', 'BrainVision RDA')
-
-        # create a new inlet to read from the stream
-        self.inlet = StreamInlet(streams[0])
-
-        self.threshold = threshold
-        self.frame_rate = frame_rate
-        self.window_size = window_size
-        self.do_reg = regression
-        self.baseline_size = 25
-
-        # create empty numpy array (2D: m1 and m2)
-        self.all_data = np.zeros((len(self.chans), self.window_size))
-        self.reg_feats = np.zeros((len(self.chans), int(self.window_size/self.frame_rate)))
-
-        self.feat_data = np.array((len(self.chans), 11, 25))
-
-        self.state = False
-    
-    def run(self):
-
-        frame = 1
-
-        while True:
-
-            start = time.time()
-
-            # get a new sample (you can also omit the timestamp part if you're not interested in it)
-            sample = np.array(self.inlet.pull_sample()[0])
-            self.all_data[:,-1] = sample[self.chans-1].flatten()
-
-            if frame == self.classifier_srate: # every X ms
-
-                if self.type == "motion":
-                    feats = np.sqrt(
-                        np.square(np.diff(self.all_data[0,:])) + 
-                        np.square(np.diff(self.all_data[1,:])) + 
-                        np.square(np.diff(self.all_data[2,:]))).reshape(1,-1)
-
-                if self.type == "eeg":
-                    # self.feat_data = np.reshape(self.all_data, (len(self.chans), 11, 25))
-                    self.feat_data = base_correct(windowed_mean(self.all_data, windows = self.window_size))
-
-                if self.do_reg == True:
-                    try:
-                        # t = time.time()
-                        for i in range(len(self.chans)):
-                            for j in range(10):
-                                self.reg_feats[i,j] = np.polyfit(self.feat_data[i,j,:], self.feat_data[-1,j,:],1)[1]
-                                feats = self.reg_feats.flatten().reshape(1,-1)
-                        # elapsed = time.time() - t
-                        # tmp.append(elapsed)
-                    except:
-                        print("waiting for buffer")
-                else:
-                    # feats = np.mean(self.feat_data, axis = 2) # windowed mean features
-                    # feats -= feats[:,0][:,None] # base correct
-                    feats = feats[:,1:]
-                    # feats = feats.flatten().reshape(1,-1)
-                    feats = reshape_trial(feats)
-        
-                prediction = self.clf.predict(feats)[0] #predicted class
-                probs = self.clf.predict_proba(feats) #probability for class prediction
-                self.outlet.push_sample([prediction,probs[0][0],probs[0][1]])
-
-                if prediction == self.target_class and probs[0][0] >= self.threshold:
-                    self.state = True
-                else:
-                    self.state = False
-
-                frame = 0
-                # print(str(prediction) + ' ' + str(probs))
-
-            frame += 1
-            self.all_data = np.roll(self.all_data,-1) # Speed could be increased here, something like all_data[:,0:-2] = all_data[:,1:-1]
-
-            time.sleep(max(1./250 - (time.time() - start), 0))
-
-class EMSResetter(threading.Thread):
-
-    def __init__(self, ems, lsl, markers):
-
-        threading.Thread.__init__(self)
-        self.ems = ems
-        self.lsl = lsl
-        self.markers = markers
-        self.state = False
-
-    def run(self):
-
-        global EMS_RESET_TIME
-
-        while True:
-
-            # print(time.time() - EMS_RESET_TIME) 
-            if (time.time() - EMS_RESET_TIME) > 9.8 and self.state == False:
-                self.state = True
-    
-                self.ems.write("r".encode('utf-8'))
-                self.ems.write("e".encode('utf-8'))
-
-                self.lsl.send(self.markers["ems reset"],1)
-            if (time.time() - EMS_RESET_TIME) > 9.95 and self.state == True:
-                
-                self.ems.write("r".encode('utf-8'))
-                self.ems.write("e".encode('utf-8'))
-
-                EMS_RESET_TIME = time.time()
-                self.state = False
-
-### SET Experiment params ###
-np.set_printoptions(precision=2)
-
-system = 'mac' # 'mac' or 'windows'
-if system == 'mac':
-    arduino_port = '/dev/tty.usbmodem21401'
-    # path = '/Users/lukasgehrke/Documents/publications/2021-fastReach'
-    path = '/Volumes/projects/Lukas_Gehrke/2021-fastReach'
-elif system == 'win':
-    arduino_port = 'COM3' # ls /dev/tty.*
-    path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\'
-
-### Settings for each participant ###
-pID = 2
-# trial_type = 'baseline'
-trial_type = 'ems1'
-# trial_type = 'ems2'
-# trial_type = 'training'
-###
-
-if trial_type == 'training':
-    num_trials = 9
-else:
-    num_trials = 75
-
-if trial_type == 'baseline':
-    with_ems = False
-else:
-    with_ems = True
-debug = False
-exp = fastReach(pID, path, with_ems, arduino_port, num_trials, debug)
-exp.start(trial_type, with_ems)
+        else:
+            m = self.markers['end']+';condition:'+self.trial_type
+            self.lsl.send(m,1)
+            self.instruct(self.instruction["wait"])
