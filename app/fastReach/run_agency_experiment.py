@@ -1,13 +1,17 @@
 from fastReach import fastReach
 
-system = 'mac' # 'mac' or 'windows'
-if system == 'mac':
-    arduino_port = '/dev/tty.usbmodem21401'
-    # path = '/Users/lukasgehrke/Documents/publications/2021-fastReach'
-    path = '/Volumes/projects/Lukas_Gehrke/2021-fastReach'
-elif system == 'win':
-    arduino_port = 'COM3' # ls /dev/tty.*
-    path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\'
+# system = 'mac' # 'mac' or 'windows'
+# if system == 'mac':
+#     arduino_port = '/dev/tty.usbmodem21401'
+#     # path = '/Users/lukasgehrke/Documents/publications/2021-fastReach'
+#     path = '/Volumes/projects/Lukas_Gehrke/2021-fastReach'
+# elif system == 'win':
+#     arduino_port = 'COM3' # ls /dev/tty.*
+#     path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\'
+#     # TODO: add windows path of server drive project folder
+
+path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/' # add path to repository here!!!
+arduino_port = ''
 
 ### Settings for each participant ###
 pID = 3
@@ -27,7 +31,7 @@ if trial_type == 'baseline':
 else:
     with_ems = True
 
-debug = False
+debug = True
 
 exp = fastReach(pID, path, with_ems, trial_type, arduino_port, num_trials, debug)
 exp.start()

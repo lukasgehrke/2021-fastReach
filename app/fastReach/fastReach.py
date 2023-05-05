@@ -59,7 +59,9 @@ class fastReach:
 
         self.init_trial()
 
-        data_path = path+os.sep+'data'+os.sep+'study'+os.sep+'eeglab2python'+os.sep+str(self.pID)+os.sep
+        # data_path = path+os.sep+'data'+os.sep+'study'+os.sep+'eeglab2python'+os.sep+str(self.pID)+os.sep
+        data_path = path+os.sep+self.pID+os.sep # for example data
+
         if self.ems_on == True:
             
             # self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)

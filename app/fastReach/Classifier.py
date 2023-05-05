@@ -1,6 +1,6 @@
 from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
 import threading, pickle, numpy as np, time
-from bci_funcs import windowed_mean, base_correct
+from bci_funcs import windowed_mean, base_correct, slope
 
 class Classifier(threading.Thread):
     """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded. 
@@ -63,7 +63,8 @@ class Classifier(threading.Thread):
             if frame == self.classifier_srate: # every X ms
 
                 tmp = base_correct(self.all_data, self.baseline_ix-1)
-                feats = windowed_mean(tmp, self.window_size).flatten().reshape(1,-1)
+                # feats = windowed_mean(tmp, self.window_size).flatten().reshape(1,-1)
+                feats = slope(tmp, 'linear').flatten().reshape(1,-1)
         
                 self.prediction = int(self.clf.predict(feats)[0]) #predicted class
                 probs = self.clf.predict_proba(feats) #probability for class prediction
