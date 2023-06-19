@@ -1,20 +1,13 @@
 
-\section{Methods}
-
-% With this study we wanted to find out whether agency can be preserved during \textit{physical actuation} of the user's body when their own brain signals serve as the control signal. To this end, we build a system that leverages the brain signals known to reflect the volitional intent to interact, i.e. the EEG readiness potential, to trigger electrical muscle stimulation to cue a reaching movement.
-
-Our idea to overcome this disruption in agency is to use EEG signals reflecting the intent to (inter)act and leverage them for the control of an end-effector, here EMS. We trained an EEG classifier to discriminate between two user states and applied it in real-time: either the user is predicted to be in an \textit{idle}-- or a \textit{pre-movement} state. Is the user predicted to be in a \textit{pre-movement} state, EMS is triggered, augmenting their action.
-
-\input{input/4_prototype}
-
-To assess whether our prototype preserves agency during action augmentation, we used a mixed methods approach including a psychometric test of intentional binding, questionnaires as well as qualitative interviews. Our interviews followed a phenomenological structure~\citep{Danry2022-xk}.
-
-\subsection{User study}
+\section{User study \& Methods}
+With this study we wanted to find out whether agency can be preserved during \textit{physical action augmentation} when the user's own brain signals serve as the control signal. To this end, we assessed whether our prototype preserved agency using a mixed methods approach including a psychometric test of intentional binding, questionnaires as well as a qualitative interview. Our interviews followed a phenomenological structure~\citep{Danry2022-xk}.
 
 \subsubsection{Participants}
+\todo{add actual number} Ten participants (\todo{add mean age and sd}) from our local institution participated in our study. All participants were right handed, had normal or corrected to normal vision and had not experienced EMS before. Participants were compensated with 12 Euro per hour of study participation. Prior to their participation, participants were informed of the nature of the experiment, recording and anonymization procedures and signed a consent form. The experiment was approved by the ethics committee of [anonymized]
+%the Department of Psychology and Ergonomics at TU Berlin (tracking number: BPN\_GEH\_2\_230130220421).
 
-\todo{add actual number} Ten participants (\todo{add mean age and sd}) from our local institution participated in our study. All participants were right handed, had normal or corrected to normal vision and had not experienced EMS before. Participants were compensated with 12 Euro per hour of study participation. Prior to their participation, participants were informed of the nature of the experiment, recording and anonymization procedures and signed a consent form.
 
+% TODO continue here 19.05.2023
 \subsubsection{Apparatus}
 \todo{add the components that were used to run the STUDY, touchpad, keyboard etc.}
 The experimental setup, depicted in Figure~\ref{}, comprised: (1) a wrist-mounted wearable HTC VIVE tracker for motion capture, (2) a 64-channel EEG system, and (3) a medically-compliant EMS device connected via two electrodes worn on the forearm. To assist readers in replicating our experiment, we provide the necessary technical details, the complete source code to the experiment, the collected data, and the analysis scripts\footnote{[anonymized]}.
