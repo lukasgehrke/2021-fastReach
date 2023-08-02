@@ -20,8 +20,12 @@ trial_type = 'ems_bci'
 
 if trial_type == 'training':
     num_trials = 9
-else:
-    num_trials = 75
+elif trial_type == 'baseline':
+    num_trials = 90
+elif trial_type == 'ems_random':
+    num_trials = 30
+elif trial_type == 'ems_bci':
+    num_trials = 60
 
 if trial_type == 'baseline':
     with_ems = False

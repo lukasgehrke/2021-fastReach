@@ -2,13 +2,14 @@
 pID = 3;
 
 %% config
-% current_sys = "mac";
-% % eeglab
-% eeglab_ver(current_sys);
+current_sys = "mac";
+% eeglab
+eeglab_ver(current_sys);
 
 % addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
-%addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
+% addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
 % addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
+addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/liblsl-Matlab'))
 
 pi_bemobil_config;
 
@@ -21,7 +22,7 @@ path = 'P:\Lukas_Gehrke\fastReach\data\0_source-data';
 %     ['sub-' sprintf('%03d', pID)], 'EMS1.xdf'), ...
 %     'streamtype', 'EEG', 'exclude_markerstreams', {});
 EEG = pop_loadxdf(fullfile(path, ...
-    ['sub-' sprintf('%03d', pID)], 'EMS1.xdf'), ...
+    ['sub-' sprintf('%03d', pID)], 'EMS2.xdf'), ...
     'streamtype', 'EEG', 'exclude_markerstreams', {});
 
 % EEG = pop_eegfiltnew(EMG, 10);
