@@ -16,15 +16,19 @@ arduino_port = ''
 ### Settings for each participant ###
 pID = 3
 
-# trial_type = 'baseline'
-trial_type = 'ems_bci'
+trial_type = 'baseline'
+# trial_type = 'ems_bci'
 # trial_type = 'ems_random'
 # trial_type = 'training'
 
 if trial_type == 'training':
     num_trials = 9
-else:
-    num_trials = 75
+elif trial_type == 'baseline':
+    num_trials = 90
+elif trial_type == 'ems_random':
+    num_trials = 30
+elif trial_type == 'ems_bci':
+    num_trials = 60
 
 if trial_type == 'baseline':
     with_ems = False
