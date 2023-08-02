@@ -40,7 +40,7 @@ def slope(data, function):
             slopes = np.append(slopes, stats.linregress(data[i,:], np.arange(0, data.shape[1]))[0])
 
         elif function == 'exp':
-            log_clean_data = np.ma.masked_invalid(np.log(data[i,:] - np.min(data[i,:]))).compressed() # log of data, excluding -inf
+            log_clean_data = np.ma.masked_invalid(np.log(data[i,:] - np.min(data[i,:]) + .0001)).compressed() # log of data, excluding -inf
             slopes = np.append(slopes, stats.linregress(log_clean_data, np.arange(0, log_clean_data.shape[0]))[0])
 
     return slopes
