@@ -12,7 +12,8 @@ pID = 3;
 
 pi_bemobil_config;
 
-path = '/Users/lukasgehrke/Desktop/data/';
+% path = '/Users/lukasgehrke/Desktop/data/';
+path = 'P:\Lukas_Gehrke\fastReach\data\0_source-data';
 
 %% load data and parse events
 

@@ -27,11 +27,13 @@ class fastReach:
         debug (boolean): whether to print debug messages
     """
 
-    def __init__(self, pID, path, ems_on, trial_type, arduino_port, num_trials, debug) -> None:
+    def __init__(self, pID, code_path, data_path, ems_on, trial_type, arduino_port, num_trials, debug) -> None:
         self.lsl = LSL('fastReach')
         
         self.pID = 'sub-0' + "%02d" % (pID)
-        self.code_path = path+os.sep+'app'+os.sep+'fastReach'+os.sep
+        self.code_path = code_path+os.sep+'app'+os.sep+'fastReach'+os.sep
+        self.data_path = data_path+os.sep+self.pID+os.sep
+
         self.markers = json.load(open(self.code_path+'markers.json', 'r'))
         self.instruction = json.load(open(self.code_path+'instructions.json', 'r'))
         
@@ -59,21 +61,18 @@ class fastReach:
 
         self.init_trial()
 
-        # data_path = path+os.sep+'data'+os.sep+'study'+os.sep+'eeglab2python'+os.sep+str(self.pID)+os.sep
-        data_path = path+os.sep+self.pID+os.sep # for example data
-
         if self.ems_on == True:
             
             # self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
             self.ems_training_delay = 2
-            stim_delay = pd.read_csv(data_path+'delay.csv')
+            stim_delay = pd.read_csv(self.data_path+'delay.csv')
             self.ems_randommin = float(stim_delay.columns[0])
             self.ems_randommax = float(stim_delay.columns[1])
 
         if self.trial_type == 'ems_bci':
 
-            model_path_eeg = data_path+'model_'+str(self.pID)+'_eeg.sav'
-            with open(data_path+os.sep+'bci_params.json', 'r') as f:
+            model_path_eeg = self.data_path+'model_'+str(self.pID)+'_eeg.sav'
+            with open(self.data_path+os.sep+'bci_params.json', 'r') as f:
                 bci_params = json.load(f)
 
             self.eeg = Classifier('eeg_classifier', bci_params['classifier_update_rate'], bci_params['data_srate'], model_path_eeg, 
