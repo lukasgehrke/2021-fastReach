@@ -63,7 +63,7 @@ class fastReach:
 
         if self.ems_on == True:
             
-            # self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
+            self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
             self.ems_training_delay = 2
             stim_delay = pd.read_csv(self.data_path+'delay.csv')
             self.ems_randommin = float(stim_delay.columns[0])
