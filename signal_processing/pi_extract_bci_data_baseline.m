@@ -2,13 +2,13 @@
 pID = 3;
 
 %% config
-current_sys = "mac";
-% eeglab
-eeglab_ver(current_sys);
+current_sys = "win";
+% eeglab_ver(current_sys);
+eeglab
 
-% addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
-%addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
-addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
+addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
+addpath('D:\Lukas\2021-fastReach\signal_processing');
+% addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
 
 pi_bemobil_config;
 

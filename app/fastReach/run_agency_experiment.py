@@ -1,17 +1,13 @@
 from fastReach import fastReach
 
-# system = 'mac' # 'mac' or 'windows'
-# if system == 'mac':
-#     arduino_port = '/dev/tty.usbmodem21401'
-#     # path = '/Users/lukasgehrke/Documents/publications/2021-fastReach'
-#     path = '/Volumes/projects/Lukas_Gehrke/2021-fastReach'
-# elif system == 'win':
-#     arduino_port = 'COM3' # ls /dev/tty.*
-#     path = 'C:\\Users\\neuro\\Documents\\GitHub\\2021-fastReach\\'
-#     # TODO: add windows path of server drive project folder
-
-path = '/Users/lukasgehrke/Documents/publications/2021-fastReach/' # add path to repository here!!!
-arduino_port = ''
+system = 'mac' # 'mac' or 'windows'
+if system == 'mac':
+    arduino_port = '/dev/tty.usbmodem21401'
+    # path = '/Users/lukasgehrke/Documents/publications/2021-fastReach'
+    path = '/Volumes/projects/Lukas_Gehrke/2021-fastReach'
+elif system == 'win':
+    arduino_port = 'COM3' # ls /dev/tty.*
+    path = 'P:\\Lukas_Gehrke\\fastReach\\data\\eeglab2python'
 
 ### Settings for each participant ###
 pID = 3

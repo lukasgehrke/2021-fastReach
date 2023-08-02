@@ -3,12 +3,12 @@ clear bemobil_config
 %% General Setup
 
 if strcmp(current_sys,'win')
-    path = 'P:\Lukas_Gehrke\2021-fastReach';
+    path = 'P:\Lukas_Gehrke\fastReach';
 else
     path = '/Volumes/projects/Lukas_Gehrke/2021-fastReach';
 end
 
-bemobil_config.study_folder = [path filesep 'data' filesep 'study' filesep]; %(NEEDS to have a filesep at the end, sorry!) 
+bemobil_config.study_folder = [path filesep 'data' filesep]; %(NEEDS to have a filesep at the end, sorry!) 
 bemobil_config.filename_prefix = 'sub-';
 
 % foldernames (NEED to have a filesep at the end, sorry!) 
