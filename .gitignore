@@ -11,7 +11,7 @@ figures/
 *.mat
 app/fastReach/ptext.py
 # *.docx
-*.pdf
+
 admin/Questionnaire/
 admin/BPN_VP-Gelder-fastReach.docx
 *.DS_Store
