@@ -1,14 +1,14 @@
 
-pID = 3;
+pID = 4;
 
 %% config
-current_sys = "win";
-% eeglab_ver(current_sys);
-eeglab
+current_sys = "mac";
+eeglab_ver(current_sys);
+% eeglab
 
-addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
-addpath('D:\Lukas\2021-fastReach\signal_processing');
-% addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
+% addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
+% addpath('D:\Lukas\2021-fastReach\signal_processing');
+addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
 
 pi_bemobil_config;
 
@@ -123,7 +123,7 @@ sel_chans = best_chans_ixs(1:n_best_chans);
 chans_to_keep = {'C3', 'C4', 'Cz'};
 
 for chan = chans_to_keep
-    chan_ix = find(strcmp({EEG.chanlocs.labels}, chan{1}));
+    chan_ix = find(strcmp({pre_move_erp.chanlocs.labels}, chan{1}));
 
     if sum(ismember(sel_chans, chan_ix)) < 1
         sel_chans(2:end) = sel_chans(1:end-1);

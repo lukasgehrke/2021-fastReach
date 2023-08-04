@@ -5,7 +5,7 @@ clear bemobil_config
 if strcmp(current_sys,'win')
     path = 'P:\Lukas_Gehrke\fastReach';
 else
-    path = '/Volumes/projects/Lukas_Gehrke/2021-fastReach';
+    path = '/Volumes/Lukas_Gehrke/fastReach';
 end
 
 bemobil_config.study_folder = [path filesep 'data' filesep]; %(NEEDS to have a filesep at the end, sorry!) 
