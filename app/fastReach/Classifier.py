@@ -62,9 +62,9 @@ class Classifier(threading.Thread):
 
             # tmp = base_correct(data.T, self.baseline_ix)
             # feats = windowed_mean(tmp, self.window_size).flatten().reshape(1,-1)
-            slope_linear = slope(data.T, 'linear').flatten().reshape(1,-1)
-            slope_exp = slope(data.T, 'exp').flatten().reshape(1,-1)
-            feats = np.concatenate((slope_linear, slope_exp), axis=1)
+            feats = slope(data.T, 'linear').flatten().reshape(1,-1)
+            # slope_exp = slope(data.T, 'exp').flatten().reshape(1,-1)
+            # feats = np.concatenate((slope_linear, slope_exp), axis=1)
         
             self.prediction = int(self.clf.predict(feats)[0]) #predicted class
             probs = self.clf.predict_proba(feats) #probability for class prediction
