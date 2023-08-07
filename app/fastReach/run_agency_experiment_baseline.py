@@ -29,7 +29,7 @@ elif system == 'win':
 
 trial_type = 'baseline'
 num_trials = 90
-with_ems = False
+with_ems = True
 debug = False
 
 exp = fastReach(pID, code_path, data_path, with_ems, trial_type, arduino_port, num_trials, debug)
