@@ -242,9 +242,8 @@ class fastReach:
                     self.mouse_input_enabled = True
 
                 # ems behavior
-                # TODO test this
-                if elapsed > (self.isi_dur + 2) and self.ems_on == True and self.mouse_input_enabled == True and self.ems_active == False and self.ems_sent == False:
-                # if self.ems_on == True and self.mouse_input_enabled == True and self.ems_active == False and self.ems_sent == False:
+                # if self.ems_on== True and self.mouse_input_enabled == True and self.ems_active == False and self.ems_sent == False:
+                if elapsed > (self.isi_dur + 1) and self.ems_on == True and self.mouse_input_enabled == True and self.ems_active == False and self.ems_sent == False:
                     if self.trial_type == 'ems_bci' and self.eeg.state == True:
                         ems_time = self.send_ems_pulse("ems on", self.trial_type)
                     elif self.trial_type == 'ems_random' and elapsed > (self.ems_delay + self.isi_dur):

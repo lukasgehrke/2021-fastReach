@@ -1,7 +1,7 @@
 from fastReach import fastReach
 
 ### Settings for each participant ###
-pID = 4
+pID = 6
 
 
 
@@ -28,8 +28,8 @@ elif system == 'win':
     data_path = '\\\\stor1\projects\\Lukas_Gehrke\\fastReach\\data\\eeglab2python'
 
 trial_type = 'baseline'
-num_trials = 90
-with_ems = True
+num_trials = 75
+with_ems = False
 debug = False
 
 exp = fastReach(pID, code_path, data_path, with_ems, trial_type, arduino_port, num_trials, debug)

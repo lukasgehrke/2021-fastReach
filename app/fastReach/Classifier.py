@@ -26,7 +26,7 @@ class Classifier(threading.Thread):
         self.classifier_srate = classifier_srate
         
         self.srate = data_srate
-        stream_info = StreamInfo(out_stream_name, 'Classifier', 3, self.srate/self.classifier_srate, 'double64', 'myuid34234')
+        stream_info = StreamInfo(out_stream_name, 'Classifier', 2, self.srate/self.classifier_srate, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
         
         # LSL inlet via BSL wrapper
@@ -82,10 +82,11 @@ class Classifier(threading.Thread):
             else:
                 self.state = False
 
-            score = self.clf.transform(feats)[0][0]
-            self.outlet.push_sample([c, p, score])
+            # score = self.clf.transform(feats)[0][0]
+            #self.outlet.push_sample([c, p, score])
+            self.outlet.push_sample([c, p])
 
-            if self.print_states:
-                print('rp: '+str(self.state) + ', class: ' + str(c) + ', probs: ' + str(p) + ', lda score: ' + str(score))
+            #if self.print_states:
+           #     print('rp: '+str(self.state) + ', class: ' + str(c) + ', probs: ' + str(p) + ', lda score: ' + str(score))
 
             time.sleep(self.classifier_srate/self.srate)
