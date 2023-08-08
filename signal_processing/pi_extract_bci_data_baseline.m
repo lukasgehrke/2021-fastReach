@@ -1,5 +1,6 @@
 
-pID = 4;
+
+pID = 6;
 
 %% config
 current_sys = "mac";
@@ -49,7 +50,7 @@ emg_onset_fine = max(find(diff(pre_move_erp(1:emg_onset_raw)) < 0));
 delay = (emg_onset_fine - EEG.srate) / EEG.srate;
 
 figure;plot(pre_move_erp);
-if isempty(delay)
+if isempty(delay) || delay > .2
     delay = -.08;
 else
     xline(emg_onset_fine);
@@ -58,10 +59,12 @@ disp(delay);
 
 %% Extract EEG data for 2 classes: idle and pre-move
 
-eeg_delay = .06;
+eeg_delay = 0; % - .06;
 
 pre_move_data = pop_select(pre_move_data, 'nochannel',{'EMG', 'VEOG'});
 pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-1 + delay + eeg_delay, 0 + delay + eeg_delay]);
+
+disp([-1 + delay + eeg_delay, 0 + delay + eeg_delay]);
 
 idle_event_ixs = find(contains({EEG.event.type}, 'idle_start'));
 idle_events = EEG.event(idle_event_ixs);
@@ -70,6 +73,8 @@ idle_data = pop_select(idle_data, 'nochannel',{'EMG', 'VEOG'});
 idle_data.event = idle_events;
 [idle_data.event.type] = deal('idle_start');
 idle_erp = pop_epoch(idle_data, {'idle_start'}, [1 + eeg_delay, 2 + eeg_delay]);
+
+disp([1 + eeg_delay, 2 + eeg_delay])
 
 %% reject noisy epochs
 
@@ -100,8 +105,8 @@ pre_move_erp = pop_rejepoch(pre_move_erp, noisy_trials_pre_move, 0); % actually 
 % pre_move_erp = pop_rejepoch(pre_move_erp, pre_move_erp.reject.rejthresh,0); % actually reject high prob epochs
 
 % %% data exploration 21.03.2023
-% 
-% c = 40;
+% % 
+% c = 24;
 % p = mean(squeeze(pre_move_erp.data(c,:,:)),2);
 % i = mean(squeeze(idle_erp.data(c,:,:)),2);
 % 
