@@ -250,7 +250,7 @@ def plot_erp_timeline(data,id_vars, delete_vars, sample_rate,window_start,hue,pa
         plt.show()
 
         fig.savefig('results/'+ title + '.png', format='png', transparent=False, bbox_inches='tight', dpi=300)
-        fig.savefig('results/'+title + '.eps', format='eps', transparent=True, bbox_inches='tight', dpi=300)
+        fig.savefig('results/'+title + '.svg', format='eps', transparent=True, bbox_inches='tight', dpi=300)
 
 # plot eeg data with in timeline with 3 conditions using means of all trials
 
@@ -285,4 +285,4 @@ def plot_erp_timeline_2(data_2, id_vars_2,sample_rate,window_start,hue,palette,t
         plt.show()
 
         fig.savefig('results/'+ title + '.png', format='png', transparent=False, bbox_inches='tight', dpi=300)
-        fig.savefig('results/'+title + '.eps', format='eps', transparent=True, bbox_inches='tight', dpi=300)
+        fig.savefig('results/'+title + '.eps', format='svg', transparent=True, bbox_inches='tight', dpi=300)
