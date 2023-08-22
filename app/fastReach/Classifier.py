@@ -2,6 +2,7 @@ from pylsl import StreamInfo, StreamOutlet, StreamInlet, resolve_stream
 import threading, pickle, numpy as np, time
 from bci_funcs import windowed_mean, base_correct, slope
 from bsl import StreamReceiver
+import mne
 
 class Classifier(threading.Thread):
     """Reads a data stream from LSL, computes features and predicts a class label and probability. For this, a model is loaded. 
@@ -33,6 +34,10 @@ class Classifier(threading.Thread):
         self.sr = StreamReceiver(bufsize=1, winsize=1, stream_name='BrainVision RDA')
         time.sleep(1)
 
+        # create MNE raw object for filter
+        # self.sr. check this for channel size, maybe its in there
+        self.mne_raw_info = mne.create_info(ch_names=[f"EEG{n:01}" for n in range(1, 66)],  ch_types=["eeg"] * 65, sfreq=self.srate) # hardcoded
+
         self.model_path = model_path
         self.clf = pickle.load(open(self.model_path, 'rb'))
         self.target_class = target_class
@@ -57,8 +62,15 @@ class Classifier(threading.Thread):
 
             self.sr.acquire()
             data, timestamps = self.sr.get_window(stream_name='BrainVision RDA')
-            data = np.delete(data, 0, 1)
+            data = np.delete(data, 0, 1) # TODO needs to be accessed from simulated_raw
+
+            simulated_raw = mne.io.RawArray(data.T, self.mne_raw_info)
+            
+            #tic = time.time()
+            simulated_raw = simulated_raw.copy().filter(l_freq = .1, h_freq=15)
+            
             data = data[:, self.chans]
+            data_filt = simulated_raw._data.T[:, self.chans]
 
             # tmp = base_correct(data.T, self.baseline_ix)
             # feats = windowed_mean(tmp, self.window_size).flatten().reshape(1,-1)
@@ -70,17 +82,24 @@ class Classifier(threading.Thread):
             probs = self.clf.predict_proba(feats) #probability for class prediction
             self.probs = probs[0][int(self.target_class)]
 
-            self.smooth_class[-1] = self.prediction
-            self.smooth_proba[-1] = self.probs
-            c = np.median(self.smooth_class)
-            p = np.average(self.smooth_proba, weights=self.weights)
-            self.smooth_class = np.roll(self.smooth_class,-1)
-            self.smooth_proba = np.roll(self.smooth_proba,-1)
+            # class and proba smoothing
+            #self.smooth_class[-1] = self.prediction
+            #self.smooth_proba[-1] = self.probs
+            #c = np.median(self.smooth_class)
+            #p = np.average(self.smooth_proba, weights=self.weights)
+            #self.smooth_class = np.roll(self.smooth_class,-1)
+            #self.smooth_proba = np.roll(self.smooth_proba,-1)
+
+            c = self.prediction
+            p = self.probs
 
             if c == self.target_class and p >= self.threshold:
                 self.state = True
             else:
                 self.state = False
+
+            #toc = time.time() - tic
+            #print(toc)
 
             # score = self.clf.transform(feats)[0][0]
             #self.outlet.push_sample([c, p, score])
@@ -89,4 +108,5 @@ class Classifier(threading.Thread):
             #if self.print_states:
            #     print('rp: '+str(self.state) + ', class: ' + str(c) + ', probs: ' + str(p) + ', lda score: ' + str(score))
 
-            time.sleep(self.classifier_srate/self.srate)
+            # time.sleep(self.classifier_srate/self.srate)
+            time.sleep(.1)
