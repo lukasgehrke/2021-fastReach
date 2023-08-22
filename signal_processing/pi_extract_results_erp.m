@@ -7,8 +7,8 @@ pi_bemobil_config;
 
 %% load data and parse events
 
-pIDs = 2:3; %1:10;
-conds = {'Baseline', 'EMS1', 'EMS2'};
+pIDs = 4:6; %1:10;
+conds = {'Baseline', 'passive', 'agency1', 'agency2'};
 chan_for_grand_mean = 'C4';
 results = [];
 

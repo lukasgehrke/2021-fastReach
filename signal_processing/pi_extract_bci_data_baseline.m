@@ -2,21 +2,21 @@
 
 pID = 6;
 
-%% config
-current_sys = "mac";
-eeglab_ver(current_sys);
-% eeglab
-
-% addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
-% addpath('D:\Lukas\2021-fastReach\signal_processing');
-addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
-
-pi_bemobil_config;
+% %% config
+% current_sys = "mac";
+% % eeglab_ver(current_sys);
+% % eeglab
+% 
+% % addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
+% % addpath('D:\Lukas\2021-fastReach\signal_processing');
+% addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
+% 
+% pi_bemobil_config;
 
 %% load data and parse events
 
 EEG = pop_loadxdf(fullfile(bemobil_config.study_folder, bemobil_config.source_data_folder, ...
-    ['sub-' sprintf('%03d', pID)], 'Baseline.xdf'), ...
+    ['sub-' sprintf('%03d', pID)], 'baseline.xdf'), ...
     'streamtype', 'EEG', 'exclude_markerstreams', {});
 [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
 EEG = pi_parse_events(EEG);
@@ -24,6 +24,8 @@ EEG = pi_parse_events(EEG);
 %% filter EMG
 
 EMG = pop_eegfiltnew(EEG, 20, 100); % only filter EMG channel
+EEG = pop_eegfiltnew(EEG, .1, 15); % only filter EMG channel
+
 EEG.data(end,:) = EMG.data(end,:).^2;
 
 %% determine delay from EMG onset to button press
@@ -72,7 +74,7 @@ idle_data = EEG;
 idle_data = pop_select(idle_data, 'nochannel',{'EMG', 'VEOG'});
 idle_data.event = idle_events;
 [idle_data.event.type] = deal('idle_start');
-idle_erp = pop_epoch(idle_data, {'idle_start'}, [1 + eeg_delay, 2 + eeg_delay]);
+idle_erp = pop_epoch(idle_data, {'idle_start'}, [0 + eeg_delay, 1 + eeg_delay]);
 
 disp([1 + eeg_delay, 2 + eeg_delay])
 
@@ -117,6 +119,14 @@ pre_move_erp = pop_rejepoch(pre_move_erp, noisy_trials_pre_move, 0); % actually 
 % subplot(2,1,1);plot(p)
 % subplot(2,1,2);plot(i)
 
+%% save long epochs for testing class probas
+
+long_pre_move_erp = pop_epoch(pre_move_data, {'reach'}, [-2 + delay + eeg_delay, 0 + delay + eeg_delay]);
+long_idle_erp = pop_epoch(idle_data, {'idle_start'}, [0 + eeg_delay, 2 + eeg_delay]);
+
+long_idle = long_idle_erp.data;
+long_pre_move = long_pre_move_erp.data;
+
 %% select best channels
 
 n_wins = 10;
@@ -142,6 +152,9 @@ path = fullfile(bemobil_config.study_folder, 'eeglab2python', ['sub-' sprintf('%
 if ~exist(path, 'dir')
     mkdir(path);
 end
+
+save(fullfile(path, 'long_pre_move_Baseline'), 'long_pre_move');
+save(fullfile(path, 'long_idle_Baseline'), 'long_idle');
 
 % make same size
 % epochs = min([size(idle_erp.data,3), size(pre_move_erp.data,3)]);
