@@ -27,7 +27,8 @@ class Classifier(threading.Thread):
         self.classifier_srate = classifier_srate
         
         self.srate = data_srate
-        stream_info = StreamInfo(out_stream_name, 'Classifier', 2, self.srate/self.classifier_srate, 'double64', 'myuid34234')
+        # stream_info = StreamInfo(out_stream_name, 'Classifier', 2, self.srate/self.classifier_srate, 'double64', 'myuid34234')
+        stream_info = StreamInfo(out_stream_name, 'Classifier', 2, 10, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
         
         # LSL inlet via BSL wrapper
