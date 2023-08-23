@@ -1,7 +1,7 @@
 from fastReach import fastReach
 
 ### Settings for each participant ###
-pID = 6
+pID = 9
 
 
 
@@ -28,7 +28,7 @@ elif system == 'win':
     data_path = '\\\\stor1\projects\\Lukas_Gehrke\\fastReach\\data\\eeglab2python'
 
 trial_type = 'ems_random'
-num_trials = 60
+num_trials = 75
 with_ems = True
 debug = False
 
