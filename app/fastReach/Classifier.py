@@ -28,15 +28,17 @@ class Classifier(threading.Thread):
         
         self.srate = data_srate
         # stream_info = StreamInfo(out_stream_name, 'Classifier', 2, self.srate/self.classifier_srate, 'double64', 'myuid34234')
-        stream_info = StreamInfo(out_stream_name, 'Classifier', 2, 10, 'double64', 'myuid34234')
+        stream_info = StreamInfo(out_stream_name, 'EEG', 3, 10, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
+
+        stream_info = StreamInfo('eeg_state', 'EEG', 1, 10, 'double64', 'myuid34234')
+        self.eeg_state = StreamOutlet(stream_info)
         
         # LSL inlet via BSL wrapper
         self.sr = StreamReceiver(bufsize=1, winsize=1, stream_name='BrainVision RDA')
         time.sleep(1)
 
         # create MNE raw object for filter
-        # self.sr. check this for channel size, maybe its in there
         self.mne_raw_info = mne.create_info(ch_names=[f"EEG{n:01}" for n in range(1, 66)],  ch_types=["eeg"] * 65, sfreq=self.srate) # hardcoded
 
         self.model_path = model_path
@@ -48,11 +50,11 @@ class Classifier(threading.Thread):
         self.baseline_ix = baseline_index
 
         self.probs = 0
-        self.smooth_proba = np.zeros(5)
-        self.weights = [.1,.2,.3,.4,.5]
+        self.smooth_proba = np.zeros(3)
+        self.weights = [.1,.3,.5]
 
         self.prediction = 0        
-        self.smooth_class = np.zeros(5)
+        self.smooth_class = np.zeros(3)
 
         self.state = False
         self.print_states = debug
@@ -63,7 +65,7 @@ class Classifier(threading.Thread):
 
             self.sr.acquire()
             data, timestamps = self.sr.get_window(stream_name='BrainVision RDA')
-            data = np.delete(data, 0, 1) # TODO needs to be accessed from simulated_raw
+            data = np.delete(data, 0, 1)
 
             simulated_raw = mne.io.RawArray(data.T, self.mne_raw_info)
             
@@ -84,30 +86,33 @@ class Classifier(threading.Thread):
             self.probs = probs[0][int(self.target_class)]
 
             # class and proba smoothing
-            #self.smooth_class[-1] = self.prediction
-            #self.smooth_proba[-1] = self.probs
-            #c = np.median(self.smooth_class)
-            #p = np.average(self.smooth_proba, weights=self.weights)
-            #self.smooth_class = np.roll(self.smooth_class,-1)
-            #self.smooth_proba = np.roll(self.smooth_proba,-1)
+            self.smooth_class[-1] = self.prediction
+            self.smooth_proba[-1] = self.probs
+            c = np.median(self.smooth_class)
+            p = np.average(self.smooth_proba, weights=self.weights)
+            self.smooth_class = np.roll(self.smooth_class,-1)
+            self.smooth_proba = np.roll(self.smooth_proba,-1)
 
-            c = self.prediction
-            p = self.probs
+            #c = self.prediction
+            #p = self.probs
 
             if c == self.target_class and p >= self.threshold:
-                self.state = True
+                self.state = 1 #True
             else:
-                self.state = False
+                self.state = 0 #False
 
             #toc = time.time() - tic
             #print(toc)
 
-            # score = self.clf.transform(feats)[0][0]
-            #self.outlet.push_sample([c, p, score])
-            self.outlet.push_sample([c, p])
+            score = self.clf.transform(feats)[0][0]
+            self.outlet.push_sample([c, p, score])
 
-            #if self.print_states:
-           #     print('rp: '+str(self.state) + ', class: ' + str(c) + ', probs: ' + str(p) + ', lda score: ' + str(score))
+            #print(self.state)
+            self.eeg_state.push_sample([self.state])
+            # self.outlet.push_sample([c, p])
+
+            if self.print_states:
+                print('rp: '+str(self.state) + ', class: ' + str(c) + ', probs: ' + str(p) + ', lda score: ' + str(score))
 
             # time.sleep(self.classifier_srate/self.srate)
             time.sleep(.1)
