@@ -66,7 +66,7 @@ class fastReach:
 
         if self.ems_on == True:
             
-            self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
+            # self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
             self.ems_training_delay = 2
             stim_delay = pd.read_csv(self.data_path+'delay.csv')
             self.ems_randommin = float(stim_delay.columns[0])
@@ -75,9 +75,8 @@ class fastReach:
         if self.trial_type == 'ems_bci':
             
             # resolve eeg_classifier stream
-            self.eeg_state_stream = StreamReceiver(winsize=.1, bufsize=.1, stream_name='eeg_state')
+            self.eeg_state_stream = StreamReceiver(winsize=1, bufsize=1, stream_name='eeg_state')
             time.sleep(1)
-            self.eeg_state_stream.acquire()
             self.eeg_state = False
             
             # now running Classifier externally and streaming output via LSL
@@ -235,13 +234,15 @@ class fastReach:
             elapsed = time.time() - start
 
             if self.trial_type == 'ems_bci' and elapsed >= classifier_update_start + EEG_UPDATE_RATE:
-                classifier_update_start = elapsed
+               classifier_update_start = elapsed
 
-                data, timestamps = self.eeg_state_stream.get_window()
-                if data[0,1] < 1:
-                    self.eeg_state = False
-                else:
-                    self.eeg_state = True
+               self.eeg_state_stream.acquire()
+               data, timestamps = self.eeg_state_stream.get_window()
+
+               if data[0,1] < 1:
+                   self.eeg_state = False
+               else:
+                   self.eeg_state = True
 
             # isi
             if elapsed < self.isi_dur and self.fix_cross_shown == False:
