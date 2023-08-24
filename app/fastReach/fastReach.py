@@ -12,6 +12,8 @@ import random
 
 from Classifier import Classifier
 
+EEG_UPDATE_RATE = .1
+
 class fastReach:
     """Experiment triggering electrical muscle stimulation EMS directly from the output of a brain-computer interface (BCI)
     This class initializes the different components, starts an EEG and motion classifier in separate threads, and draws the experiment to the screen.
@@ -78,9 +80,7 @@ class fastReach:
             self.eeg_state_stream.acquire()
             self.eeg_state = False
             
-            
-            # now doing externally
-
+            # now running Classifier externally and streaming output via LSL
             #model_path_eeg = self.data_path+'model_'+str(self.pID)+'_eeg.sav'
             #with open(self.data_path+os.sep+'bci_params.json', 'r') as f:
             #    bci_params = json.load(f)
@@ -227,17 +227,21 @@ class fastReach:
             start (time object): time.time() of the experiment start
         """
         
-        while self.trial_counter <= self.num_trials:
+        classifier_update_start = time.time() - start
 
-            if self.trial_type == 'ems_bci': # only update every 100ms
+        while self.trial_counter <= self.num_trials:
+            
+            # trial logic
+            elapsed = time.time() - start
+
+            if self.trial_type == 'ems_bci' and elapsed >= classifier_update_start + EEG_UPDATE_RATE:
+                classifier_update_start = elapsed
+
                 data, timestamps = self.eeg_state_stream.get_window()
                 if data[0,1] < 1:
                     self.eeg_state = False
                 else:
                     self.eeg_state = True
-            
-            # trial logic
-            elapsed = time.time() - start
 
             # isi
             if elapsed < self.isi_dur and self.fix_cross_shown == False:
