@@ -6,13 +6,15 @@ import numpy as np
 import pandas as pd
 import serial, time, json
 from LSL import LSL
+from pylsl import StreamInlet, resolve_stream
+
 from bsl import StreamReceiver
 import ptext
 import random
 
 from Classifier import Classifier
 
-EEG_UPDATE_RATE = .1
+EEG_UPDATE_RATE = .15 # TODO this has to be higher than an LSL pull_sample takes on the machine this is running on
 
 class fastReach:
     """Experiment triggering electrical muscle stimulation EMS directly from the output of a brain-computer interface (BCI)
@@ -77,6 +79,10 @@ class fastReach:
             # resolve eeg_classifier stream
             self.eeg_state_stream = StreamReceiver(winsize=1, bufsize=1, stream_name='eeg_state')
             time.sleep(1)
+
+            streams = resolve_stream('name', 'eeg_classifier')
+            self.classifier_inlet = StreamInlet(streams[0])
+
             self.eeg_state = False
             
             # now running Classifier externally and streaming output via LSL
@@ -139,6 +145,9 @@ class fastReach:
         self.key_board_input_enabled = False
         self.mouse_input_enabled = False
 
+        # bci
+        self.classifier_update_start = time.time()
+
     def play_sound(self, duration):
         """Plays a sound using pygame
 
@@ -160,7 +169,7 @@ class fastReach:
     def send_ems_pulse(self, marker, trial_type):
         """Sends a pulse to the EMS device
         """
-        self.ems.write("r".encode('utf-8'))
+        # self.ems.write("r".encode('utf-8'))
         
         m = self.markers[marker]+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
         self.lsl.send(m,1)
@@ -225,24 +234,30 @@ class fastReach:
             self.ems_on (boolean): Whether to EMS is presented or not
             start (time object): time.time() of the experiment start
         """
-        
-        classifier_update_start = time.time() - start
+
+        classifier_srate = start
 
         while self.trial_counter <= self.num_trials:
             
             # trial logic
-            elapsed = time.time() - start
+            now = time.time()
+            elapsed = now - start
+            elapsed_classifier_srate = now - classifier_srate
 
-            if self.trial_type == 'ems_bci' and elapsed >= classifier_update_start + EEG_UPDATE_RATE:
-               classifier_update_start = elapsed
+            if self.trial_type == 'ems_bci' and elapsed_classifier_srate >= EEG_UPDATE_RATE:
+                classifier_srate = time.time()
 
-               self.eeg_state_stream.acquire()
-               data, timestamps = self.eeg_state_stream.get_window()
+                tic = time.time()
+                data = self.classifier_inlet.pull_sample()
+                toc = time.time() - tic
+                print(toc)
 
-               if data[0,1] < 1:
-                   self.eeg_state = False
-               else:
-                   self.eeg_state = True
+                if data[0] < 1:
+                    self.eeg_state = False
+                else:
+                    self.eeg_state = True
+
+                # print(self.eeg_state)
 
             # isi
             if elapsed < self.isi_dur and self.fix_cross_shown == False:
@@ -269,6 +284,7 @@ class fastReach:
                     # if self.trial_type == 'ems_bci' and self.eeg.state == True:
                     if self.trial_type == 'ems_bci' and self.eeg_state == True:
                         ems_time = self.send_ems_pulse("ems on", self.trial_type)
+                        print('send pulse')
                     elif self.trial_type == 'ems_random' and elapsed > (self.ems_delay + self.isi_dur):
                         ems_time = self.send_ems_pulse("ems on", self.trial_type)
                     elif self.trial_type == 'training' and elapsed > (self.ems_training_delay + self.isi_dur):

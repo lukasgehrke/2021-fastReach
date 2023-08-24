@@ -19,23 +19,21 @@ class Classifier(threading.Thread):
         window_size (integer): Buffer size
         baseline_index (integer): Index of baseline window in buffer
     """
-    def __init__(self, out_stream_name, classifier_srate, data_srate, model_path, target_class, chans, threshold, window_size, baseline_index, debug) -> None:
+    def __init__(self, in_stream_name, out_stream_name, classifier_srate, data_srate, model_path, target_class, chans, threshold, window_size, baseline_index, debug) -> None:
         
         threading.Thread.__init__(self)
 
         # LSL outlet
         self.classifier_srate = classifier_srate
+        self.in_stream = in_stream_name
         
         self.srate = data_srate
         # stream_info = StreamInfo(out_stream_name, 'Classifier', 2, self.srate/self.classifier_srate, 'double64', 'myuid34234')
-        stream_info = StreamInfo(out_stream_name, 'EEG', 3, 10, 'double64', 'myuid34234')
+        stream_info = StreamInfo(out_stream_name, 'EEG', 4, 10, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
-
-        stream_info = StreamInfo('eeg_state', 'EEG', 1, 10, 'double64', 'myuid34234')
-        self.eeg_state = StreamOutlet(stream_info)
         
         # LSL inlet via BSL wrapper
-        self.sr = StreamReceiver(bufsize=1, winsize=1, stream_name='BrainVision RDA')
+        self.sr = StreamReceiver(bufsize=1, winsize=1, stream_name=self.in_stream)
         time.sleep(1)
 
         # create MNE raw object for filter
@@ -55,21 +53,23 @@ class Classifier(threading.Thread):
 
         self.prediction = 0        
         self.smooth_class = np.zeros(3)
+        
+        self.state = 0 #False
 
-        self.state = False
         self.print_states = debug
 
     def run(self):
 
         while True:
 
+            tic = time.time()
+
             self.sr.acquire()
-            data, timestamps = self.sr.get_window(stream_name='BrainVision RDA')
+            data, timestamps = self.sr.get_window(stream_name=self.in_stream)
             data = np.delete(data, 0, 1)
 
             simulated_raw = mne.io.RawArray(data.T, self.mne_raw_info)
             
-            #tic = time.time()
             simulated_raw = simulated_raw.copy().filter(l_freq = .1, h_freq=15)
             
             data = data[:, self.chans]
@@ -77,7 +77,7 @@ class Classifier(threading.Thread):
 
             # tmp = base_correct(data.T, self.baseline_ix)
             # feats = windowed_mean(tmp, self.window_size).flatten().reshape(1,-1)
-            feats = slope(data.T, 'linear').flatten().reshape(1,-1)
+            feats = slope(data_filt.T, 'linear').flatten().reshape(1,-1)
             # slope_exp = slope(data.T, 'exp').flatten().reshape(1,-1)
             # feats = np.concatenate((slope_linear, slope_exp), axis=1)
         
@@ -101,18 +101,14 @@ class Classifier(threading.Thread):
             else:
                 self.state = 0 #False
 
-            #toc = time.time() - tic
-            #print(toc)
-
             score = self.clf.transform(feats)[0][0]
-            self.outlet.push_sample([c, p, score])
-
-            #print(self.state)
-            self.eeg_state.push_sample([self.state])
-            # self.outlet.push_sample([c, p])
+            self.outlet.push_sample([self.state, c, p, score])
 
             if self.print_states:
                 print('rp: '+str(self.state) + ', class: ' + str(c) + ', probs: ' + str(p) + ', lda score: ' + str(score))
 
             # time.sleep(self.classifier_srate/self.srate)
-            time.sleep(.1)
+            toc = time.time() - tic
+            print(toc)
+
+            time.sleep(self.classifier_srate)
