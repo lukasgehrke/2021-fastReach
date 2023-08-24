@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import serial, time, json
 from LSL import LSL
+from bsl import StreamReceiver
 import ptext
 import random
 
@@ -70,15 +71,24 @@ class fastReach:
             self.ems_randommax = float(stim_delay.columns[1])
 
         if self.trial_type == 'ems_bci':
+            
+            # resolve eeg_classifier stream
+            self.eeg_state_stream = StreamReceiver(winsize=.1, bufsize=.1, stream_name='eeg_state')
+            time.sleep(1)
+            self.eeg_state_stream.acquire()
+            self.eeg_state = False
+            
+            
+            # now doing externally
 
-            model_path_eeg = self.data_path+'model_'+str(self.pID)+'_eeg.sav'
-            with open(self.data_path+os.sep+'bci_params.json', 'r') as f:
-                bci_params = json.load(f)
+            #model_path_eeg = self.data_path+'model_'+str(self.pID)+'_eeg.sav'
+            #with open(self.data_path+os.sep+'bci_params.json', 'r') as f:
+            #    bci_params = json.load(f)
 
-            self.eeg = Classifier('eeg_classifier', bci_params['classifier_update_rate'], bci_params['data_srate'], model_path_eeg, 
-                                     bci_params['target_class'], bci_params['chans'], bci_params['threshold'], bci_params['windows'], bci_params['baseline'],
-                                     debug)
-            self.eeg.start()
+            #self.eeg = Classifier('eeg_classifier', bci_params['classifier_update_rate'], bci_params['data_srate'], model_path_eeg, 
+            #                         bci_params['target_class'], bci_params['chans'], bci_params['threshold'], bci_params['windows'], bci_params['baseline'],
+            #                         debug)
+            #self.eeg.start()
 
     def init_screen(self, fullscreen):
         """Initialize screen object using pygame
@@ -218,6 +228,13 @@ class fastReach:
         """
         
         while self.trial_counter <= self.num_trials:
+
+            if self.trial_type == 'ems_bci': # only update every 100ms
+                data, timestamps = self.eeg_state_stream.get_window()
+                if data[0,1] < 1:
+                    self.eeg_state = False
+                else:
+                    self.eeg_state = True
             
             # trial logic
             elapsed = time.time() - start
@@ -244,7 +261,8 @@ class fastReach:
                 # ems behavior
                 # if self.ems_on== True and self.mouse_input_enabled == True and self.ems_active == False and self.ems_sent == False:
                 if elapsed > (self.isi_dur + 1) and self.ems_on == True and self.mouse_input_enabled == True and self.ems_active == False and self.ems_sent == False:
-                    if self.trial_type == 'ems_bci' and self.eeg.state == True:
+                    # if self.trial_type == 'ems_bci' and self.eeg.state == True:
+                    if self.trial_type == 'ems_bci' and self.eeg_state == True:
                         ems_time = self.send_ems_pulse("ems on", self.trial_type)
                     elif self.trial_type == 'ems_random' and elapsed > (self.ems_delay + self.isi_dur):
                         ems_time = self.send_ems_pulse("ems on", self.trial_type)

@@ -28,8 +28,11 @@ class Classifier(threading.Thread):
         
         self.srate = data_srate
         # stream_info = StreamInfo(out_stream_name, 'Classifier', 2, self.srate/self.classifier_srate, 'double64', 'myuid34234')
-        stream_info = StreamInfo(out_stream_name, 'Classifier', 2, 10, 'double64', 'myuid34234')
+        stream_info = StreamInfo(out_stream_name, 'EEG', 3, 10, 'double64', 'myuid34234')
         self.outlet = StreamOutlet(stream_info)
+
+        stream_info = StreamInfo('eeg_state', 'EEG', 1, 10, 'double64', 'myuid34234')
+        self.eeg_state = StreamOutlet(stream_info)
         
         # LSL inlet via BSL wrapper
         self.sr = StreamReceiver(bufsize=1, winsize=1, stream_name='BrainVision RDA')
@@ -37,7 +40,8 @@ class Classifier(threading.Thread):
 
         # create MNE raw object for filter
         # self.sr. check this for channel size, maybe its in there
-        self.mne_raw_info = mne.create_info(ch_names=[f"EEG{n:01}" for n in range(1, 66)],  ch_types=["eeg"] * 65, sfreq=self.srate) # hardcoded
+        # TODO change 65 back to 66 and 64 to 65
+        self.mne_raw_info = mne.create_info(ch_names=[f"EEG{n:01}" for n in range(1, 65)],  ch_types=["eeg"] * 64, sfreq=self.srate) # hardcoded
 
         self.model_path = model_path
         self.clf = pickle.load(open(self.model_path, 'rb'))
@@ -95,19 +99,22 @@ class Classifier(threading.Thread):
             p = self.probs
 
             if c == self.target_class and p >= self.threshold:
-                self.state = True
+                self.state = 1 #True
             else:
-                self.state = False
+                self.state = 0 #False
 
             #toc = time.time() - tic
             #print(toc)
 
-            # score = self.clf.transform(feats)[0][0]
-            #self.outlet.push_sample([c, p, score])
-            self.outlet.push_sample([c, p])
+            score = self.clf.transform(feats)[0][0]
+            self.outlet.push_sample([c, p, score])
 
-            #if self.print_states:
-           #     print('rp: '+str(self.state) + ', class: ' + str(c) + ', probs: ' + str(p) + ', lda score: ' + str(score))
+            print(self.state)
+            self.eeg_state.push_sample([self.state])
+            # self.outlet.push_sample([c, p])
+
+            if self.print_states:
+                print('rp: '+str(self.state) + ', class: ' + str(c) + ', probs: ' + str(p) + ', lda score: ' + str(score))
 
             # time.sleep(self.classifier_srate/self.srate)
             time.sleep(.1)
