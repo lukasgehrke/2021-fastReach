@@ -2,19 +2,19 @@
 pID = 11;
 
 %% config
-current_sys = "mac";
-% eeglab
-eeglab_ver(current_sys);
+% current_sys = "mac";
+eeglab
+% eeglab_ver(current_sys);
 
-% addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
+addpath(genpath('D:\Lukas\signal-processing-motor-intent'));
 % addpath('/Users/lukasgehrke/Documents/publications/2021-fastReach/signal_processing');
 % addpath('/Users/lukasgehrke/Documents/code.nosync/signal-processing-motor-intent');
-addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/liblsl-Matlab'))
+% addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/liblsl-Matlab'))
 
 pi_bemobil_config;
 
-path = '/Volumes/Lukas_Gehrke/fastReach/data/0_source-data/';
-% path = 'P:\Lukas_Gehrke\fastReach\data\0_source-data';
+% path = '/Volumes/Lukas_Gehrke/fastReach/data/0_source-data/';
+path = 'P:\Lukas_Gehrke\fastReach\data\0_source-data';
 
 %% load data and parse events
 
@@ -36,7 +36,7 @@ lib = lsl_loadlib();
 
 % make a new stream outlet
 disp('Creating a new streaminfo...');
-info = lsl_streaminfo(lib,'Lukas Test EEG','EEG',65,250,'cf_float32','sdfwerr32432');
+info = lsl_streaminfo(lib,'BrainVision RDA','EEG',65,250,'cf_float32','sdfwerr32432');
 
 disp('Opening an outlet...');
 outlet = lsl_outlet(info);
