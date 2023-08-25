@@ -70,3 +70,9 @@ def reshape_trial(data):
     data_reshaped_trial = np.reshape(data, (data.shape[2], data.shape[0] * data.shape[1]), order = 'F')
     # data_reshaped_trial = np.reshape(data, (data.shape[0] * data.shape[1]), order = 'F')
     return data_reshaped_trial
+
+def sliding_window(elements, window_size):
+    if len(elements) <= window_size:
+       return elements
+    for i in range(len(elements)- window_size + 1):
+        print(elements[i:i+window_size])
