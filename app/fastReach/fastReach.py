@@ -77,11 +77,11 @@ class fastReach:
         if self.trial_type == 'ems_bci':
             
             # resolve eeg_classifier stream
-            self.eeg_state_stream = StreamReceiver(winsize=1, bufsize=1, stream_name='eeg_state')
-            time.sleep(1)
+            # self.eeg_state_stream = StreamReceiver(winsize=1, bufsize=1, stream_name='eeg_state')
 
             streams = resolve_stream('name', 'eeg_classifier')
             self.classifier_inlet = StreamInlet(streams[0])
+            time.sleep(1)
 
             self.eeg_state = False
             
