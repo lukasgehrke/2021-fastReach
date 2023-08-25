@@ -1,5 +1,5 @@
 
-pID = 3;
+pID = 11;
 
 %% config
 current_sys = "mac";
@@ -13,8 +13,8 @@ addpath(genpath('/Users/lukasgehrke/Documents/code.nosync/liblsl-Matlab'))
 
 pi_bemobil_config;
 
-% path = '/Users/lukasgehrke/Desktop/data/';
-path = 'P:\Lukas_Gehrke\fastReach\data\0_source-data';
+path = '/Volumes/Lukas_Gehrke/fastReach/data/0_source-data/';
+% path = 'P:\Lukas_Gehrke\fastReach\data\0_source-data';
 
 %% load data and parse events
 
@@ -22,8 +22,10 @@ path = 'P:\Lukas_Gehrke\fastReach\data\0_source-data';
 %     ['sub-' sprintf('%03d', pID)], 'EMS1.xdf'), ...
 %     'streamtype', 'EEG', 'exclude_markerstreams', {});
 EEG = pop_loadxdf(fullfile(path, ...
-    ['sub-' sprintf('%03d', pID)], 'EMS2.xdf'), ...
+    ['sub-' sprintf('%03d', pID)], 'Baseline.xdf'), ...
     'streamtype', 'EEG', 'exclude_markerstreams', {});
+
+EEG.data(end+1,:) = EEG.data(end,:);
 
 % EEG = pop_eegfiltnew(EMG, 10);
 allEventsLats = [EEG.event.latency];
@@ -34,7 +36,7 @@ lib = lsl_loadlib();
 
 % make a new stream outlet
 disp('Creating a new streaminfo...');
-info = lsl_streaminfo(lib,'BrainVision RDA','EEG',64,250,'cf_float32','sdfwerr32432');
+info = lsl_streaminfo(lib,'Lukas Test EEG','EEG',65,250,'cf_float32','sdfwerr32432');
 
 disp('Opening an outlet...');
 outlet = lsl_outlet(info);
