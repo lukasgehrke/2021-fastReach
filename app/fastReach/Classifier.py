@@ -109,6 +109,6 @@ class Classifier(threading.Thread):
 
             # time.sleep(self.classifier_srate/self.srate)
             toc = time.time() - tic
-            print(toc)
+            # print(toc)
 
             time.sleep(self.classifier_srate)
