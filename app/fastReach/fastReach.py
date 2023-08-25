@@ -14,7 +14,9 @@ import random
 
 from Classifier import Classifier
 
-EEG_UPDATE_RATE = .15 # TODO this has to be higher than an LSL pull_sample takes on the machine this is running on
+EEG_UPDATE_RATE = .1 
+# on the Microsoft Tablet this runs into problems with a pull rate below 0.08
+# this has to be higher than an LSL pull_sample takes on the machine this is running on
 
 class fastReach:
     """Experiment triggering electrical muscle stimulation EMS directly from the output of a brain-computer interface (BCI)
@@ -68,7 +70,7 @@ class fastReach:
 
         if self.ems_on == True:
             
-            # self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
+            self.ems = serial.Serial(port=arduino_port, baudrate=9600, timeout=.1)
             self.ems_training_delay = 2
             stim_delay = pd.read_csv(self.data_path+'delay.csv')
             self.ems_randommin = float(stim_delay.columns[0])
@@ -169,7 +171,7 @@ class fastReach:
     def send_ems_pulse(self, marker, trial_type):
         """Sends a pulse to the EMS device
         """
-        # self.ems.write("r".encode('utf-8'))
+        self.ems.write("r".encode('utf-8'))
         
         m = self.markers[marker]+';condition:'+trial_type+';trial_nr:'+str(self.trial_counter)
         self.lsl.send(m,1)
@@ -247,12 +249,12 @@ class fastReach:
             if self.trial_type == 'ems_bci' and elapsed_classifier_srate >= EEG_UPDATE_RATE:
                 classifier_srate = time.time()
 
-                tic = time.time()
+                # tic = time.time()
                 data = self.classifier_inlet.pull_sample()
-                toc = time.time() - tic
-                print(toc)
+                # toc = time.time() - tic
+                # print(toc)
 
-                if data[0] < 1:
+                if data[0][0] < 1:
                     self.eeg_state = False
                 else:
                     self.eeg_state = True
@@ -284,7 +286,7 @@ class fastReach:
                     # if self.trial_type == 'ems_bci' and self.eeg.state == True:
                     if self.trial_type == 'ems_bci' and self.eeg_state == True:
                         ems_time = self.send_ems_pulse("ems on", self.trial_type)
-                        print('send pulse')
+                        # print('send pulse')
                     elif self.trial_type == 'ems_random' and elapsed > (self.ems_delay + self.isi_dur):
                         ems_time = self.send_ems_pulse("ems on", self.trial_type)
                     elif self.trial_type == 'training' and elapsed > (self.ems_training_delay + self.isi_dur):

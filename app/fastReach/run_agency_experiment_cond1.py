@@ -1,7 +1,7 @@
 from fastReach import fastReach
 
 ### Settings for each participant ###
-pID = 9
+pID = 12
 
 
 
