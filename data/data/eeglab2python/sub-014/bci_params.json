@@ -1,1 +1,0 @@
-{"chans": [23, 7, 62, 57, 26, 58, 20, 34, 56, 24, 27, 22, 29, 35, 33, 59], "windows": 10, "baseline": 25.0, "target_class": 1.0, "threshold": 0.639038646966611, "data_srate": 250, "classifier_update_rate": 0.05}
