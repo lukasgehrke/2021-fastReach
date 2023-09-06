@@ -7,8 +7,8 @@ pi_bemobil_config;
 
 %% load data and parse events
 
-pIDs = 6; %1:10;
-conds = {'agency1', 'agency2'}; % 'Baseline', 'passive', 
+pIDs = [12, 14:21] ; %1:10;
+conds = {'Baseline', 'passive', 'agency1'}; %
 design = [];
 
 for pID = pIDs
@@ -21,21 +21,35 @@ for pID = pIDs
         EEG = pop_loadxdf(fullfile(bemobil_config.study_folder, bemobil_config.source_data_folder, ...
             ['sub-' sprintf('%03d', pID)], [cond{1} '.xdf']), ...
             'streamtype', 'EEG', 'exclude_markerstreams', {});
-        [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
+        [AL.LEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
         EEG = pi_parse_events(EEG);
+
+        % delete all events before and after condition
+        block_start_ix = find(strcmp({EEG.event.block}, 'start'));
+        block_end_ix = find(strcmp({EEG.event.block}, 'end'));
+        EEG.event = EEG.event(block_start_ix:block_end_ix);
 
         %% behavior
         rt = {EEG.event.rt};
         rt = rt(~cellfun('isempty', rt));
-        rt = cellfun(@str2num, rt)';
+        rt = cellfun(@str2double, rt)';
         
         rd = {EEG.event.real_delay};
-        rd = rd(~cellfun('isempty', rd));
-        rd = cellfun(@str2num, rd)';
-        
+        estimation_task_ix = ~cellfun('isempty', rd);
+        rd = rd(~cellfun('isempty', rd))';
+
         ed = {EEG.event.estimated_delay};
-        ed = ed(~cellfun('isempty', ed));
-        ed = cellfun(@str2num, ed)';
+        ed = ed(estimation_task_ix);
+        % ed = ed(~cellfun('isempty', ed));
+        fx = @(x)any(isempty(x));
+        ind = cellfun(fx, ed);
+        ed(ind) = {nan};
+
+        if pID == 16 && strcmp(cond, 'Baseline')
+            ed(38) = {'150'};
+        end
+
+        ed = cellfun(@str2double, ed)';
         
         condition = {EEG.event.condition};
         condition = condition(1:size(ed))';
@@ -79,7 +93,7 @@ for pID = pIDs
             condition(1) = [];
             control(1) = [];
         end
-    
+
         design_tmp = table(id, condition, tr_nr, rd, ed, rt, control, delta_tap_ems, delta_idle_ems);
         design_this_pID = [design_this_pID; design_tmp];
 
