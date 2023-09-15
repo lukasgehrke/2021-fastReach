@@ -1,20 +1,59 @@
 \section{Discussion}
+With this paper, we contributed a new way to design augmented experiences with the potential to maintain a user's SoA: a bleeding edge BCI to control EMS at moments of users' intention to interact. By leveraging an average of 11.5 EEG channels and using a simple, fast-to-compute feature, the BCI achieved a mean F1 score of .7. We demonstrated in eight participants that one effect of SoA, intentional binding, is maintained when using our INTENTION system. However, the subjectively rated level of control was lower when using the INTENTION system as compared to voluntary interaction without EMS. This was differentiated by participants' qualitative reports: when the stimulation aligned with participants' intentions, positive sentiments outweighed negative ones. When it did not, participants reported a negatively perceived loss of control.
 
-% summary here! BLUF!
+% Sandwich: 
+% Good -> [short] cool system, first of its kind setting out to augment user's action preceeding their movement in time
+Our prototype was built using off-the-shelf, affordable, equipment to physically augment users' actions. Taken together, all the tech to control the users' movements, i.e., the EMS stimulation device, Arduino, and switchboard, cost less than 100 [anonymized]. While we used a 64-channel research-grade EEG system, the channel selection procedure resulted in the system ultimately using a low-density coverage of about 12 channels on average for classification. Today, many low-density EEG devices are available on consumer markets at affordable price points, see~\citet{Niso2023-ce} for a recent summary of available wireless systems. 
 
-% Outlook Ideas
-% - Strength of EMS could be set by the amplitude of the RP -> is there evidence for a correlation between amplitude and 'strength' of volitional action?
-%[ - EEG Signal may be contaminated by eye movement, maybe a worthwhile thing to build this interaction relying solely on eye tracking information, gaze fixating on the target before moving]
-%- not only physical integration but also other adpative interfaces, or control of mobile phone (see Cornelio2022 review); % say here somewhere what action augmentation is and how it differs from body and environment/outcome augmentation
+Still, the system achieved what is considered to be a `good' F1 score of .7, and hence sometimes detected users' intention to interact. In our user study, this system performance affected users' performance in the time estimation task when comparing the three experimental conditions. We conclude that taking users' sentiments and ratings of control into account, this indicates a general modulation of agency with respect to augmentation. We believe this to be a very promising finding considering the fact that our prototype with low technological requirements still produces behavioral results indicating that intention can be detected and planned movements be augmented.
 
+In line with the literature, we found that participants estimated the delay between tap and tone to be lower in both conditions where they were instructed to act on their own volition as compared to the passive condition~\cite{Moore2012-dk}. More recent literature has questioned the validity of the intentional binding phenomenon as a correlate of agency, stating that the effect may ``merely represent a strong case of multisensory causal binding.''~\cite{Suzuki2019-pi, Gutzeit2023-ei, Hoerl2020-my}. However, in our study, we observed the effect of compressing the action-outcome delay to be maintained even when using the INTENTION system. Hence, the effect was maintained for both conditions of voluntary action.
 
+% Bad -> (1) situate the findings of the IB, (2) bad classification metrics not good enough to feel in control
+\subsection{Limitations}
+Two main procedural issues arose with respect to the time estimation task: First, contrasting INTENTION with BASELINE, we noted that when EMS moved participants' fingers, they sometimes reported that their finger was pressing on the touchscreen for a longer duration as compared to their `normal' touchscreen tap. This may have introduced additional variance in the time estimation task since the exact moment of the tap that causes the tone is more obscure. Second, following pilot recordings, we chose to obtain participants' time estimates by asking them to type in their estimates on the keyboard. However, we observed that many participants, while perceiving a continuous distribution of the delays, did not answer at a continuous ms resolution but rather at steps of 50 or 100ms, skewing the distribution of their answers. While many different versions of the intentional binding paradigm exist~\cite{Moore2012-dk}, we would now choose a continuous slider, perhaps set at different initial positions between trials, to obtain participants' estimates.
+
+\subsubsection{Improving the Prediction of the Intent to (Inter-) act}
+While an F1 score of .7 may be considered `good' for many classification scenarios, when aiming to elicit a feeling of control this level of performance may likely not be good enough, see~\citet{Papenmeier2022-oi} for a review. Balancing false positive rate (FPR) and true positive rate (TPR) appropriately may prove crucial in order to elicit an experience of agency.
+
+For the current study, we must note the following limitations arising from the (potentially) insufficient performance of the classification system. To provide a full picture we first describe the impact from a signal detection point of view: False negative classifications meant that the system did not trigger an EMS pulse in line with participants intent to tap on the screen. On the other hand, false positive classification meant that an EMS pulse was sent in the absence of a true intention by the participant. Both cases, individually and jointly, had the potential to significantly impact the user experience and erode trust in the system. In the interviews, participants reported only a relatively low number of correctly detected intentions. This may have ultimately lead to a misalignment between users' perceptions and the observed, measurable, system behavior. 
+
+As a consequence, the insights gained into the INTENTION system's potential to preserve a sense of agency are, regrettably, limited. The quantitative metrics employed in our study, specifically those measuring the sense of control (including temporal binding and item assessment), may not have captured the nuanced temporal alignment experiences associated with EMS augmentation and user movement intentions but rather a more holistic assessment of the entire experimental block, which included trials with missed stimulation, too early stimulation, and some trials where the stimulation was in alignment with the participants' intent.
+
+% Good -> This can be improved by using Gaze Dynamics, EMG and other things
+% If it would work, how can it be used? Implications -> playful experiences, adaptive interfaces
+Hence, a \textit{key} objective remains in improving the overall performance of the classification system. This can be accomplished by fusing several complementary models. For virtual reality (VR) platforms,~\citet{David-John2021-vg} have recently shown that gaze dynamics, especially gaze velocity, carry information with respect to the intent to interact. Furthermore,~\citet{Nguyen2023-me} presented further evidence that physiological signals originating from muscle activity (EMG) provide a very reliable label of movement onset~\cite{Nguyen2023-me}. Arguably, an augmentation system based on several models tuned to specific physiological features will reach sufficient classification performance in the very near future.
+
+% \subsubsection{Opportunities}
+\begin{comment}
+% Kasahara work, Tajima, neuromodulation? reference my affordance position paper -> copy text from there!! or during painting -> scott/gehrke -> reuse image?, affordance ++ as well, 
+- relevance of research for prostheses ( see https://link.springer.com/chapter/10.1007/978-3-030-38740-2_8)
+% At this point in time, the movement plan is already in place and so <[rework] there is slack in the perceptual system that can be exploited so user's action can be altered with them noticing>. 
+- EMS augmented interaction might make sense for bigger movements (e,g. back muscle to support lifting) -> might have less effect (negative) effect on the feeling of control, since it is a less specific movement
+- However, brain signal might not be the best indicator in such cases (simply motion tracking indicating the start of the movement)
 
 % playful experiences: EMS 
 
-\begin{comment}
-% snippets that might be useful
-- a sense of agency is not an infallible reproduction of objective reality / can be quite divorced from objective reality (see Moore 2016) // --> if people still report agency, in no-intent (only EMS) condition
+\missingfigure[]{Hand weg zieh spiel foto, beispielhafte playful experience in der es interessant ist mit dem agency konzept herumzuspielen und es spielerisch zu entdecken?}
 
+- a bit on HCINT?
+% What do I want to say here? Just in general describe the level of integrations that exist and then say where we would place our prototype? Or is this more interesting for a later discussion part? Maybe yes, just move this to a later stage, it does not really add here and better fits in the discussion, also then to discuss the results and what it means to be integrated in a certain way
 
+%- not only physical integration but also other adpative interfaces, or control of mobile phone (see Cornelio2022 review); % say here somewhere what action augmentation is and how it differs from body and environment/outcome augmentation
 
+% briefly summarize the papers on discriminating action augementation and other such things, reference cornelio 2022 paper
+% Previous research on augmented technology and ideas to maintain sense of of agency
+% The experience of being integrated with a technology, or of being one ``human-technology assemblage'' <REF where is this from, Danry2022 used it> 
+
+% Action augmentation technology using motor actuation aims to augment the user’s actions diminishing the SoA (see Cornelio 2022). 
+% - add research
+% Here I want to say where our system lies within the design space of augmentation devices and <cornelio2022> gives a good nomenclature for this. Then transition over to how agency is important to consider when localizing our prototpye and then in the next paragraph talk about what agency from a neuroscientific perspective
 \end{comment}
+
+% Conclusion
+\section{Conclusions}
+In this paper, we demonstrated a system to maintain users' SoA during augmented experiences using brain signals reflecting the intent to (inter-) act. In our user study, we found that intentional binding effects were stronger when participants worked with the system to tap on a screen compared to when they were passively moved. Furthermore, the level of control working with the system was higher than when being passively moved, as indicated by subjective responses.
+
+We believe this to be an important next step towards augmented users with full integration of the technology~\cite{Mueller2020-dl}. Ultimately, our closed-loop system enables novel predictive interfaces that leverage the users' body directly yet still feel \textit{natural} as they align with the users' intention: For example, altering the affordance structure of the interaction in real-time~\cite{Gehrke2022-kz, Lopes2015-ze, Nataraj2020-wm}.
+
+With AI technologies becoming more and more ubiquitous in our everyday life, questions about how agency is shared between us humans and these AI technologies arise on a regular basis. With the likely future that these systems move directly onto our bodies, alignment with users' intentions will be the \textit{key} component driving their adoption.
