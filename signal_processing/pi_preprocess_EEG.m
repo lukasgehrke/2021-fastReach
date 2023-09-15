@@ -35,13 +35,13 @@ EEG = pop_loadset('filename',[ bemobil_config.filename_prefix num2str(subject) '
 
 %% extract ECG and GSR channel and add to physio data
 
-Physio = pop_loadset('filename',[ bemobil_config.filename_prefix num2str(subject) '_' bemobil_config.merged_physio_filename],'filepath',input_filepath);
-Physio.data(end+1,:) = EEG.data(end,:);
-Physio.nbchan = Physio.nbchan+1;
-Physio.chanlocs(end+1).labels = EEG.chanlocs(end).labels;
-Physio = eeg_checkset(Physio);
-
-pop_saveset(Physio, 'filename',[ bemobil_config.filename_prefix num2str(subject) '_' bemobil_config.merged_physio_filename],'filepath',input_filepath);
+% Physio = pop_loadset('filename',[ bemobil_config.filename_prefix num2str(subject) '_' bemobil_config.merged_physio_filename],'filepath',input_filepath);
+% Physio.data(end+1,:) = EEG.data(end,:);
+% Physio.nbchan = Physio.nbchan+1;
+% Physio.chanlocs(end+1).labels = EEG.chanlocs(end).labels;
+% Physio = eeg_checkset(Physio);
+% 
+% pop_saveset(Physio, 'filename',[ bemobil_config.filename_prefix num2str(subject) '_' bemobil_config.merged_physio_filename],'filepath',input_filepath);
 
 EEG.chanlocs(end) = [];
 EEG.data(end,:) = [];

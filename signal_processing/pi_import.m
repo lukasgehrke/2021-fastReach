@@ -1,6 +1,6 @@
 function pi_import(cfg, subject, training)
 
-    sessionNames                        = {'Baseline', 'EMS1', 'EMS2'};
+    sessionNames                        = {'Baseline', 'passive', 'agency1'};
     
     % general metadata shared across all modalities
     %--------------------------------------------------------------------------
@@ -67,7 +67,7 @@ function pi_import(cfg, subject, training)
         'PO4', 'PO8', 'P6', 'P2', 'CPz', 'CP4', 'TP8', 'C6', 'C2', 'FC4', ...
         'FT8', 'F6', 'AF8', 'AF4', 'F2', 'VEOG' , 'EMG'};
     config.eeg.ref_channel        = 'FCz'; % optional, relevant only if you want to re-use the ref channel after re-referencing
-    config.other_data_types        = {'physio'};
+    % config.other_data_types        = {'physio'};
     
     %%
     
@@ -75,9 +75,9 @@ function pi_import(cfg, subject, training)
         config.session                = session{1};              % required if there are more than 1 session
         config.filename               = [cfg.study_folder filesep '0_source-data' filesep sub_path filesep [session{1}, '.xdf']];
 
-        if ~strcmp(config.session, 'Baseline')
-            config.phys.streams{1}.stream_name          = 'eeg_classifier';            % optional
-        end
+        % if ~strcmp(config.session, 'Baseline')
+        %     config.phys.streams{1}.stream_name          = 'eeg_classifier';            % optional
+        % end
 
         bemobil_xdf2bids(config, ...
             'general_metadata', generalInfo,...
@@ -89,7 +89,7 @@ function pi_import(cfg, subject, training)
     %----------------------------------------------------------------------
     config.study_folder             = cfg.study_folder;
     config.session_names            = sessionNames;
-    config.set_folder               = cfg.study_folder; %fullfile(config.study_folder, '2_raw-EEGLAB');
+    config.set_folder               = fullfile(config.study_folder, '2_raw-EEGLAB');
     bemobil_bids2set(config);
     
 end
