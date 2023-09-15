@@ -1,7 +1,7 @@
 \section{Introduction}
 % 1. Describe the Current Situtation
 % Functions as a starting point and a common basis. Therefore it primarily contains recognizable and agreed points.
-Advances in hardware that augment a user's physical actions have reignited dreams of overcoming human limitations, recovering lost abilities and simplifying skill acquisition~\citep{Goto2020-mw}. However, augmented users often report dissociative experiences, frequently disrupting their sense of agency (SoA)~\citep{Gilbert2017-ze, Gilbert2019-uc}.
+Advances in hardware that augment a user's physical actions have reignited dreams of overcoming human limitations, recovering lost abilities and simplifying skill acquisition~\citep{Goto2020-mw, Kunze2017-co}. However, augmented users often report dissociative experiences, frequently disrupting their sense of agency (SoA)~\citep{Gilbert2017-ze, Gilbert2019-uc}.
 
 % 2. What is the complication, challenge identified
 % Spells the reason for acting now. It contains threats / opportunities and the hurdles that need to be overcome.
@@ -21,7 +21,13 @@ In experimental settings, this is typically achieved by using strongly controlle
 \subsection{Preserving Agency using Brain Signals of the Intent to (Inter-) act}
 % 4. (long) Anwser with teaser image
 % Provides the answer on how to overcome the hurdles. Explains how this will help deflect the threats or seize the opportunities.
-In this paper, we present a bleeding edge prototype to challenge the disruption in experiencing agency during action augmentation. We developed a brain-computer interface (BCI) that establishes a fast communication channel between a user's brain signals and a physical end effector. The  INTENTION system controls the user's muscles at the time of their \textit{intent to interact}, as measured through readiness potentials (RP) manifesting in the user's electroencephalogram (EEG)~\cite{Nguyen2023-me, Schurger2021-vp, Schultze-Kraft2016-bx, Schultze-Kraft2021-cu}. 
+In this paper, we present a bleeding edge prototype to challenge the disruption in experiencing agency during action augmentation. We developed a brain-computer interface (BCI) that establishes a fast communication channel between a user's brain signals and a physical end effector. The AUGMENTATION system (from hereon referred to simply as \textit{system}) controls the user's muscles at the time of their \textit{intent to interact}, as measured through readiness potentials (RP) manifesting in the user's electroencephalogram (EEG)~\cite{Nguyen2023-me, Schurger2021-vp, Schultze-Kraft2016-bx, Schultze-Kraft2021-cu}. 
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/bci_game.png}
+    \caption{Our Augmentation system: When participants feel the spontaneous urge to move, readiness potentials (RPs) are picked up in the user's EEG signals. A brain-computer interface (BCI) predicts the data to be in either of two classes: Idle or pre-movement. In the latter case, the user's hand is moved by trigger electrical muscle stimulation (EMS). Image presented with consent from participant.}
+\end{figure}
 
 % TODO merge this with the figure below
 % \missingfigure{maybe small infographic here showing the connection from EEG volitional RP thought to EMS trigger on the Arm. <- better use this for the teaser image. Here better present the main results, i.e. SoA scores? -> Klaus comment: yes, but they don't have to be exclusive. The general setup with the LRP could appear with the main results both in the teaser or here? But the teaser would be more a visualization of the principle, no? That does not necessarily require real results but could show a hyperplane and data dots for examplification.}
