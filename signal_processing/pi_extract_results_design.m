@@ -21,7 +21,7 @@ for pID = pIDs
         EEG = pop_loadxdf(fullfile(bemobil_config.study_folder, bemobil_config.source_data_folder, ...
             ['sub-' sprintf('%03d', pID)], [cond{1} '.xdf']), ...
             'streamtype', 'EEG', 'exclude_markerstreams', {});
-        [AL.LEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
+        [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
         EEG = pi_parse_events(EEG);
 
         % delete all events before and after condition
