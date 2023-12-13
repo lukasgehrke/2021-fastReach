@@ -1,0 +1,58 @@
+
+
+\section{comparison with baseline conditions}
+% [1AC] The authors did a comparison between three conditions. However, how those conditions are compared to other techniques (as a baseline) in previous studies should be discussed.
+
+% [2AC] The current baseline (EXTERNAL) condition is too weak. It is a trivial finding that the SoA of the AUGMENTED condition is higher than that of the EXTERNAL condition. Why has no comparison been made with a simpler technique where EMS is triggered by heuristic rules rather than based on EEG signals? Is there a reason the authors did not use as a baseline any technique suggested in previous studies?
+% So it seems we should consider the INTENTION condition as a more important baseline for this study. And the fact that the AUGMENTED condition shows a lower SoA than the INTENTION condition (Figure 4) is a common problem with EMS-based techniques found in previous studies and is also a key motivation for this study. In other words, it appears that important problems have not been solved even though EEG signals have been utilized.
+% How does the difference in SoA between the INTENTION condition and the AUGMENTED condition in previous studies compare to the difference in this study?
+
+- [1AC, 2AC, R1]: comparison with other baseline conditions
+The major motivation for the current work was to present a closed-loop augmentation system using neural input that is entirely decoupled from any outside constraints. Ultimately, we aim at designing a system that a user can wear and use in a variety of settings and applications as no knowledge about the user's environment should b enecessary for it to work. With this goal in mind, we did not find a useful baseline condition from previous studies to compare our interface to. We believe the simple case of random activation, for example 'send 10 EMS pulses within every 5 minutes' to not be a useful heuristic since we have shown that our classifier performs above chance level (F1 score of .7). Hence, as we have demonstrated, it outperforms activating EMS at chance level. Any other method to predict the user's intent to interact would be reliant on measuring some form of behavior or physiology, or constraining the interaction to a stimulus-response pattern. 
+
+% - Instead we chose to position the agency experience when using the prototype between the two edge cases of full control (INTENTION) vs. being passively moved (EXTERNAL).
+% - because it would distract from the goal that this work was set out to tackle.
+% - we want to have free behavior therefore there is no heuristic, or just a very basic one like activate 10 times every minute.
+% 1. we focused on investigating sense of agency, not rt
+% [ ] we adjusted the framing of the paper in the introduction accordingly and better situate it now within the action augmentation literature
+% [ ] compare it in reference to earlier work and add a future outlook on subsequent validation steps against existing approaches and the potential fusion of these.
+
+
+
+
+\section{on reduction in reaction time}
+
+% [1AC] Both 2AC and R1 are concerned with a justification of the classification rate (10Hz) and the maximum interaction time reduction that this technique can achieve.
+
+% [1AC] The used timing in the EXTERNAL condition was not particularly extreme and randomly picked from within 5-95\% of that user's previous timings. So they weren't faster here, and it's unclear whether they were faster in the augmented condition either.
+
+% [2AC] I agree with the authors' idea that reaction time can be reduced through EMS if we know in advance when the user will move. However, according to the technique proposed by the authors, the maximum amount of reaction time we can reduce is the time interval between detection of the readiness potential (RP) and execution of the movement. Isn't this time interval usually very short (i.e., less than 200 ms)? Furthermore, for more robust classification, wouldn't EEG data sometimes need to be observed for a longer period of time, and as a result, the margin for reducing reaction time could be further reduced? We even have to consider the latency of the EMS itself.
+
+% [2AC] Considering all these factors, I am curious to what maximum reaction time reduction the authors' proposed technique can actually achieve.
+
+% [2AC] The time interval between the detection of RP and the actual movement of the participant's finger is very short (in Figure 5a), so isn't the classification rate of 10 Hz too low?
+
+% [R1] But I'd like to start with something I found a bit odd. The paper positions itself within the human augmentation space, and I think that makes sense. The intro and method sections also discuss this. But did the augmented condition here actually improve reaction times? That does not actually become clear. As stated on p. 6, in the external condition, the used timing was not particularly extreme and randomly picked from within 5-95\% of that users previous timings. So they weren't actually faster here, and it's not clear whether they were faster in the augmented condition either. That might well not matter, given that this paper is not about reaction times per se. However, it is a curious aspect of the experimental design, reporting, and framing and thus would be good to discuss a bit more. Given that there probably would be a higher experienced loss of control with out of the ordinary reaction times, this might well have had an influence on the results, though.
+
+- [1AC, 2AC, R1]: on the potential reduction in reaction time
+
+The focus of the revised manuscript is now on SoA and is not deferred as much anymore by a secondary aspect of the system, i.e., a reduction in reaction times. In the revised manuscript we tightened the focus and framing on SoA and moved the part on previous studies reducing reaction times from the introduction section to related work. This better fits with the direct contrast of using predictive models (based on physiological signals) instead of controlled environments for action augmentation that falls in line with a user's intentions. Furthermore, we clarified reviewers' comments concerning the reduction in RT our system can achieve, i.e. prediction smoothing.
+
+With the current implementation of the prototype, we saw an end-to-end latency from the measured physiological signals to the gating of the EMS switch of around 40 ms. Since this was implemented in relatively slow python code the time could be brought down significantly with more native code. While we could have applied the classifier at 20 Hz (one prediction every 50 ms) we wanted to be certain not to run into problems due to buffer overflow which is why we kept the real-time classification at 10 Hz. As 2AC points out, the RP precedes the movement onset by 200-300 ms. If the classifier works as intended, it should be able to pre-empt the movement, sending the first EMS pulse at 150 ms (200 - 50 ms) before the movement. 
+
+However, it is difficult to assess the reduction in reaction time at a high resolution as no label exists for the 'true' intention onset. This is the key contribution (and distinction) as compared to previous works in controlled environments. We are adding labels based on implicit classification of EEG signals in freely behaving users. Hence, we cannot assess the reduction based on any other metric other than the classifier, but if it works as designed, the reduction is there. However, we tried to explore the subjective experience of a potential reduction in RT through interviews. Another way would be to determine this on a single trial level by asking questions (explicit) or by inferring from neural signals (implicit). We added a paragraph to the discussion.
+
+\section{technical details about the classifier}
+
+By including a random effect for participants in our LME analyses, we accounted for the dependency of repeated measures within participants. The analysis is correct. We clarified [R2]'s comment about multiple comparison corrections and added details about why electrode Cz was used to report exemplary EEG results. Furthermore, we now report electrodes that were leveraged for classification in several participants and rephrased how we smoothed the prediction output [R1].
+
+EMG and EMS were NOT recorded at the same time, as EMG was only recorded in the first condition to obtain labels for training data for the classifier. Following [2AC]'s suggestion, we added a new figure to reflect this and show the processing steps in detail. Additionally, we changed the order of the apparatus and procedure section, so readers have a better understanding of the setup before going into the task. 
+
+To improve readability and clarity [R2, R1] we now explain how the augmentation was achieved much earlier in our paper (both in the abstract and introduction). Furthermore, we better situate our augmentation system in the human augmentation/integration literature, thereby making our paper more accessible to a broader HCI audience. Lastly, we now include references to the distinction between pre-movement and idle EEG states.
+
+% [R1] A big part of the work here is the classifier that determines whether a participant is idling or just about to move. I'm not an expert here, but I was left with a few questions regarding this classifier. For starters, it's not clear to me why the main reference throughout is Cz. The paper mentions this electrode earlier together with C3 and C4 as commonly used, but how does Cz stand out from the three? All the training is then in relation to the time of movement as detected by the EMG. So not when the brain started to plan the motion, but when the muscle actually is activating. As the whole second up to that moment is training data, it thus contains not just the planning either (but of course _also_ the planning). As Section 3.4.1 notes, 1s signal windows are condensed to slope values, based on the first and last 100ms. Per Section 3.4.3, this window is updated 10 times a second, so essentially shifted by 100ms. However, the predictions are smoothed with two previous ones (btw. I don't get the weighting: 0.3 & 0.5 for the previous predictions, and then presumably only 0.2 as weight for the current one? Why such a low value for the most up-to-date value?). However, doesn't that also mean that prediction of pre-movement is quite laggy? For a slope to be noticeable, the window must likely overlap quite a bit with the increase and then another 200ms of delay come to the averaging. With the EMS then active for 500ms, I'm pretty much wondering whether this did preempt the motion and whether the system then remained active longer than needed. As the paper itself states, the performance of the classifier is mixed with several participants reporting issues. So this is probably an aspect to provide a bit more details and explanations for.
+
+% [ ] also why wasnt a link function used? assumed linear relationship between time estimation / questionnaires and study design
+
+% [2AC] Most of the movements we perform in daily life are continuous rather than discrete, such as tapping. For example, human continuous movement (e.g., pointing) is known to be based on intermittent motor control [1]. In such cases, RP is expected to occur intermittently and repeatedly. Even in such cases, can the technique suggested by the authors be applied?
+% -> unfold reference, % - unfold overlapping ERPs, for example with unfold toolbox
