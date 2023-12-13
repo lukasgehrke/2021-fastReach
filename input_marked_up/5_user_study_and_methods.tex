@@ -75,6 +75,13 @@ The EEG data was band pass filtered from 0.1 to 15 Hz. In the first step to prep
 
 Then, to decrease the dimensionality of the EEG data, we selected discriminative channels following an approach outlined by~\citep{Schultze-Kraft2021-cu}. First, for both \textit{pre-movement} and \textit{idle} the mean signal in the last 100 ms of each segment was subtracted from the mean signal in the first 100 ms of the segment. The resulting value thus indicated how much the signal had changed in the course of the 1 s segments. In line with the literature, there should be a change over time in the \textit{pre-movement} segment but not in the \textit{idle} segment. Then, all channels were sorted (1) in descending order by the signal difference in the \textit{pre-movement} segments and (2) in ascending order by the signal difference in the \textit{idle} segments. With respect to the ability of the system to discriminate between movement intention and the absence of movement intention, an ideal channel should show a strong change in signal over the course of a \textit{pre-movement} segment but no difference during an \textit{idle} segment. The ranks of the two criteria were joined by summation and the resulting order was saved for later use in training and real-time application of the classifier. Lastly, channels C3, C4, and Cz were moved to the top of the order for every participant as these are most frequently reported in studies on the RP.
 
+\begin{figure*}[!h]
+    \centering
+    \includegraphics[width=\textwidth]{figures/method.png}
+    \caption{\textcolor{green}{Diagram summarizing: (a) signal processing and event labeling from muscle activity, (b) extraction of linear slope features from labeled brain signals and (c) real-time application of the BCI gating the muscle stimulation hardware.}}
+    \label{fig:method}
+\end{figure*}
+
 \subsubsection{Training of EEG classifier}
 To classify EEG data, a linear discriminant analysis (LDA) with shrinkage regularization (automatic shrinkage using the Ledoit-Wolf lemma~\cite{Ledoit2004-bi}) was trained for each participant individually. As single-trial features, the (linear) slope coefficient was obtained for both \textit{idle} and \textit{pre-movement} segments by fitting a linear regression. The classifier was then trained using the slope coefficient of the selection of the most discriminative channels as features, generating a feature vector in the dimension of channels that were kept for classification. We purposefully constrained the dimensionality of the feature vector to avoid over-fitting~\textcolor{green}{and decrease the computational load.}
 

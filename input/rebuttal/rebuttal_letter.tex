@@ -1,5 +1,7 @@
 
 
+We want to thank the reviewers for their critical, and helpful, comments. We thoroughly revised the paper and believe that the contribution of our BCI based muscle augmentation is a very valuable contribution to the CHI community.
+
 \section{comparison with baseline conditions}
 % [1AC] The authors did a comparison between three conditions. However, how those conditions are compared to other techniques (as a baseline) in previous studies should be discussed.
 
@@ -8,7 +10,7 @@
 % How does the difference in SoA between the INTENTION condition and the AUGMENTED condition in previous studies compare to the difference in this study?
 
 - [1AC, 2AC, R1]: comparison with other baseline conditions
-The major motivation for the current work was to present a closed-loop augmentation system using neural input that is entirely decoupled from any outside constraints. Ultimately, we aim at designing a system that a user can wear and use in a variety of settings and applications as no knowledge about the user's environment should b enecessary for it to work. With this goal in mind, we did not find a useful baseline condition from previous studies to compare our interface to. We believe the simple case of random activation, for example 'send 10 EMS pulses within every 5 minutes' to not be a useful heuristic since we have shown that our classifier performs above chance level (F1 score of .7). Hence, as we have demonstrated, it outperforms activating EMS at chance level. Any other method to predict the user's intent to interact would be reliant on measuring some form of behavior or physiology, or constraining the interaction to a stimulus-response pattern. 
+The major motivation for the current work was to present a closed-loop augmentation system using neural input that is entirely decoupled from any outside constraints. Ultimately, we aim at designing a system that a user can wear and use in a variety of settings and applications as no knowledge about the user's environment should be necessary for it to work. With this goal in mind, we did not find a useful heuristic to compare our interface to. We believe the simple case of random activation, for example 'send 10 EMS pulses within every 5 minutes' to not be a useful heuristic since we have shown that our classifier performs above chance level (F1 score of .7). Hence, as we have demonstrated, it outperforms activating EMS at chance level. Any other method to predict the user's intent to interact would be reliant on measuring some form of behavior or physiology, or constraining the interaction to a stimulus-response pattern. 
 
 % - Instead we chose to position the agency experience when using the prototype between the two edge cases of full control (INTENTION) vs. being passively moved (EXTERNAL).
 % - because it would distract from the goal that this work was set out to tackle.
@@ -36,7 +38,7 @@ The major motivation for the current work was to present a closed-loop augmentat
 
 - [1AC, 2AC, R1]: on the potential reduction in reaction time
 
-The focus of the revised manuscript is now on SoA and is not deferred as much anymore by a secondary aspect of the system, i.e., a reduction in reaction times. In the revised manuscript we tightened the focus and framing on SoA and moved the part on previous studies reducing reaction times from the introduction section to related work. This better fits with the direct contrast of using predictive models (based on physiological signals) instead of controlled environments for action augmentation that falls in line with a user's intentions. Furthermore, we clarified reviewers' comments concerning the reduction in RT our system can achieve, i.e. prediction smoothing.
+The focus of the revised manuscript is now on SoA and is not deferred as much anymore by a secondary aspect of the system, i.e., a reduction in reaction times. This better fits with the direct contrast of using predictive models (based on physiological signals) instead of controlled environments for action augmentation that falls in line with a user's intentions. Furthermore, we clarified reviewers' comments concerning the reduction in RT our system can achieve, i.e. prediction smoothing.
 
 With the current implementation of the prototype, we saw an end-to-end latency from the measured physiological signals to the gating of the EMS switch of around 40 ms. Since this was implemented in relatively slow python code the time could be brought down significantly with more native code. While we could have applied the classifier at 20 Hz (one prediction every 50 ms) we wanted to be certain not to run into problems due to buffer overflow which is why we kept the real-time classification at 10 Hz. As 2AC points out, the RP precedes the movement onset by 200-300 ms. If the classifier works as intended, it should be able to pre-empt the movement, sending the first EMS pulse at 150 ms (200 - 50 ms) before the movement. 
 
