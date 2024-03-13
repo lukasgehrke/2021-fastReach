@@ -1,0 +1,465 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{54}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Barlas and Kopp(2018)]%
+        {Barlas2018-bq}
+\bibfield{author}{\bibinfo{person}{Zeynep Barlas} {and} \bibinfo{person}{Stefan Kopp}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Action Choice and Outcome Congruency Independently Affect Intentional Binding and Feeling of Control Judgments}.
+\newblock \bibinfo{journal}{\emph{Front. Hum. Neurosci.}}  \bibinfo{volume}{12} (\bibinfo{date}{April} \bibinfo{year}{2018}), \bibinfo{pages}{137}.
+\newblock
+
+
+\bibitem[Berberian et~al\mbox{.}(2012)]%
+        {Berberian2012-do}
+\bibfield{author}{\bibinfo{person}{Bruno Berberian}, \bibinfo{person}{Jean-Christophe Sarrazin}, \bibinfo{person}{Patrick Le~Blaye}, {and} \bibinfo{person}{Patrick Haggard}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Automation technology and sense of control: a window on human agency}.
+\newblock \bibinfo{journal}{\emph{PLoS One}} \bibinfo{volume}{7}, \bibinfo{number}{3} (\bibinfo{date}{March} \bibinfo{year}{2012}), \bibinfo{pages}{e34075}.
+\newblock
+
+
+\bibitem[Bergstr{\"o}m et~al\mbox{.}(2022)]%
+        {Bergstrom2022-fb}
+\bibfield{author}{\bibinfo{person}{Joanna Bergstr{\"o}m}, \bibinfo{person}{Jarrod Knibbe}, \bibinfo{person}{Henning Pohl}, {and} \bibinfo{person}{Kasper Hornb{\ae}k}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Sense of Agency and User Experience: Is There a Link?}
+\newblock \bibinfo{journal}{\emph{ACM Trans. Comput.-Hum. Interact.}} \bibinfo{volume}{29}, \bibinfo{number}{4} (\bibinfo{date}{March} \bibinfo{year}{2022}), \bibinfo{pages}{1--22}.
+\newblock
+
+
+\bibitem[Blakemore et~al\mbox{.}(2002)]%
+        {Blakemore2002-dj}
+\bibfield{author}{\bibinfo{person}{Sarah~Jayne Blakemore}, \bibinfo{person}{Daniel~M Wolpert}, {and} \bibinfo{person}{Christopher~D Frith}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \showarticletitle{Abnormalities in the awareness of action}.
+\newblock \bibinfo{journal}{\emph{Trends Cogn. Sci.}} \bibinfo{volume}{6}, \bibinfo{number}{6} (\bibinfo{date}{June} \bibinfo{year}{2002}), \bibinfo{pages}{237--242}.
+\newblock
+
+
+\bibitem[Clark(2013)]%
+        {Clark2013-ah}
+\bibfield{author}{\bibinfo{person}{Andy Clark}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Whatever next? Predictive brains, situated agents, and the future of cognitive science}.
+\newblock \bibinfo{journal}{\emph{Behav. Brain Sci.}} \bibinfo{volume}{36}, \bibinfo{number}{3} (\bibinfo{date}{June} \bibinfo{year}{2013}), \bibinfo{pages}{181--204}.
+\newblock
+
+
+\bibitem[Cornelio et~al\mbox{.}(2022)]%
+        {Cornelio2022-aq}
+\bibfield{author}{\bibinfo{person}{Patricia Cornelio}, \bibinfo{person}{Patrick Haggard}, \bibinfo{person}{Kasper Hornbaek}, \bibinfo{person}{Orestis Georgiou}, \bibinfo{person}{Joanna Bergstr{\"o}m}, \bibinfo{person}{Sriram Subramanian}, {and} \bibinfo{person}{Marianna Obrist}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{The sense of agency in emerging technologies for human-computer integration: A review}.
+\newblock \bibinfo{journal}{\emph{Front. Neurosci.}}  \bibinfo{volume}{16} (\bibinfo{date}{Sept.} \bibinfo{year}{2022}), \bibinfo{pages}{949138}.
+\newblock
+
+
+\bibitem[Danry et~al\mbox{.}(2022)]%
+        {Danry2022-xk}
+\bibfield{author}{\bibinfo{person}{Valdemar Danry}, \bibinfo{person}{Pat Pataranutaporn}, \bibinfo{person}{Florian Mueller}, \bibinfo{person}{Pattie Maes}, {and} \bibinfo{person}{Sang-Won Leigh}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{On Eliciting a Sense of Self when Integrating with Computers}. In \bibinfo{booktitle}{\emph{Augmented Humans 2022}} (Kashiwa, Chiba, Japan) \emph{(\bibinfo{series}{AHs 2022})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{68--81}.
+\newblock
+
+
+\bibitem[David-John et~al\mbox{.}(2021)]%
+        {David-John2021-vg}
+\bibfield{author}{\bibinfo{person}{Brendan David-John}, \bibinfo{person}{Candace Peacock}, \bibinfo{person}{Ting Zhang}, \bibinfo{person}{T~Scott Murdison}, \bibinfo{person}{Hrvoje Benko}, {and} \bibinfo{person}{Tanya~R Jonker}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Towards gaze-based prediction of the intent to interact in virtual reality}. In \bibinfo{booktitle}{\emph{{ACM} Symposium on Eye Tracking Research and Applications}} (Virtual Event, Germany) \emph{(\bibinfo{series}{ETRA '21 Short Papers}, \bibinfo{number}{Article 2})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1--7}.
+\newblock
+
+
+\bibitem[Deecke et~al\mbox{.}(1969)]%
+        {Deecke1969-bl}
+\bibfield{author}{\bibinfo{person}{L Deecke}, \bibinfo{person}{P Scheid}, {and} \bibinfo{person}{H~H Kornhuber}.} \bibinfo{year}{1969}\natexlab{}.
+\newblock \showarticletitle{Distribution of readiness potential, pre-motion positivity, and motor potential of the human cerebral cortex preceding voluntary finger movements}.
+\newblock \bibinfo{journal}{\emph{Exp. Brain Res.}} \bibinfo{volume}{7}, \bibinfo{number}{2} (\bibinfo{year}{1969}), \bibinfo{pages}{158--168}.
+\newblock
+
+
+\bibitem[Delorme and Makeig(2004)]%
+        {Delorme2004-sn}
+\bibfield{author}{\bibinfo{person}{Arnaud Delorme} {and} \bibinfo{person}{Scott Makeig}.} \bibinfo{year}{2004}\natexlab{}.
+\newblock \showarticletitle{{EEGLAB}: an open source toolbox for analysis of single-trial {EEG} dynamics including independent component analysis}.
+\newblock \bibinfo{journal}{\emph{J. Neurosci. Methods}} \bibinfo{volume}{134}, \bibinfo{number}{1} (\bibinfo{date}{March} \bibinfo{year}{2004}), \bibinfo{pages}{9--21}.
+\newblock
+
+
+\bibitem[Ebert and Wegner(2010)]%
+        {Ebert2010-lu}
+\bibfield{author}{\bibinfo{person}{Jeffrey~P Ebert} {and} \bibinfo{person}{Daniel~M Wegner}.} \bibinfo{year}{2010}\natexlab{}.
+\newblock \showarticletitle{Time warp: authorship shapes the perceived timing of actions and events}.
+\newblock \bibinfo{journal}{\emph{Conscious. Cogn.}} \bibinfo{volume}{19}, \bibinfo{number}{1} (\bibinfo{date}{March} \bibinfo{year}{2010}), \bibinfo{pages}{481--489}.
+\newblock
+
+
+\bibitem[Frith et~al\mbox{.}(2000)]%
+        {Frith2000-ch}
+\bibfield{author}{\bibinfo{person}{C~D Frith}, \bibinfo{person}{S~J Blakemore}, {and} \bibinfo{person}{D~M Wolpert}.} \bibinfo{year}{2000}\natexlab{}.
+\newblock \showarticletitle{Abnormalities in the awareness and control of action}.
+\newblock \bibinfo{journal}{\emph{Philos. Trans. R. Soc. Lond. B Biol. Sci.}} \bibinfo{volume}{355}, \bibinfo{number}{1404} (\bibinfo{date}{Dec.} \bibinfo{year}{2000}), \bibinfo{pages}{1771--1788}.
+\newblock
+
+
+\bibitem[Frith and Frith(2006)]%
+        {Frith2006-sc}
+\bibfield{author}{\bibinfo{person}{Chris~D Frith} {and} \bibinfo{person}{Uta Frith}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \showarticletitle{How we predict what other people are going to do}.
+\newblock \bibinfo{journal}{\emph{Brain Res.}} \bibinfo{volume}{1079}, \bibinfo{number}{1} (\bibinfo{date}{March} \bibinfo{year}{2006}), \bibinfo{pages}{36--46}.
+\newblock
+
+
+\bibitem[Gehrke et~al\mbox{.}(2022)]%
+        {Gehrke2022-kz}
+\bibfield{author}{\bibinfo{person}{Lukas Gehrke}, \bibinfo{person}{Pedro Lopes}, {and} \bibinfo{person}{Klaus Gramann}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Toward Human Augmentation Using Neural Fingerprints of Affordances}.
+\newblock In \bibinfo{booktitle}{\emph{Affordances in Everyday Life: A Multidisciplinary Collection of Essays}}, \bibfield{editor}{\bibinfo{person}{Zakaria Djebbara}} (Ed.). \bibinfo{publisher}{Springer International Publishing}, \bibinfo{address}{Cham}, \bibinfo{pages}{173--180}.
+\newblock
+
+
+\bibitem[Gilbert et~al\mbox{.}(2019)]%
+        {Gilbert2019-uc}
+\bibfield{author}{\bibinfo{person}{F Gilbert}, \bibinfo{person}{M Cook}, \bibinfo{person}{T O'Brien}, {and} \bibinfo{person}{J Illes}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Embodiment and Estrangement: Results from a {First-in-Human} ``Intelligent {BCI''} Trial}.
+\newblock \bibinfo{journal}{\emph{Sci. Eng. Ethics}} \bibinfo{volume}{25}, \bibinfo{number}{1} (\bibinfo{date}{Feb.} \bibinfo{year}{2019}), \bibinfo{pages}{83--96}.
+\newblock
+
+
+\bibitem[Gilbert et~al\mbox{.}(2017)]%
+        {Gilbert2017-ze}
+\bibfield{author}{\bibinfo{person}{Frederic Gilbert}, \bibinfo{person}{Eliza Goddard}, \bibinfo{person}{John Noel~M Via{\~n}a}, \bibinfo{person}{Adrian Carter}, {and} \bibinfo{person}{Malcolm Horne}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{{I} Miss Being Me: Phenomenological Effects of Deep Brain Stimulation}.
+\newblock \bibinfo{journal}{\emph{AJOB Neurosci.}} \bibinfo{volume}{8}, \bibinfo{number}{2} (\bibinfo{date}{April} \bibinfo{year}{2017}), \bibinfo{pages}{96--109}.
+\newblock
+
+
+\bibitem[Goto et~al\mbox{.}(2020)]%
+        {Goto2020-mw}
+\bibfield{author}{\bibinfo{person}{Takashi Goto}, \bibinfo{person}{Swagata Das}, \bibinfo{person}{Katrin Wolf}, \bibinfo{person}{Pedro Lopes}, \bibinfo{person}{Yuichi Kurita}, {and} \bibinfo{person}{Kai Kunze}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Accelerating Skill Acquisition of {Two-Handed} Drumming using Pneumatic Artificial Muscles}. In \bibinfo{booktitle}{\emph{Proceedings of the Augmented Humans International Conference}} (Kaiserslautern, Germany) \emph{(\bibinfo{series}{AHs '20}, \bibinfo{number}{Article 12})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1--9}.
+\newblock
+
+
+\bibitem[Gutzeit et~al\mbox{.}(2023)]%
+        {Gutzeit2023-ei}
+\bibfield{author}{\bibinfo{person}{Julian Gutzeit}, \bibinfo{person}{Lisa Weller}, \bibinfo{person}{Jens K{\"u}rten}, {and} \bibinfo{person}{Lynn Huestegge}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Intentional binding: Merely a procedural confound?}
+\newblock \bibinfo{journal}{\emph{J. Exp. Psychol. Hum. Percept. Perform.}} \bibinfo{volume}{49}, \bibinfo{number}{6} (\bibinfo{date}{June} \bibinfo{year}{2023}), \bibinfo{pages}{759--773}.
+\newblock
+
+
+\bibitem[Haggard(2017)]%
+        {Haggard2017-uv}
+\bibfield{author}{\bibinfo{person}{Patrick Haggard}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Sense of agency in the human brain}.
+\newblock \bibinfo{journal}{\emph{Nat. Rev. Neurosci.}} \bibinfo{volume}{18}, \bibinfo{number}{4} (\bibinfo{date}{April} \bibinfo{year}{2017}), \bibinfo{pages}{196--207}.
+\newblock
+
+
+\bibitem[Haggard and Clark(2003)]%
+        {Haggard2003-ff}
+\bibfield{author}{\bibinfo{person}{Patrick Haggard} {and} \bibinfo{person}{Sam Clark}.} \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{Intentional action: conscious experience and neural prediction}.
+\newblock \bibinfo{journal}{\emph{Conscious. Cogn.}} \bibinfo{volume}{12}, \bibinfo{number}{4} (\bibinfo{date}{Dec.} \bibinfo{year}{2003}), \bibinfo{pages}{695--707}.
+\newblock
+
+
+\bibitem[Haggard et~al\mbox{.}(2002)]%
+        {Haggard2002-sz}
+\bibfield{author}{\bibinfo{person}{Patrick Haggard}, \bibinfo{person}{Sam Clark}, {and} \bibinfo{person}{Jeri Kalogeras}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \showarticletitle{Voluntary action and conscious awareness}.
+\newblock \bibinfo{journal}{\emph{Nat. Neurosci.}} \bibinfo{volume}{5}, \bibinfo{number}{4} (\bibinfo{date}{April} \bibinfo{year}{2002}), \bibinfo{pages}{382--385}.
+\newblock
+
+
+\bibitem[Hoerl et~al\mbox{.}(2020)]%
+        {Hoerl2020-my}
+\bibfield{author}{\bibinfo{person}{Christoph Hoerl}, \bibinfo{person}{Sara Lorimer}, \bibinfo{person}{Teresa McCormack}, \bibinfo{person}{David~A Lagnado}, \bibinfo{person}{Emma Blakey}, \bibinfo{person}{Emma~C Tecwyn}, {and} \bibinfo{person}{Marc~J Buehner}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Temporal Binding, Causation, and Agency: Developing a New Theoretical Framework}.
+\newblock \bibinfo{journal}{\emph{Cogn. Sci.}} \bibinfo{volume}{44}, \bibinfo{number}{5} (\bibinfo{date}{May} \bibinfo{year}{2020}), \bibinfo{pages}{e12843}.
+\newblock
+
+
+\bibitem[Jasper(1983)]%
+        {Jasper1983-uw}
+\bibfield{author}{\bibinfo{person}{H Jasper}.} \bibinfo{year}{1983}\natexlab{}.
+\newblock \showarticletitle{The ten-twenty electrode system of the international federation, recommendations for the practice of clinical neurophysiology}.
+\newblock \bibinfo{journal}{\emph{The International Federation Societies for Electroencephalography and Clinical Neurophysiology, Elsevier, Amsterdam}} (\bibinfo{year}{1983}), \bibinfo{pages}{3--10}.
+\newblock
+
+
+\bibitem[Kasahara et~al\mbox{.}(2019)]%
+        {Kasahara2019-sk}
+\bibfield{author}{\bibinfo{person}{Shunichi Kasahara}, \bibinfo{person}{Jun Nishida}, {and} \bibinfo{person}{Pedro Lopes}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Preemptive Action: Accelerating Human Reaction using Electrical Muscle Stimulation Without Compromising Agency}. In \bibinfo{booktitle}{\emph{Proceedings of the 2019 {CHI} Conference on Human Factors in Computing Systems}} (Glasgow, Scotland Uk) \emph{(\bibinfo{series}{CHI '19}, \bibinfo{number}{Paper 643})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1--15}.
+\newblock
+
+
+\bibitem[Kasahara et~al\mbox{.}(2021)]%
+        {Kasahara2021-gy}
+\bibfield{author}{\bibinfo{person}{Shunichi Kasahara}, \bibinfo{person}{Kazuma Takada}, \bibinfo{person}{Jun Nishida}, \bibinfo{person}{Kazuhisa Shibata}, \bibinfo{person}{Shinsuke Shimojo}, {and} \bibinfo{person}{Pedro Lopes}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Preserving Agency During Electrical Muscle Stimulation Training Speeds up Reaction Time Directly After Removing {EMS}}. In \bibinfo{booktitle}{\emph{Proceedings of the 2021 {CHI} Conference on Human Factors in Computing Systems}} (Yokohama, Japan) \emph{(\bibinfo{series}{CHI '21}, \bibinfo{number}{Article 194})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1--9}.
+\newblock
+
+
+\bibitem[K{\"u}hn et~al\mbox{.}(2013)]%
+        {Kuhn2013-ls}
+\bibfield{author}{\bibinfo{person}{Simone K{\"u}hn}, \bibinfo{person}{Marcel Brass}, {and} \bibinfo{person}{Patrick Haggard}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Feeling in control: Neural correlates of experience of agency}.
+\newblock \bibinfo{journal}{\emph{Cortex}} \bibinfo{volume}{49}, \bibinfo{number}{7} (\bibinfo{year}{2013}), \bibinfo{pages}{1935--1942}.
+\newblock
+
+
+\bibitem[Kunze et~al\mbox{.}(2017)]%
+        {Kunze2017-co}
+\bibfield{author}{\bibinfo{person}{Kai Kunze}, \bibinfo{person}{Kouta Minamizawa}, \bibinfo{person}{Stephan Lukosch}, \bibinfo{person}{Masahiko Inami}, {and} \bibinfo{person}{Jun Rekimoto}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Superhuman sports: Applying human augmentation to physical exercise}.
+\newblock \bibinfo{journal}{\emph{IEEE Pervasive Comput.}} \bibinfo{volume}{16}, \bibinfo{number}{2} (\bibinfo{date}{April} \bibinfo{year}{2017}), \bibinfo{pages}{14--17}.
+\newblock
+
+
+\bibitem[Ledoit and Wolf(2004)]%
+        {Ledoit2004-bi}
+\bibfield{author}{\bibinfo{person}{Olivier Ledoit} {and} \bibinfo{person}{Michael Wolf}.} \bibinfo{year}{2004}\natexlab{}.
+\newblock \showarticletitle{A well-conditioned estimator for large-dimensional covariance matrices}.
+\newblock \bibinfo{journal}{\emph{J. Multivar. Anal.}} \bibinfo{volume}{88}, \bibinfo{number}{2} (\bibinfo{date}{Feb.} \bibinfo{year}{2004}), \bibinfo{pages}{365--411}.
+\newblock
+
+
+\bibitem[Lenth et~al\mbox{.}(2020)]%
+        {Lenth2020-xk}
+\bibfield{author}{\bibinfo{person}{Russell Lenth}, \bibinfo{person}{Henrik Singmann}, \bibinfo{person}{Jonathon Love}, \bibinfo{person}{Paul Buerkner}, {and} \bibinfo{person}{Maxime Herve}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Package `emmeans'}.
+\newblock \bibinfo{journal}{\emph{R package version 1.4.6.}} \bibinfo{volume}{34}, \bibinfo{number}{1} (\bibinfo{year}{2020}), \bibinfo{pages}{216--221}.
+\newblock
+
+
+\bibitem[Libet et~al\mbox{.}(1983)]%
+        {Libet1983-qu}
+\bibfield{author}{\bibinfo{person}{B Libet}, \bibinfo{person}{E~W Wright, Jr}, {and} \bibinfo{person}{C~A Gleason}.} \bibinfo{year}{1983}\natexlab{}.
+\newblock \showarticletitle{Preparation- or intention-to-act, in relation to pre-event potentials recorded at the vertex}.
+\newblock \bibinfo{journal}{\emph{Electroencephalogr. Clin. Neurophysiol.}} \bibinfo{volume}{56}, \bibinfo{number}{4} (\bibinfo{date}{Oct.} \bibinfo{year}{1983}), \bibinfo{pages}{367--372}.
+\newblock
+
+
+\bibitem[Limerick et~al\mbox{.}(2014)]%
+        {Limerick2014-un}
+\bibfield{author}{\bibinfo{person}{Hannah Limerick}, \bibinfo{person}{David Coyle}, {and} \bibinfo{person}{James~W Moore}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{The experience of agency in human-computer interactions: a review}.
+\newblock \bibinfo{journal}{\emph{Front. Hum. Neurosci.}} \bibinfo{volume}{8}, \bibinfo{number}{AUG} (\bibinfo{date}{Aug.} \bibinfo{year}{2014}), \bibinfo{pages}{643}.
+\newblock
+
+
+\bibitem[Lopes et~al\mbox{.}(2015)]%
+        {Lopes2015-ze}
+\bibfield{author}{\bibinfo{person}{Pedro Lopes}, \bibinfo{person}{Patrik Jonell}, {and} \bibinfo{person}{Patrick Baudisch}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Affordance++: Allowing Objects to Communicate Dynamic Use}.
+\newblock In \bibinfo{booktitle}{\emph{Proceedings of the 33rd Annual {ACM} Conference on Human Factors in Computing Systems}}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{2515--2524}.
+\newblock
+
+
+\bibitem[Mayring(2015)]%
+        {Mayring2015-pp}
+\bibfield{author}{\bibinfo{person}{Philipp Mayring}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{Qualitative Inhaltsanalyse: Grundlagen und Techniken}}.
+\newblock \bibinfo{publisher}{Beltz}.
+\newblock
+
+
+\bibitem[Miller and Parasuraman(2007)]%
+        {Miller2007-rb}
+\bibfield{author}{\bibinfo{person}{Christopher~A Miller} {and} \bibinfo{person}{Raja Parasuraman}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{Designing for flexible interaction between humans and automation: delegation interfaces for supervisory control}.
+\newblock \bibinfo{journal}{\emph{Hum. Factors}} \bibinfo{volume}{49}, \bibinfo{number}{1} (\bibinfo{date}{Feb.} \bibinfo{year}{2007}), \bibinfo{pages}{57--75}.
+\newblock
+
+
+\bibitem[Moore(2016)]%
+        {Moore2016-ub}
+\bibfield{author}{\bibinfo{person}{James~W Moore}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \bibinfo{title}{What is the sense of agency and why does it matter?}
+\newblock
+\newblock
+
+
+\bibitem[Moore et~al\mbox{.}(2012)]%
+        {Moore2012-ic}
+\bibfield{author}{\bibinfo{person}{J~W Moore}, \bibinfo{person}{D Middleton}, \bibinfo{person}{P Haggard}, {and} \bibinfo{person}{P~C Fletcher}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Exploring implicit and explicit aspects of sense of agency}.
+\newblock \bibinfo{journal}{\emph{Conscious. Cogn.}} \bibinfo{volume}{21}, \bibinfo{number}{4} (\bibinfo{date}{Dec.} \bibinfo{year}{2012}), \bibinfo{pages}{1748--1753}.
+\newblock
+
+
+\bibitem[Moore and Obhi(2012)]%
+        {Moore2012-dk}
+\bibfield{author}{\bibinfo{person}{James~W Moore} {and} \bibinfo{person}{Sukhvinder~S Obhi}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Intentional binding and the sense of agency: a review}.
+\newblock \bibinfo{journal}{\emph{Conscious. Cogn.}} \bibinfo{volume}{21}, \bibinfo{number}{1} (\bibinfo{date}{March} \bibinfo{year}{2012}), \bibinfo{pages}{546--561}.
+\newblock
+
+
+\bibitem[Mueller et~al\mbox{.}(2020)]%
+        {Mueller2020-dl}
+\bibfield{author}{\bibinfo{person}{Florian~Floyd Mueller}, \bibinfo{person}{Pedro Lopes}, \bibinfo{person}{Paul Strohmeier}, \bibinfo{person}{Wendy Ju}, \bibinfo{person}{Caitlyn Seim}, \bibinfo{person}{Martin Weigel}, \bibinfo{person}{Suranga Nanayakkara}, \bibinfo{person}{Marianna Obrist}, \bibinfo{person}{Zhuying Li}, \bibinfo{person}{Joseph Delfa}, \bibinfo{person}{Jun Nishida}, \bibinfo{person}{Elizabeth~M Gerber}, \bibinfo{person}{Dag Svanaes}, \bibinfo{person}{Jonathan Grudin}, \bibinfo{person}{Stefan Greuter}, \bibinfo{person}{Kai Kunze}, \bibinfo{person}{Thomas Erickson}, \bibinfo{person}{Steven Greenspan}, \bibinfo{person}{Masahiko Inami}, \bibinfo{person}{Joe Marshall}, \bibinfo{person}{Harald Reiterer}, \bibinfo{person}{Katrin Wolf}, \bibinfo{person}{Jochen Meyer}, \bibinfo{person}{Thecla Schiphorst}, \bibinfo{person}{Dakuo Wang}, {and} \bibinfo{person}{Pattie Maes}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Next steps for human-computer integration}. In \bibinfo{booktitle}{\emph{Proceedings of the 2020 {CHI} Conference on Human Factors in Computing Systems}} (Honolulu HI USA). \bibinfo{publisher}{ACM}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1--15}.
+\newblock
+
+
+\bibitem[Nataraj et~al\mbox{.}(2020)]%
+        {Nataraj2020-wm}
+\bibfield{author}{\bibinfo{person}{Raviraj Nataraj}, \bibinfo{person}{Sean Sanford}, \bibinfo{person}{Mingxiao Liu}, \bibinfo{person}{Kevin Walsh}, \bibinfo{person}{Samuel Wilder}, \bibinfo{person}{Anthony Santo}, {and} \bibinfo{person}{David Hollinger}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Cognitive and Physiological Intent for the Adaptation of Motor Prostheses}.
+\newblock In \bibinfo{booktitle}{\emph{Advances in Motor Neuroprostheses}}, \bibfield{editor}{\bibinfo{person}{Ramana Vinjamuri}} (Ed.). \bibinfo{publisher}{Springer International Publishing}, \bibinfo{address}{Cham}, \bibinfo{pages}{123--153}.
+\newblock
+
+
+\bibitem[Nguyen et~al\mbox{.}(2023)]%
+        {Nguyen2023-me}
+\bibfield{author}{\bibinfo{person}{Willy Nguyen}, \bibinfo{person}{Klaus Gramann}, {and} \bibinfo{person}{Lukas Gehrke}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Modeling the Intent to Interact with {VR} using Physiological Features}.
+\newblock \bibinfo{journal}{\emph{IEEE Trans. Vis. Comput. Graph.}}  \bibinfo{volume}{PP} (\bibinfo{date}{Aug.} \bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Niso et~al\mbox{.}(2023)]%
+        {Niso2023-ce}
+\bibfield{author}{\bibinfo{person}{Guiomar Niso}, \bibinfo{person}{Elena Romero}, \bibinfo{person}{Jeremy~T Moreau}, \bibinfo{person}{Alvaro Araujo}, {and} \bibinfo{person}{Laurens~R Krol}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Wireless {EEG}: A survey of systems and studies}.
+\newblock \bibinfo{journal}{\emph{Neuroimage}}  \bibinfo{volume}{269} (\bibinfo{date}{April} \bibinfo{year}{2023}), \bibinfo{pages}{119774}.
+\newblock
+
+
+\bibitem[Pangratz et~al\mbox{.}(2023)]%
+        {Pangratz2023-ew}
+\bibfield{author}{\bibinfo{person}{Elisabeth Pangratz}, \bibinfo{person}{Francesco Chiossi}, \bibinfo{person}{Steeven Villa}, \bibinfo{person}{Klaus Gramann}, {and} \bibinfo{person}{Lukas Gehrke}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Towards an Implicit Metric of {Sensory-Motor} Accuracy: Brain Responses to Auditory Prediction Errors in Pianists}. In \bibinfo{booktitle}{\emph{Proceedings of the 15th Conference on Creativity and Cognition}} (Virtual Event, USA) \emph{(\bibinfo{series}{C\&C '23})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{129--138}.
+\newblock
+
+
+\bibitem[Papenmeier et~al\mbox{.}(2022)]%
+        {Papenmeier2022-oi}
+\bibfield{author}{\bibinfo{person}{Andrea Papenmeier}, \bibinfo{person}{Dagmar Kern}, \bibinfo{person}{Daniel Hienert}, \bibinfo{person}{Yvonne Kammerer}, {and} \bibinfo{person}{Christin Seifert}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{How Accurate Does It Feel? -- Human Perception of Different Types of Classification Mistakes}. In \bibinfo{booktitle}{\emph{Proceedings of the 2022 {CHI} Conference on Human Factors in Computing Systems}} (New Orleans, LA, USA) \emph{(\bibinfo{series}{CHI '22}, \bibinfo{number}{Article 180})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{1--13}.
+\newblock
+
+
+\bibitem[Par{\'e}s-Pujolr{\`a}s et~al\mbox{.}(2019)]%
+        {Pares-Pujolras2019-ll}
+\bibfield{author}{\bibinfo{person}{Elisabeth Par{\'e}s-Pujolr{\`a}s}, \bibinfo{person}{Yong-Wook Kim}, \bibinfo{person}{Chang-Hwan Im}, {and} \bibinfo{person}{Patrick Haggard}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Latent awareness: Early conscious access to motor preparation processes is linked to the readiness potential}.
+\newblock \bibinfo{journal}{\emph{Neuroimage}}  \bibinfo{volume}{202} (\bibinfo{date}{Nov.} \bibinfo{year}{2019}), \bibinfo{pages}{116140}.
+\newblock
+
+
+\bibitem[Pedregosa et~al\mbox{.}(2012)]%
+        {Pedregosa2012-sj}
+\bibfield{author}{\bibinfo{person}{Fabian Pedregosa}, \bibinfo{person}{Ga{\"e}l Varoquaux}, \bibinfo{person}{Alexandre Gramfort}, \bibinfo{person}{Vincent Michel}, \bibinfo{person}{Bertrand Thirion}, \bibinfo{person}{Olivier Grisel}, \bibinfo{person}{Mathieu Blondel}, \bibinfo{person}{Andreas M{\"u}ller}, \bibinfo{person}{Joel Nothman}, \bibinfo{person}{Gilles Louppe}, \bibinfo{person}{Peter Prettenhofer}, \bibinfo{person}{Ron Weiss}, \bibinfo{person}{Vincent Dubourg}, \bibinfo{person}{Jake Vanderplas}, \bibinfo{person}{Alexandre Passos}, \bibinfo{person}{David Cournapeau}, \bibinfo{person}{Matthieu Brucher}, \bibinfo{person}{Matthieu Perrot}, {and} \bibinfo{person}{{\'E}douard Duchesnay}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Scikit-learn: Machine Learning in Python}.
+\newblock  (\bibinfo{date}{Jan.} \bibinfo{year}{2012}).
+\newblock
+\showeprint[arxiv]{1201.0490}~[cs.LG]
+
+
+\bibitem[Pinheiro and Bates(2006)]%
+        {Pinheiro2006-bk}
+\bibfield{author}{\bibinfo{person}{Jos{\'e} Pinheiro} {and} \bibinfo{person}{Douglas Bates}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \bibinfo{booktitle}{\emph{{Mixed-Effects} Models in {S} and {S-PLUS}}}.
+\newblock \bibinfo{publisher}{Springer Science \& Business Media}.
+\newblock
+
+
+\bibitem[Schultze-Kraft et~al\mbox{.}(2016)]%
+        {Schultze-Kraft2016-bx}
+\bibfield{author}{\bibinfo{person}{Matthias Schultze-Kraft}, \bibinfo{person}{Daniel Birman}, \bibinfo{person}{Marco Rusconi}, \bibinfo{person}{Carsten Allefeld}, \bibinfo{person}{Kai G{\"o}rgen}, \bibinfo{person}{Sven D{\"a}hne}, \bibinfo{person}{Benjamin Blankertz}, {and} \bibinfo{person}{John-Dylan Haynes}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{The point of no return in vetoing self-initiated movements}.
+\newblock \bibinfo{journal}{\emph{Proc. Natl. Acad. Sci. U. S. A.}} \bibinfo{volume}{113}, \bibinfo{number}{4} (\bibinfo{date}{Jan.} \bibinfo{year}{2016}), \bibinfo{pages}{1080--1085}.
+\newblock
+
+
+\bibitem[Schultze-Kraft et~al\mbox{.}(2021)]%
+        {Schultze-Kraft2021-cu}
+\bibfield{author}{\bibinfo{person}{Matthias Schultze-Kraft}, \bibinfo{person}{Vincent Jonany}, \bibinfo{person}{Thomas~Samuel Binns}, \bibinfo{person}{Joram Soch}, \bibinfo{person}{Benjamin Blankertz}, {and} \bibinfo{person}{John-Dylan Haynes}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Suppress Me if You Can: Neurofeedback of the Readiness Potential}.
+\newblock \bibinfo{journal}{\emph{eNeuro}} \bibinfo{volume}{8}, \bibinfo{number}{2} (\bibinfo{date}{March} \bibinfo{year}{2021}), \bibinfo{pages}{1--11}.
+\newblock
+
+
+\bibitem[Schultze-Kraft et~al\mbox{.}(2020)]%
+        {Schultze-Kraft2020-rm}
+\bibfield{author}{\bibinfo{person}{Matthias Schultze-Kraft}, \bibinfo{person}{Elisabeth Par{\'e}s-Pujolr{\`a}s}, \bibinfo{person}{Karla Mati{\'c}}, \bibinfo{person}{Patrick Haggard}, {and} \bibinfo{person}{John-Dylan Haynes}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Preparation and execution of voluntary action both contribute to awareness of intention}.
+\newblock \bibinfo{journal}{\emph{Proc. Biol. Sci.}} \bibinfo{volume}{287}, \bibinfo{number}{1923} (\bibinfo{date}{March} \bibinfo{year}{2020}), \bibinfo{pages}{20192928}.
+\newblock
+
+
+\bibitem[Schurger et~al\mbox{.}(2021)]%
+        {Schurger2021-vp}
+\bibfield{author}{\bibinfo{person}{Aaron Schurger}, \bibinfo{person}{Pengbo~'ben' Hu}, \bibinfo{person}{Joanna Pak}, {and} \bibinfo{person}{Adina~L Roskies}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{What Is the Readiness Potential?}
+\newblock \bibinfo{journal}{\emph{Trends Cogn. Sci.}} \bibinfo{volume}{25}, \bibinfo{number}{7} (\bibinfo{date}{July} \bibinfo{year}{2021}), \bibinfo{pages}{558--570}.
+\newblock
+
+
+\bibitem[Shibasaki and Hallett(2006)]%
+        {Shibasaki2006-mt}
+\bibfield{author}{\bibinfo{person}{Hiroshi Shibasaki} {and} \bibinfo{person}{Mark Hallett}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \showarticletitle{What is the bereitschaftspotential?}
+\newblock \bibinfo{journal}{\emph{Clin. Neurophysiol.}} \bibinfo{volume}{117}, \bibinfo{number}{11} (\bibinfo{date}{Nov.} \bibinfo{year}{2006}), \bibinfo{pages}{2341--2356}.
+\newblock
+
+
+\bibitem[Suzuki et~al\mbox{.}(2019)]%
+        {Suzuki2019-pi}
+\bibfield{author}{\bibinfo{person}{Keisuke Suzuki}, \bibinfo{person}{Peter Lush}, \bibinfo{person}{Anil~K Seth}, {and} \bibinfo{person}{Warrick Roseboom}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Intentional Binding Without Intentional Action}.
+\newblock \bibinfo{journal}{\emph{Psychol. Sci.}} \bibinfo{volume}{30}, \bibinfo{number}{6} (\bibinfo{date}{June} \bibinfo{year}{2019}), \bibinfo{pages}{842--853}.
+\newblock
+
+
+\bibitem[Travers et~al\mbox{.}(2020)]%
+        {Travers2020-hf}
+\bibfield{author}{\bibinfo{person}{Eoin Travers}, \bibinfo{person}{Nima Khalighinejad}, \bibinfo{person}{Aaron Schurger}, {and} \bibinfo{person}{Patrick Haggard}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Do readiness potentials happen all the time?}
+\newblock \bibinfo{journal}{\emph{Neuroimage}}  \bibinfo{volume}{206} (\bibinfo{date}{Feb.} \bibinfo{year}{2020}), \bibinfo{pages}{116286}.
+\newblock
+
+
+\bibitem[Tukey(1949)]%
+        {Tukey1949-sl}
+\bibfield{author}{\bibinfo{person}{J~W Tukey}.} \bibinfo{year}{1949}\natexlab{}.
+\newblock \showarticletitle{Comparing individual means in the analysis of variance}.
+\newblock \bibinfo{journal}{\emph{Biometrics}} \bibinfo{volume}{5}, \bibinfo{number}{2} (\bibinfo{date}{June} \bibinfo{year}{1949}), \bibinfo{pages}{99--114}.
+\newblock
+
+
+\end{thebibliography}

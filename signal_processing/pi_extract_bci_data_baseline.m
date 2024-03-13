@@ -27,7 +27,7 @@ for pID = pIDs
     %% filter EMG
     
     EMG = pop_eegfiltnew(EEG, 20, 100); % only filter EMG channel
-    EEG = pop_eegfiltnew(EEG, .1, 15); % only filter EMG channel
+    EEG = pop_eegfiltnew(EEG, .1, 15); % EEG
     
     EEG.data(end,:) = EMG.data(end,:).^2;
     
