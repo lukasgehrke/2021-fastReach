@@ -7,7 +7,7 @@ pi_bemobil_config;
 
 %% load data and parse events
 
-pIDs = [12, 14:21] ; %1:10;
+pIDs = [12, 14:23] ; %1:10;
 conds = {'Baseline', 'passive', 'agency1'}; %
 design = [];
 

@@ -7,7 +7,7 @@ pi_bemobil_config;
 
 %% load data and parse events
 
-pIDs = [12, 14:17, 19:21] ; %1:10; % remove also 18 1
+pIDs = [12, 14:17, 19:23] ; %1:10; % remove also 18 1
 cond = {'Baseline'};
 cz_ix = 24;
 design_erp = [];

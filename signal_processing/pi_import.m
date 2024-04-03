@@ -13,10 +13,10 @@ function pi_import(cfg, subject, training)
     
     % optional for dataset_description.json
     generalInfo.dataset_description.License             = 'CC BY';
-    generalInfo.dataset_description.Authors             = {'Lukas Gehrke', 'Leonie Terfurth'};
+    generalInfo.dataset_description.Authors             = 'n/a';
     generalInfo.dataset_description.Acknowledgements    = 'n/a';
-    generalInfo.dataset_description.Funding             = {''};
-    generalInfo.dataset_description.ReferencesAndLinks  = {};
+    generalInfo.dataset_description.Funding             = 'n/a';
+    generalInfo.dataset_description.ReferencesAndLinks  = 'n/a';
     generalInfo.dataset_description.DatasetDOI          = 'n/a';
     
     % general information shared across modality specific json files 

@@ -14,7 +14,8 @@ pi_bemobil_config;
 
 % set to 1 if all files should be recomputed and overwritten
 force_recompute = 1;
-subjects = [12, 14:17, 19:21] ;
+% subjects = [12, 14:17, 19:21] ;
+subjects = [22:23];
 
 for subject = subjects
     pi_import(bemobil_config, subject, 0);

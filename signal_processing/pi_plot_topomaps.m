@@ -6,7 +6,7 @@ pi_bemobil_config;
 load('/Volumes/Lukas_Gehrke/fastReach/data/eeglab2python/locs.mat');
 
 % load csv scores and concatenate to one matrix
-pIDs = [12, 14:17, 19:21] ; %1:10; % remove also 18 1
+pIDs = [12, 14:17, 19:23] ; %1:10; % remove also 18 1
 
 % what is all_chans_score_order and what does it mean???
 for pID = pIDs
