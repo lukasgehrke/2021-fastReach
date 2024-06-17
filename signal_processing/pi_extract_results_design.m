@@ -7,7 +7,7 @@ pi_bemobil_config;
 
 %% load data and parse events
 
-pIDs = [12, 14:23] ; %1:10;
+pIDs = [12, 14:17, 19:23] ; %1:10;
 conds = {'Baseline', 'passive', 'agency1'}; %
 design = [];
 
@@ -20,7 +20,7 @@ for pID = pIDs
         %% load
         EEG = pop_loadxdf(fullfile(bemobil_config.study_folder, bemobil_config.source_data_folder, ...
             ['sub-' sprintf('%03d', pID)], [cond{1} '.xdf']), ...
-            'streamtype', 'EEG', 'exclude_markerstreams', {});
+            'streamname', 'BrainVision RDA', 'exclude_markerstreams', {});
         [ALLEEG EEG CURRENTSET] = pop_newset(ALLEEG, EEG, 0,'gui','off');
         EEG = pi_parse_events(EEG);
 
@@ -82,7 +82,7 @@ for pID = pIDs
             delta_tap_ems_values = (tap_latency - ems_latency) / EEG.srate;
             delta_tap_ems(ems_trials) = delta_tap_ems_values;
 
-            delta_idle_ems_values = (idle_latency - ems_latency) / EEG.srate;
+            delta_idle_ems_values = (ems_latency - idle_latency) / EEG.srate;
             delta_idle_ems(ems_trials) = delta_idle_ems_values;
         end
 
