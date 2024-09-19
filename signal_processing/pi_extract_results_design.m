@@ -11,6 +11,8 @@ pIDs = [12, 14:17, 19:23] ; %1:10;
 conds = {'Baseline', 'passive', 'agency1'}; %
 design = [];
 
+pIDs = 15;
+
 for pID = pIDs
 
     design_this_pID = [];
