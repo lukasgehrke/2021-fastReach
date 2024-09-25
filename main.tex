@@ -1,5 +1,5 @@
-% \documentclass[manuscript, screen=true, review=true, anonymous=true, authordraft=False]{acmart}
-\documentclass[sigconf, review=true, anonymous=true]{acmart}
+% \documentclass[manuscript, screen=true, review=true, anonymous=false, authordraft=False]{acmart}
+\documentclass[sigconf, review=false, anonymous=false]{acmart}
 % \documentclass[sigconf]{acmart}
 
 %%% START ADDITIONAL PACKAGES AND COMMANDS %%% 
@@ -12,6 +12,9 @@
 \newcolumntype{d}[1]{D{.}{.}{#1}}
 
 \usepackage{subcaption}
+\usepackage{draftwatermark}
+\SetWatermarkText{Author Manuscript}
+\SetWatermarkScale{.4}
 
 \usepackage{todonotes}
 \let\xtodo\todo
@@ -32,17 +35,15 @@
 %% values in them; it is your responsibility as an author to replace
 %% the commands and values with those provided to you when you
 %% complete the rights form.
-\setcopyright{acmcopyright}
-\copyrightyear{2018}
-\acmYear{2018}
-\acmDOI{XXXXXXX.XXXXXXX}
+\setcopyright{} %acmcopyright
+\copyrightyear{}
+\acmYear{}
+\acmDOI{}
 
 %% These commands are for a PROCEEDINGS abstract or paper.
-\acmConference[Conference acronym 'XX]{Make sure to enter the correct
-  conference title from your rights confirmation emai}{June 03--05,
-  2018}{Woodstock, NY}
-\acmPrice{15.00}
-\acmISBN{978-1-4503-XXXX-X/18/06}
+\acmConference[]{}{}{}
+\acmPrice{}
+\acmISBN{}
 
 
 %%
@@ -65,9 +66,9 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-% \title{\input{input/title}}
+\title{\input{input/title}}
 % \title[Preemptive Muscle Control using Brain-Computer Interfaces]{Agency-preserving Action Augmentation: Preemptive Muscle Control using Brain-Computer Interfaces}
-\title[Towards Preemptive Muscle Control using Brain-Computer Interfaces]{Agency-preserving Action Augmentation: Towards Preemptive Muscle Control using Brain-Computer Interfaces}
+% \title[Towards Preemptive Muscle Control using Brain-Computer Interfaces]{Agency-preserving Action Augmentation: Towards Preemptive Muscle Control using Brain-Computer Interfaces}
 
 
 %%
@@ -129,23 +130,23 @@
 %% Please copy and paste the code instead of the example below.
 %%
 
-\begin{CCSXML}
-<ccs2012>
-   <concept>
-       <concept_id>10003120.10003121.10003125.10011752</concept_id>
-       <concept_desc>Human-centered computing~Haptic devices</concept_desc>
-       <concept_significance>500</concept_significance>
-       </concept>
-   <concept>
-       <concept_id>10003120.10003121.10003122.10011749</concept_id>
-       <concept_desc>Human-centered computing~Laboratory experiments</concept_desc>
-       <concept_significance>300</concept_significance>
-       </concept>
- </ccs2012>
-\end{CCSXML}
+% \begin{CCSXML}
+% <ccs2012>
+%    <concept>
+%        <concept_id>10003120.10003121.10003125.10011752</concept_id>
+%        <concept_desc>Human-centered computing~Haptic devices</concept_desc>
+%        <concept_significance>500</concept_significance>
+%        </concept>
+%    <concept>
+%        <concept_id>10003120.10003121.10003122.10011749</concept_id>
+%        <concept_desc>Human-centered computing~Laboratory experiments</concept_desc>
+%        <concept_significance>300</concept_significance>
+%        </concept>
+%  </ccs2012>
+% \end{CCSXML}
 
-\ccsdesc[500]{Human-centered computing~Haptic devices}
-\ccsdesc[300]{Human-centered computing~Laboratory experiments}
+% \ccsdesc[500]{Human-centered computing~Haptic devices}
+% \ccsdesc[300]{Human-centered computing~Laboratory experiments}
 
 
 %%
